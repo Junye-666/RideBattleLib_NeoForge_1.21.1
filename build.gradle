@@ -188,3 +188,14 @@ idea {
         downloadJavadoc = true
     }
 }
+
+jar {
+    manifest {
+        attributes([
+                "FMLModType": "LIBRARY",
+        ])
+    }
+    // 只打包以下包路径
+    include 'com/jpigeon/ridebattlelib/**'
+    include 'com/jpigeon/ridebattlelib/system/**'
+}

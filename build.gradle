@@ -166,14 +166,16 @@ neoForge.ideSyncTask generateModMetadata
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {
-        register('mavenJava', MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
+            // 添加API文档和源码（可选）
+            artifact sourcesJar
+            artifact javadocJar
         }
     }
     repositories {
-        maven {
-            url "file://${project.projectDir}/repo"
-        }
+        mavenLocal() // 本地测试用
+        // 或发布到GitHub Packages等远程仓库
     }
 }
 
@@ -190,12 +192,8 @@ idea {
 }
 
 jar {
-    manifest {
-        attributes([
-                "FMLModType": "LIBRARY",
-        ])
-    }
-    // 只打包以下包路径
-    include 'com/jpigeon/ridebattlelib/**'
-    include 'com/jpigeon/ridebattlelib/system/**'
+    // 包含所有必要的类
+    from sourceSets.main.output
+    // 标记为库文件
+    archiveClassifier.set('api') // 生成如ridebattlelib-1.0.0-api.jar
 }

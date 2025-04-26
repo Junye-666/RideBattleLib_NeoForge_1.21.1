@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.system;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
 public class RiderConfig {
@@ -11,10 +12,10 @@ public class RiderConfig {
     private EquipmentSlot driverSlot;       //定义驱动器位置
     private Item requiredItem;              //必要物品
     //定义盔甲
-    private Item helmet;
-    private Item chestplate;
-    private Item leggings;
-    private Item boots;
+    private Item helmet = Items.AIR;
+    private Item chestplate = Items.AIR;
+    private @Nullable Item leggings = null;
+    private Item boots = Items.AIR;
 
 
     //====================初始化方法====================
@@ -77,11 +78,11 @@ public class RiderConfig {
     }
 
     //指定全身盔甲
-    public RiderConfig setArmor(Item helmet, Item chestplate, Item leggings, Item boots){
-        this.helmet = helmet;
-        this.chestplate = chestplate;
+    public RiderConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots){
+        this.helmet = helmet != null ? helmet : Items.AIR;
+        this.chestplate = chestplate != null ? chestplate : Items.AIR;
         this.leggings = leggings;
-        this.boots = boots;
+        this.boots = boots != null ? boots : Items.AIR;
         return this;
     }
 

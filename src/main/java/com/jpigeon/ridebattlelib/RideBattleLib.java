@@ -1,6 +1,9 @@
 package com.jpigeon.ridebattlelib;
 
-import com.jpigeon.ridebattlelib.system.Henshin;
+import com.jpigeon.ridebattlelib.example.ExampleRider;
+import com.jpigeon.ridebattlelib.system.RiderRegistry;
+import com.jpigeon.ridebattlelib.system.handler.HenshinHandler;
+import com.jpigeon.ridebattlelib.system.network.handler.PacketHandler;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -27,44 +30,49 @@ public class RideBattleLib
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    // The constructor for the mod class is the first code that is run when your mod is loaded.
-    // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
     public RideBattleLib(IEventBus modEventBus, ModContainer modContainer)
     {
 
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(PacketHandler::register);
 
         NeoForge.EVENT_BUS.register(this);
-        NeoForge.EVENT_BUS.register(Henshin.class);
 
+        NeoForge.EVENT_BUS.register(HenshinHandler.class);
+
+        ExampleRider.init();
 
         modEventBus.addListener(this::addCreative);
-
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
-        // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
+
+
+        event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {
+            if (config.getDriverItem() == null){
+                LOGGER.error("骑士 {} 未设置驱动器物品!", config.getRiderId());
+            }
+        }));
 
     }
 
-    // Add the example block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event)
     {
 
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
+
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
 
     }
 
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
+
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents
     {
@@ -74,4 +82,7 @@ public class RideBattleLib
 
         }
     }
+
+
+
 }

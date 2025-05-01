@@ -195,6 +195,4 @@ idea {
 jar {
     // 包含所有必要的类
     from sourceSets.main.output
-    // 标记为库文件
-    archiveClassifier.set('api') // 生成如ridebattlelib-1.0.0-api.jar
 }

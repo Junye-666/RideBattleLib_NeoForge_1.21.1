@@ -8,9 +8,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class RiderConfig {
     private final ResourceLocation riderId; //定义骑士Id
-    private Item driverItem;                //定义驱动器
+    private Item driverItem = Items.AIR;                //定义驱动器
     private EquipmentSlot driverSlot;       //定义驱动器位置
-    private Item requiredItem;              //必要物品
+    private Item requiredItem = Items.AIR;              //必要物品
     //定义盔甲
     private Item helmet = Items.AIR;
     private Item chestplate = Items.AIR;
@@ -44,7 +44,7 @@ public class RiderConfig {
     }
 
     //获取必须物品
-    public Item getRequiredItem() {
+    public @Nullable Item getRequiredItem() {
         return requiredItem;
     }
 
@@ -62,6 +62,7 @@ public class RiderConfig {
         return boots;
     }
 
+
     //====================Setter方法====================
 
     //指定驱动器物品
@@ -72,8 +73,8 @@ public class RiderConfig {
     }
 
     //指定需要物品
-    public RiderConfig setRequiredItem(Item item) {
-        this.requiredItem = item;
+    public RiderConfig setRequiredItem(@Nullable Item item) {
+        this.requiredItem = item != null ? item : Items.AIR;
         return this;
     }
 

@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlelib.system.handler;
 
-import com.jpigeon.ridebattlelib.system.Henshin;
-import com.jpigeon.ridebattlelib.system.RiderConfig;
-import com.jpigeon.ridebattlelib.system.RiderRegistry;
+import com.jpigeon.ridebattlelib.system.rider.basic.Henshin;
+import com.jpigeon.ridebattlelib.system.rider.basic.RiderConfig;
+import com.jpigeon.ridebattlelib.system.rider.basic.RiderRegistry;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;

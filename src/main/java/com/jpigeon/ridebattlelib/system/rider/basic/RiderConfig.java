@@ -1,4 +1,5 @@
-package com.jpigeon.ridebattlelib.system;
+package com.jpigeon.ridebattlelib.system.rider.basic;
+
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -6,6 +7,16 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
+
+/**
+ * 实现假面骑士实例相关的注册
+ * 骑士ID
+ * 所需驱动器
+ * 必要物品
+ * 必要条件
+ * 关联盔甲
+ * 等等
+ */
 public class RiderConfig {
     private final ResourceLocation riderId; //定义骑士Id
     private Item driverItem = Items.AIR;                //定义驱动器

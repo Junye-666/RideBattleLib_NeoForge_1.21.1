@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.system;
+package com.jpigeon.ridebattlelib.system.rider.basic;
 
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -12,12 +12,21 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 故事从此开始!
+ * 假面骑士的变身系统
+ */
 public class Henshin {
     private static final Map<UUID, RiderConfig> TRANSFORMED_PLAYERS = new ConcurrentHashMap<>();
 
     //变身逻辑
     public static void playerHenshin(Player player, RiderConfig config){
+        if (!canTransform(player, config)){
+            return;
+        }
+
         ItemStack originalLeggings = player.getItemBySlot(EquipmentSlot.LEGS).copy();
+
 
         if(config.getHelmet() == null || config.getChestplate() == null || config.getBoots() == null){
             throw new IllegalStateException("骑士" + config.getRiderId() + "配置不完整");
@@ -93,6 +102,22 @@ public class Henshin {
         //在TRANSFORMED_PLAYERS列表中寻找玩家ID
         return TRANSFORMED_PLAYERS.containsKey(player.getUUID());
     }
+
+    private static boolean canTransform(Player player, RiderConfig config) {
+        // 在player或config不存在时, 玩家以变身时返回false
+        if (player == null || config == null || isTransformed(player)){
+            return false;
+        }
+
+        ItemStack legItem = player.getItemBySlot(EquipmentSlot.LEGS);
+
+        //返回
+        return !legItem.isEmpty()   //腿部不为空
+                && config.getDriverItem() != null   //配置中的驱动器不为空
+                && legItem.is(config.getDriverItem())  //腿部物品等于配置驱动器物品
+
+
+    ;}
 
     //====================Setter方法====================
 

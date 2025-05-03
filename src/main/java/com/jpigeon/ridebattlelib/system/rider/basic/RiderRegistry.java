@@ -1,7 +1,11 @@
-package com.jpigeon.ridebattlelib.system;
+package com.jpigeon.ridebattlelib.system.rider.basic;
 
 import java.util.ArrayList;
 import java.util.List;
+
+/**
+ * 理解为管理所有被注册骑士的列表
+ */
 
 public class RiderRegistry {
     public static final List<RiderConfig> REGISTERED_RIDERS = new ArrayList<>();    //创建已注册骑士列表

@@ -2,8 +2,8 @@ package com.jpigeon.ridebattlelib.system.network.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
-import com.jpigeon.ridebattlelib.system.Henshin;
-import com.jpigeon.ridebattlelib.system.RiderConfig;
+import com.jpigeon.ridebattlelib.system.rider.basic.Henshin;
+import com.jpigeon.ridebattlelib.system.rider.basic.RiderConfig;
 
 import com.jpigeon.ridebattlelib.system.network.packet.UnhenshinPacket;
 import net.minecraft.world.entity.player.Player;

@@ -27,17 +27,16 @@ public class Henshin {
 
         ItemStack originalLeggings = player.getItemBySlot(EquipmentSlot.LEGS).copy();
 
-
-        if(config.getHelmet() == null || config.getChestplate() == null || config.getBoots() == null){
-            throw new IllegalStateException("骑士" + config.getRiderId() + "配置不完整");
+        for (EquipmentSlot slot : EquipmentSlot.values()){
+            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR){
+                Item armorItem = config.getArmorPiece(slot);
+                if (armorItem != Items.AIR || slot == EquipmentSlot.LEGS){
+                    player.setItemSlot(slot, slot == EquipmentSlot.LEGS
+                            && armorItem == Items.AIR ?
+                            originalLeggings : new ItemStack(armorItem));
+                }
+            }
         }
-
-        //装备盔甲
-        safeSetArmor(player, EquipmentSlot.HEAD, config.getHelmet());
-        safeSetArmor(player, EquipmentSlot.CHEST, config.getChestplate());
-        conditionalEquipLeggings(player, config.getLeggings(), originalLeggings);
-        safeSetArmor(player, EquipmentSlot.FEET, config.getBoots());
-
         setTransformed(player, config);
         //...待后续添加其它变身时触发
     }
@@ -100,24 +99,17 @@ public class Henshin {
 
     public static boolean isTransformed(Player player){
         //在TRANSFORMED_PLAYERS列表中寻找玩家ID
-        return TRANSFORMED_PLAYERS.containsKey(player.getUUID());
+        return player != null && TRANSFORMED_PLAYERS.containsKey(player.getUUID());
     }
 
     private static boolean canTransform(Player player, RiderConfig config) {
         // 在player或config不存在时, 玩家以变身时返回false
-        if (player == null || config == null || isTransformed(player)){
-            return false;
-        }
+        return player != null
+                && config != null
+                && config.getDriverItem() != null
+                && !isTransformed(player);
 
-        ItemStack legItem = player.getItemBySlot(EquipmentSlot.LEGS);
-
-        //返回
-        return !legItem.isEmpty()   //腿部不为空
-                && config.getDriverItem() != null   //配置中的驱动器不为空
-                && legItem.is(config.getDriverItem())  //腿部物品等于配置驱动器物品
-
-
-    ;}
+    }
 
     //====================Setter方法====================
 
@@ -132,7 +124,7 @@ public class Henshin {
     //====================Getter方法====================
 
     public static RiderConfig getConfig(Player player) {
-        return TRANSFORMED_PLAYERS.get(player.getUUID());
+        return player != null ? TRANSFORMED_PLAYERS.get(player.getUUID()) : null;
     }
 
 }

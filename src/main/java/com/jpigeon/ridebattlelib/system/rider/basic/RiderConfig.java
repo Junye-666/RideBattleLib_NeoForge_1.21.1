@@ -7,6 +7,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+
 
 /**
  * 实现假面骑士实例相关的注册
@@ -18,15 +20,17 @@ import org.jetbrains.annotations.Nullable;
  * 等等
  */
 public class RiderConfig {
-    private final ResourceLocation riderId; //定义骑士Id
-    private Item driverItem = Items.AIR;                //定义驱动器
-    private EquipmentSlot driverSlot;       //定义驱动器位置
-    private Item requiredItem = Items.AIR;              //必要物品
+    //定义骑士Id
+    private final ResourceLocation riderId;
+    //定义驱动器
+    private Item driverItem = Items.AIR;
+    //定义驱动器位置
+    private EquipmentSlot driverSlot = EquipmentSlot.LEGS;
+    //必要物品
+    private Item requiredItem = Items.AIR;
     //定义盔甲
-    private Item helmet = Items.AIR;
-    private Item chestplate = Items.AIR;
-    private @Nullable Item leggings = null;
-    private Item boots = Items.AIR;
+    private final Item[] armor = new Item[4];
+
 
 
     //====================初始化方法====================
@@ -34,8 +38,8 @@ public class RiderConfig {
     //骑士Id初始化
     public RiderConfig(ResourceLocation riderId) {
         this.riderId = riderId;
+        Arrays.fill(armor, Items.AIR);
     }
-
 
     //====================Getter方法====================
 
@@ -60,17 +64,24 @@ public class RiderConfig {
     }
 
     //获取盔甲
+    public Item getArmorPiece(EquipmentSlot slot){
+        return armor[slot.getIndex() -2];
+    }
+
     public Item getHelmet() {
-        return helmet;
+        return armor[0];
     }
+
     public Item getChestplate() {
-        return chestplate;
+        return armor[1];
     }
-    public @Nullable Item getLeggings() {
-        return leggings;
+
+    public Item getLegging(){
+        return armor[2];
     }
+
     public Item getBoots() {
-        return boots;
+        return armor[3];
     }
 
 
@@ -91,12 +102,13 @@ public class RiderConfig {
 
     //指定全身盔甲
     public RiderConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots){
-        this.helmet = helmet != null ? helmet : Items.AIR;
-        this.chestplate = chestplate != null ? chestplate : Items.AIR;
-        this.leggings = leggings;
-        this.boots = boots != null ? boots : Items.AIR;
+        armor[0] = helmet;
+        armor[1] = chestplate;
+        armor[2] = leggings != null ? leggings : Items.AIR;
+        armor[3] = boots;
         return this;
     }
+
 
 
 }

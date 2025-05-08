@@ -8,6 +8,8 @@
 
 出现任何问题请反馈哦! 感谢配合
 
+PS: 查看代码时还务必保证自己在对的分支里, 因为分支之间的改动通常很大...
+
 Instruction / Introduction
 ============
 This Api is purely created by and for Kamen Rider fans, the goal is to be compatible with at least 3/4 of the existing riders, so that rider+MC fans can get their own digital CSM and become Cyber Rider (I mean it)
@@ -16,3 +18,4 @@ The most of the use of this Api are in the classes themselves, to get to know th
 
 If any bugs appear please notify! Thanks for cooperation!
 
+Note: make sure to get yourself the right branch when checking out the codes bcs they are very much different.

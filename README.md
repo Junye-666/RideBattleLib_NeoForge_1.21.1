@@ -1,25 +1,18 @@
 
-Installation information
+使用说明 / 介绍
 =======
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+这个模组完全就是假面骑士爱好者写出来的假面骑士代码库, 目标是几乎兼容至少3/4的假面骑士, 让骑士+MC爱好者们可以在新版本的NeoForge上玩上电子CSM, 当赛博骑士(误)
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+好啦, 这个API的使用方法我都会尽量写在注释中的, 最基础的实现直接看example文件夹里照抄就好
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+出现任何问题请反馈哦! 感谢配合
 
-Mapping Names:
+Instruction / Introduction
 ============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+This Api is purely created by and for Kamen Rider fans, the goal is to be compatible with at least 3/4 of the existing riders, so that rider+MC fans can get their own digital CSM and become Cyber Rider (I mean it)
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+The most of the use of this Api are in the classes themselves, to get to know the functions, check out the 'example' folder in the codes and write it off.
+
+If any bugs appear please notify! Thanks for cooperation!
+

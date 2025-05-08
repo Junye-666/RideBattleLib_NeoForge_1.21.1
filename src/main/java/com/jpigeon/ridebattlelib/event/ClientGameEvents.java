@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.event;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.system.rider.basic.Henshin;
 import com.jpigeon.ridebattlelib.system.KeyBindings;
 import com.jpigeon.ridebattlelib.network.packet.UnhenshinPacket;
@@ -18,7 +19,7 @@ class ClientGameEvents {
         while (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
             LocalPlayer player = Minecraft.getInstance().player;
             if (player != null && Henshin.isTransformed(player)) {
-                player.connection.send(new UnhenshinPacket());
+                PacketHandler.sendToServer(new UnhenshinPacket());
             }
         }
     }

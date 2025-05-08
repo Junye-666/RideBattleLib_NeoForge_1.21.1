@@ -32,7 +32,6 @@ public class RiderConfig {
     private final Item[] armor = new Item[4];
 
 
-
     //====================初始化方法====================
 
     //骑士Id初始化
@@ -49,12 +48,12 @@ public class RiderConfig {
     }
 
     //获取驱动器物品
-    public Item getDriverItem(){
+    public Item getDriverItem() {
         return driverItem;
     }
 
     //获取驱动器位置
-    public EquipmentSlot getDriverSlot(){
+    public EquipmentSlot getDriverSlot() {
         return driverSlot;
     }
 
@@ -64,8 +63,18 @@ public class RiderConfig {
     }
 
     //获取盔甲
-    public Item getArmorPiece(EquipmentSlot slot){
-        return armor[slot.getIndex() -2];
+    public Item getArmorPiece(EquipmentSlot slot) {
+        if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
+            return Items.AIR;
+        }
+
+        return switch (slot) {
+            case HEAD -> armor[0];
+            case CHEST -> armor[1];
+            case LEGS -> armor[2];
+            case FEET -> armor[3];
+            default -> Items.AIR;
+        };
     }
 
     public Item getHelmet() {
@@ -76,7 +85,7 @@ public class RiderConfig {
         return armor[1];
     }
 
-    public Item getLegging(){
+    public Item getLegging() {
         return armor[2];
     }
 
@@ -88,7 +97,7 @@ public class RiderConfig {
     //====================Setter方法====================
 
     //指定驱动器物品
-    public RiderConfig setDriverItem(Item item, EquipmentSlot slot){
+    public RiderConfig setDriverItem(Item item, EquipmentSlot slot) {
         this.driverItem = item;
         this.driverSlot = slot;
         return this;
@@ -101,14 +110,13 @@ public class RiderConfig {
     }
 
     //指定全身盔甲
-    public RiderConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots){
+    public RiderConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
         armor[0] = helmet;
         armor[1] = chestplate;
         armor[2] = leggings != null ? leggings : Items.AIR;
         armor[3] = boots;
         return this;
     }
-
 
 
 }

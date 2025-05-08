@@ -3,11 +3,13 @@ package com.jpigeon.ridebattlelib.network.handler;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
 import com.jpigeon.ridebattlelib.system.rider.basic.Henshin;
-import com.jpigeon.ridebattlelib.system.rider.basic.RiderConfig;
 
 import com.jpigeon.ridebattlelib.network.packet.UnhenshinPacket;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+
+import java.util.Objects;
 
 
 public class PacketHandler {
@@ -21,5 +23,9 @@ public class PacketHandler {
                             Henshin.playerUnhenshin(context.player());
                         }
                 );
+    }
+
+    public static void sendToServer(CustomPacketPayload packet){
+        Objects.requireNonNull(Minecraft.getInstance().getConnection()).send(packet);
     }
 }

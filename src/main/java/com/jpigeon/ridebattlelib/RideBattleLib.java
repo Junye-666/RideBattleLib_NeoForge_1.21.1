@@ -1,6 +1,6 @@
 package com.jpigeon.ridebattlelib;
 
-import com.jpigeon.ridebattlelib.example.ExampleRider;
+import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import com.jpigeon.ridebattlelib.system.rider.basic.RiderRegistry;
 import com.jpigeon.ridebattlelib.system.handler.HenshinHandler;
 import com.jpigeon.ridebattlelib.network.handler.PacketHandler;
@@ -40,7 +40,7 @@ public class RideBattleLib
 
         NeoForge.EVENT_BUS.register(HenshinHandler.class);
 
-        ExampleRider.init();
+        ExampleRiders.init();
 
         modEventBus.addListener(this::addCreative);
 

@@ -1,5 +1,8 @@
 package com.jpigeon.ridebattlelib.system.rider.basic;
 
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -7,9 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,60 +18,58 @@ import java.util.concurrent.ConcurrentHashMap;
  * 假面骑士的变身系统
  */
 public class Henshin {
-    private static final Map<UUID, RiderConfig> TRANSFORMED_PLAYERS = new ConcurrentHashMap<>();
+    private static final Map<UUID, TransformedData> TRANSFORMED_PLAYERS = new ConcurrentHashMap<>();
+
+    private record TransformedData(
+            RiderConfig config,
+            Map<EquipmentSlot, ItemStack> originalGear
+    ) {}
 
     //变身逻辑
-    public static void playerHenshin(Player player, RiderConfig config){
-        if (!canTransform(player, config)){
-            return;
+    public static void playerHenshin(Player player, RiderConfig config) {
+        if (!canTransform(player, config)) return;
+
+        // 保存原装备（不包括驱动器）
+        Map<EquipmentSlot, ItemStack> originalGear = new EnumMap<>(EquipmentSlot.class);
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == config.getDriverSlot()) {
+                originalGear.put(slot, player.getItemBySlot(slot).copy());
+            }
         }
 
-        ItemStack originalLeggings = player.getItemBySlot(EquipmentSlot.LEGS).copy();
-
-        for (EquipmentSlot slot : EquipmentSlot.values()){
-            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR){
+        // 装备新盔甲
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
                 Item armorItem = config.getArmorPiece(slot);
-                if (armorItem != Items.AIR || slot == EquipmentSlot.LEGS){
-                    player.setItemSlot(slot, slot == EquipmentSlot.LEGS
-                            && armorItem == Items.AIR ?
-                            originalLeggings : new ItemStack(armorItem));
+                if (armorItem != Items.AIR) {
+                    player.setItemSlot(slot, new ItemStack(armorItem));
                 }
             }
         }
-        setTransformed(player, config);
-        //...待后续添加其它变身时触发
+
+        // 立即同步装备状态
+        syncEquipment(player);
+        TRANSFORMED_PLAYERS.put(player.getUUID(), new TransformedData(config, originalGear));
     }
 
     //解除变身逻辑
-    public static void playerUnhenshin(Player player){
-        if(player == null || !player.isAlive()) return;
+    public static void playerUnhenshin(Player player) {
+        TransformedData data = TRANSFORMED_PLAYERS.remove(player.getUUID());
+        if (data == null || player == null) return;
 
-        removeTransformed(player).ifPresent(config -> {
-            // 根据 config 清理装备
-            clearArmor(player, config);
-
-
+        // 恢复原装备（不包括驱动器）
+        data.originalGear.forEach((slot, stack) -> {
+            if (slot != data.config.getDriverSlot()) {
+                player.setItemSlot(slot, stack);
+            }
         });
+
+        syncEquipment(player);
     }
 
 
 
     //====================变身辅助方法====================
-
-    //安全设置盔甲
-    public static void safeSetArmor(Player player, EquipmentSlot slot, @Nullable Item item){
-        ItemStack stack = (item != null && item != Items.AIR) ?
-                new ItemStack(item) : ItemStack.EMPTY;
-        player.setItemSlot(slot, stack);
-    }
-
-    public static void conditionalEquipLeggings(Player player, @Nullable Item leggings, ItemStack original){
-        if (leggings != null && leggings != Items.AIR){
-            player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(leggings));
-        } else {
-            player.setItemSlot(EquipmentSlot.LEGS, original);
-        }
-    }
 
     public static void clearArmor(Player player, RiderConfig config){
         //根据配置清除装备
@@ -102,29 +101,54 @@ public class Henshin {
         return player != null && TRANSFORMED_PLAYERS.containsKey(player.getUUID());
     }
 
-    private static boolean canTransform(Player player, RiderConfig config) {
-        // 在player或config不存在时, 玩家以变身时返回false
-        return player != null
-                && config != null
-                && config.getDriverItem() != null
-                && !isTransformed(player);
+    static boolean canTransform(Player player, RiderConfig config) {
+        if (player == null || config == null || isTransformed(player)) {
+            return false;
+        }
 
+        // 检查驱动器物品
+        boolean hasDriver = player.getItemBySlot(config.getDriverSlot()).is(config.getDriverItem());
+
+        // 检查需求物品（手持任意一只手）
+        boolean hasRequiredItem = config.getRequiredItem() == Items.AIR ||
+                player.getMainHandItem().is(config.getRequiredItem()) ||
+                player.getOffhandItem().is(config.getRequiredItem());
+
+        return hasDriver && hasRequiredItem;
     }
 
     //====================Setter方法====================
 
-    public static synchronized void setTransformed(Player player, RiderConfig config) {
-        TRANSFORMED_PLAYERS.put(player.getUUID(), config);
+    public static void setTransformed(Player player, RiderConfig config, Map<EquipmentSlot, ItemStack> originalGear) {
+        if (player == null || config == null) return;
+        TRANSFORMED_PLAYERS.put(player.getUUID(), new TransformedData(config, originalGear));
     }
 
-    public static synchronized Optional<RiderConfig> removeTransformed(Player player) {
+    public static Optional<TransformedData> removeTransformed(Player player) {
         return Optional.ofNullable(player != null ? TRANSFORMED_PLAYERS.remove(player.getUUID()) : null);
     }
 
     //====================Getter方法====================
 
+    @Nullable
     public static RiderConfig getConfig(Player player) {
+        TransformedData data = getTransformedData(player);
+        return data != null ? data.config() : null;
+    }
+
+    @Nullable
+    public static TransformedData getTransformedData(Player player) {
         return player != null ? TRANSFORMED_PLAYERS.get(player.getUUID()) : null;
     }
 
+    //====================辅助方法====================
+
+    private static void syncEquipment(Player player) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            List<Pair<EquipmentSlot, ItemStack>> slots = Arrays.stream(EquipmentSlot.values())
+                    .map(slot -> Pair.of(slot, player.getItemBySlot(slot)))
+                    .toList();
+            serverPlayer.connection.send(new ClientboundSetEquipmentPacket(player.getId(), slots));
+        }
+    }
 }

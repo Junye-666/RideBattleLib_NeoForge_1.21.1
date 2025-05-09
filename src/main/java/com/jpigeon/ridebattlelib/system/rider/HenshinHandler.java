@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.system.rider.basic;
+package com.jpigeon.ridebattlelib.system.rider;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

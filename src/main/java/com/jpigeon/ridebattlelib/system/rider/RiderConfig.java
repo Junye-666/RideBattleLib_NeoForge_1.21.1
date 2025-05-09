@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.system.rider.basic;
+package com.jpigeon.ridebattlelib.system.rider;
 
 
 import net.minecraft.resources.ResourceLocation;

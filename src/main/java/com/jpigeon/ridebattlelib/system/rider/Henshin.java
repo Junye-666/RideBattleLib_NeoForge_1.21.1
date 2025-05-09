@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.system.rider.basic;
+package com.jpigeon.ridebattlelib.system.rider;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;

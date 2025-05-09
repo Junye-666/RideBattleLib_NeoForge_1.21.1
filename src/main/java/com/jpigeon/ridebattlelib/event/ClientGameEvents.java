@@ -2,7 +2,7 @@ package com.jpigeon.ridebattlelib.event;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.system.rider.basic.Henshin;
+import com.jpigeon.ridebattlelib.system.rider.Henshin;
 import com.jpigeon.ridebattlelib.system.KeyBindings;
 import com.jpigeon.ridebattlelib.network.packet.UnhenshinPacket;
 import net.minecraft.client.Minecraft;

@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlelib.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.system.rider.RiderConfig;
-import com.jpigeon.ridebattlelib.system.rider.RiderRegistry;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Items;

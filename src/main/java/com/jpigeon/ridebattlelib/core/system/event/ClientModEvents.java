@@ -1,7 +1,7 @@
-package com.jpigeon.ridebattlelib.event;
+package com.jpigeon.ridebattlelib.core.system.event;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.system.KeyBindings;
+import com.jpigeon.ridebattlelib.core.KeyBindings;
 
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;

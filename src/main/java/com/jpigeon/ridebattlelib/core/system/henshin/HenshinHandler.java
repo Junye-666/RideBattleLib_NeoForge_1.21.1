@@ -1,31 +1,30 @@
-package com.jpigeon.ridebattlelib.system.handler;
+package com.jpigeon.ridebattlelib.core.system.henshin;
 
-import com.jpigeon.ridebattlelib.system.rider.Henshin;
-import com.jpigeon.ridebattlelib.system.rider.RiderConfig;
-import com.jpigeon.ridebattlelib.system.rider.RiderRegistry;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.LogicalSide;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
+
 public class HenshinHandler {
+    private static final HenshinSystem HENSHIN_SYSTEM = new HenshinSystem(); // 创建静态实例
+
     @SubscribeEvent
     public static void onItemRightClick(PlayerInteractEvent.RightClickItem event) {
         if (event.getSide() != LogicalSide.SERVER) return;
 
         Player player = event.getEntity();
-        ItemStack usedItem = event.getItemStack();
+        ItemStack heldItem = event.getItemStack();
 
         for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
-            if (!usedItem.is(config.getRequiredItem())) continue;
+            // 检查是否可变身
+            if (!HENSHIN_SYSTEM.canTransform(player, config)) continue;
 
-            ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
-            if (!driverStack.is(config.getDriverItem())) continue;
-
-            Henshin.playerHenshin(player, config);
+            // 满足条件则变身
+            HENSHIN_SYSTEM.henshin(player, config.getRiderId());
             event.setCanceled(true);
-            break;
+            return;
         }
     }
 }

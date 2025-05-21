@@ -1,9 +1,9 @@
 package com.jpigeon.ridebattlelib;
 
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinHandler;
 import com.jpigeon.ridebattlelib.example.ExampleRiders;
-import com.jpigeon.ridebattlelib.system.rider.RiderRegistry;
-import com.jpigeon.ridebattlelib.system.handler.HenshinHandler;
-import com.jpigeon.ridebattlelib.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import com.jpigeon.ridebattlelib.core.network.handler.PacketHandler;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;

@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.system.rider;
+package com.jpigeon.ridebattlelib.core.system.henshin;
 
 
 import net.minecraft.resources.ResourceLocation;

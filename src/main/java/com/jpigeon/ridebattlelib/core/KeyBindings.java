@@ -11,4 +11,11 @@ public class KeyBindings {
             GLFW.GLFW_KEY_R,
             "category.ridebattlelib"
     );
+    public static final KeyMapping HENSHIN_KEY = new KeyMapping(
+            "key.ridebattlelib.henshin",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_G,
+            "category.ridebattlelib"
+
+    );
 }

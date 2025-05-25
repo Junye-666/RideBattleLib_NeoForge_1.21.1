@@ -7,6 +7,7 @@ import com.jpigeon.ridebattlelib.core.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.network.packet.UnhenshinPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 import java.util.Objects;
@@ -21,14 +22,25 @@ public class PacketHandler {
                 .playToServer(
                         HenshinPacket.TYPE,
                         HenshinPacket.STREAM_CODEC,
-                        (payload, context) -> HENSHIN_SYSTEM.henshin(context.player(), payload.riderId())
+                        (payload, context) ->
+                        {
+                            ServerPlayer player = (ServerPlayer) context.player();
+                            if (player != null) {
+                                HENSHIN_SYSTEM.henshin(context.player(), payload.riderId());
+                            }
+
+                        }
                 )
                 .playToServer(
                         UnhenshinPacket.TYPE,
                         UnhenshinPacket.STREAM_CODEC,
-                        (payload, context) -> HENSHIN_SYSTEM.unHenshin(context.player())
-
-                )
+                        (payload, context) -> {
+                            ServerPlayer player = (ServerPlayer) context.player();
+                            if (player != null) {
+                                HENSHIN_SYSTEM.unHenshin(player);
+                            }
+                        }
+                );
         ;
     }
 

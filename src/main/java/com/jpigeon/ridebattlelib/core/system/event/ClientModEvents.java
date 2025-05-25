@@ -14,6 +14,7 @@ public class ClientModEvents {
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(KeyBindings.UNHENSHIN_KEY);
+        event.register(KeyBindings.HENSHIN_KEY);
     }
 }
 

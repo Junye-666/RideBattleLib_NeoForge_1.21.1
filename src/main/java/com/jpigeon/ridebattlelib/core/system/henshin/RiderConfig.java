@@ -28,6 +28,8 @@ public class RiderConfig {
     private EquipmentSlot driverSlot = EquipmentSlot.LEGS;
     //必要物品
     private Item requiredItem = Items.AIR;
+    //是否依赖驱动器按键
+    private boolean requiresKeyActivate = false;
     //定义盔甲
     private final Item[] armor = new Item[4];
 
@@ -60,6 +62,10 @@ public class RiderConfig {
     //获取必须物品
     public @Nullable Item getRequiredItem() {
         return requiredItem;
+    }
+
+    public boolean isRequiresKeyActivate() {
+        return requiresKeyActivate;
     }
 
     //获取盔甲
@@ -109,6 +115,11 @@ public class RiderConfig {
         return this;
     }
 
+    public RiderConfig setKeyActivate(Boolean requiresKeyActivate){
+        this.requiresKeyActivate = requiresKeyActivate;
+        return this;
+    }
+
     //指定全身盔甲
     public RiderConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
         armor[0] = helmet;
@@ -117,6 +128,7 @@ public class RiderConfig {
         armor[3] = boots;
         return this;
     }
+
 
 
 }

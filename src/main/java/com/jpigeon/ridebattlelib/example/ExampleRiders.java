@@ -13,6 +13,7 @@ public class ExampleRiders {
     )
             .setDriverItem(Items.LEATHER_LEGGINGS, EquipmentSlot.LEGS)
             .setRequiredItem(Items.IRON_INGOT)
+            .setKeyActivate(true)
             .setArmor(
                     Items.IRON_HELMET,
                     Items.IRON_CHESTPLATE,
@@ -25,6 +26,7 @@ public class ExampleRiders {
     )
             .setDriverItem(Items.BRICK, EquipmentSlot.OFFHAND)
             .setRequiredItem(Items.GOLD_INGOT)
+            .setKeyActivate(false)
             .setArmor(
                     Items.GOLDEN_HELMET,
                     Items.GOLDEN_CHESTPLATE,

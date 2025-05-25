@@ -35,7 +35,24 @@ public class HenshinSystem implements IHenshinSystem {
 
         // 保存原装备（不包括驱动器）
         Map<EquipmentSlot, ItemStack> originalGear = saveOriginalGear(player, config);
+        equipArmor(player, config);
+        setTransformed(player, config, originalGear);
+        return true;
+    }
 
+    @Override
+    public void unHenshin(Player player) {
+        removeTransformed(player);
+        TransformedData data = getTransformedData(player);
+        if (data != null) {
+            restoreOriginalGear(player, data);
+            syncEquipment(player);
+        }
+    }
+
+    //====================变身辅助方法====================
+
+    public void equipArmor(Player player, RiderConfig config){
         // 装备新盔甲
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
@@ -45,64 +62,8 @@ public class HenshinSystem implements IHenshinSystem {
                 }
             }
         }
-
         // 立即同步装备状态
         syncEquipment(player);
-        TRANSFORMED_PLAYERS.put(player.getUUID(), new TransformedData(config, originalGear));
-        return true;
-    }
-
-    @Override
-    public void unHenshin(Player player) {
-        TransformedData data = TRANSFORMED_PLAYERS.remove(player.getUUID());
-        if (data != null) {
-            restoreOriginalGear(player, data);
-            syncEquipment(player);
-            onHenshinEnd(player); // 触发回调事件
-        }
-    }
-
-    @Override
-    public boolean isTransformed(Player player) {
-        return player != null && TRANSFORMED_PLAYERS.containsKey(player.getUUID());
-    }
-
-
-    //====================变身辅助方法====================
-
-    public void clearArmor(Player player, RiderConfig config){
-        //根据配置清除装备
-        if(config.getHelmet() != null) {
-            safeClearSlot(player, EquipmentSlot.HEAD, config.getHelmet());
-        }
-        if(config.getChestplate() != null) {
-            safeClearSlot(player, EquipmentSlot.CHEST, config.getChestplate());
-        }
-        //腿部保留驱动器
-        if(config.getBoots() != null) {
-            safeClearSlot(player, EquipmentSlot.FEET, config.getBoots());
-        }
-
-    }
-
-    //匹配配置
-    public void safeClearSlot(Player player, EquipmentSlot slot, Item expectedItem){
-        ItemStack current = player.getItemBySlot(slot);
-        if (!current.isEmpty() && expectedItem != null && current.is(expectedItem)) {
-            player.setItemSlot(slot, ItemStack.EMPTY);
-        }
-    }
-
-
-    //====================辅助方法====================
-
-    private void syncEquipment(Player player) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            List<Pair<EquipmentSlot, ItemStack>> slots = Arrays.stream(EquipmentSlot.values())
-                    .map(slot -> Pair.of(slot, player.getItemBySlot(slot)))
-                    .toList();
-            serverPlayer.connection.send(new ClientboundSetEquipmentPacket(player.getId(), slots));
-        }
     }
 
     private void restoreOriginalGear(Player player, TransformedData data) {
@@ -116,7 +77,16 @@ public class HenshinSystem implements IHenshinSystem {
         });
     }
 
-    //====================检查方法====================
+    //====================辅助方法====================
+
+    private void syncEquipment(Player player) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            List<Pair<EquipmentSlot, ItemStack>> slots = Arrays.stream(EquipmentSlot.values())
+                    .map(slot -> Pair.of(slot, player.getItemBySlot(slot)))
+                    .toList();
+            serverPlayer.connection.send(new ClientboundSetEquipmentPacket(player.getId(), slots));
+        }
+    }
 
     public Map<EquipmentSlot, ItemStack> saveOriginalGear(Player player, RiderConfig config) {
         Map<EquipmentSlot, ItemStack> originalGear = new EnumMap<>(EquipmentSlot.class);
@@ -126,6 +96,15 @@ public class HenshinSystem implements IHenshinSystem {
             }
         }
         return originalGear;
+    }
+
+
+    //====================检查方法====================
+
+
+    @Override
+    public boolean isTransformed(Player player) {
+        return player != null && TRANSFORMED_PLAYERS.containsKey(player.getUUID());
     }
 
     //====================Getter方法====================
@@ -148,8 +127,10 @@ public class HenshinSystem implements IHenshinSystem {
         TRANSFORMED_PLAYERS.put(player.getUUID(), new TransformedData(config, originalGear));
     }
 
-    public Optional<TransformedData> removeTransformed(Player player) {
-        return Optional.ofNullable(player != null ? TRANSFORMED_PLAYERS.remove(player.getUUID()) : null);
+    public void removeTransformed(Player player) {
+        if (player != null) {
+            TRANSFORMED_PLAYERS.remove(player.getUUID());
+        }
     }
 
 }

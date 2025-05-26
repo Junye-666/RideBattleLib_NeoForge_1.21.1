@@ -1,37 +1,40 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
+import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.KeyBindings;
 import com.jpigeon.ridebattlelib.core.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.network.packet.HenshinPacket;
-import net.minecraft.world.entity.player.Player;
+import com.jpigeon.ridebattlelib.core.network.packet.ReturnItemsPacket;
+import com.jpigeon.ridebattlelib.core.network.packet.UnhenshinPacket;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.LogicalSide;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-
+import net.neoforged.neoforge.client.event.InputEvent;
 
 public class HenshinHandler {
-    private static final HenshinSystem HENSHIN_SYSTEM = new HenshinSystem(); // 创建静态实例
-
+    // 右键变身逻辑已迁移至BeltHandler中
+    // 按键变身逻辑
     @SubscribeEvent
-    public static void onItemRightClick(PlayerInteractEvent.RightClickItem event, RiderConfig config) {
-        if (event.getSide() != LogicalSide.CLIENT) return;
+    public static void onKeyInput(InputEvent.Key event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        LocalPlayer player = minecraft.player;
+        if (player == null) return;
 
-        Player player = event.getEntity();
-
-        if (config.isRequiresKeyActivate()){
-            return;
-        }
-
-            for (RiderConfig riderConfig : RiderRegistry.getRegisteredRiders()) {
-                // 检查是否可变身
-                if (!HENSHIN_SYSTEM.canTransform(player, riderConfig)) continue;
-
-                // 满足条件则发送变身数据包
-                PacketHandler.sendToServer(new HenshinPacket(riderConfig.getRiderId()));
-                event.setCanceled(true);
-                return;
+        if (KeyBindings.HENSHIN_KEY.consumeClick()) {
+            RideBattleLib.LOGGER.debug("检测到变身按键按下");
+            RiderConfig activeConfig = RiderConfig.findActiveDriverConfig(player);
+            if (activeConfig != null && activeConfig.getTriggerType() == TriggerType.KEY) {
+                RideBattleLib.LOGGER.debug("发送按键变身请求: {}", activeConfig.getRiderId());
+                PacketHandler.sendToServer(new HenshinPacket(activeConfig.getRiderId()));
             }
+        }
+        if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
+            RideBattleLib.LOGGER.debug("发送解除变身数据包");
+            PacketHandler.sendToServer(new UnhenshinPacket());
+        }
+        if (KeyBindings.RETURN_ITEMS_KEY.consumeClick()) {
+            // 触发物品返还
+            PacketHandler.sendToServer(new ReturnItemsPacket());
+        }
     }
-
-    // TODO: 添加onKeyPress完成变身按键的检测逻辑
-
 }

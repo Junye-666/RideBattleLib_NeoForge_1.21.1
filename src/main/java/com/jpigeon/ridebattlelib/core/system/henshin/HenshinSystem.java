@@ -1,7 +1,10 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
+import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,38 +24,92 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class HenshinSystem implements IHenshinSystem {
     private static final Map<UUID, TransformedData> TRANSFORMED_PLAYERS = new ConcurrentHashMap<>();
+    public static final HenshinSystem INSTANCE = new HenshinSystem();
 
     public record TransformedData(
             RiderConfig config,
             Map<EquipmentSlot, ItemStack> originalGear
-    ) {}
+    ) {
+    }
 
     @Override
     public boolean henshin(Player player, ResourceLocation riderId) {
-        RiderConfig config = RiderRegistry.getRider(riderId);
-        if (!validateDriver(player, config)) return false;
-        if (config == null) return false;
+        if (player.level().isClientSide()) {
+            RideBattleLib.LOGGER.error("变身逻辑不能在客户端执行");
+            return false;
+        }
 
-        // 保存原装备（不包括驱动器）
+        if (isTransformed(player)) {
+            RideBattleLib.LOGGER.warn("玩家已处于变身状态");
+            return false;
+        }
+
+        RiderConfig config = RiderRegistry.getRider(riderId);
+        if (config == null) {
+            RideBattleLib.LOGGER.error("未找到骑士配置: {}", riderId);
+            return false;
+        }
+
+        // 验证驱动器
+        if (!validateDriver(player, config)) {
+            RideBattleLib.LOGGER.warn("驱动器验证失败: 玩家未穿戴 {} 或槽位错误", config.getDriverItem());
+            return false;
+        }
+
+        // 验证腰带物品
+        if (!BeltSystem.INSTANCE.validateItems(player, riderId)) {
+            RideBattleLib.LOGGER.warn("槽位验证失败: 必要槽位未正确填充");
+            player.displayClientMessage(Component.translatable("ridebattlelib.validateItems.fail"), true);
+            return false;
+        }
+
+        // 检查是否已变身
+        if (isTransformed(player)) {
+            RideBattleLib.LOGGER.warn("玩家已处于变身状态");
+            return false;
+        }
+
+        // 检查驱动器
+        ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
+        boolean isDriverValid = driverStack.is(config.getDriverItem());
+        RideBattleLib.LOGGER.info("驱动器验证: 槽位 {} | 物品 {} | 有效: {}",
+                config.getDriverSlot(), driverStack.getItem(), isDriverValid
+        );
+        if (!isDriverValid) {
+            return false;
+        }
+
+        // 执行变身逻辑
+        RideBattleLib.LOGGER.info("玩家 {} 成功变身为 {}", player.getName(), riderId);
         Map<EquipmentSlot, ItemStack> originalGear = saveOriginalGear(player, config);
         equipArmor(player, config);
         setTransformed(player, config, originalGear);
+
+        // 日志输出
+        RideBattleLib.LOGGER.info("玩家 {} 变身为 {}，腰带数据: {}",
+                player.getName(),
+                riderId,
+                BeltSystem.INSTANCE.getBeltItems(player)
+        );
+
         return true;
     }
 
     @Override
     public void unHenshin(Player player) {
-        removeTransformed(player);
         TransformedData data = getTransformedData(player);
         if (data != null) {
             restoreOriginalGear(player, data);
             syncEquipment(player);
+            removeTransformed(player);
+            BeltSystem.INSTANCE.returnItems(player);
+            RideBattleLib.LOGGER.debug("解除变身并返还物品: {}", player.getName());
         }
     }
 
     //====================变身辅助方法====================
 
-    public void equipArmor(Player player, RiderConfig config){
+    public void equipArmor(Player player, RiderConfig config) {
         // 装备新盔甲
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
@@ -132,5 +189,4 @@ public class HenshinSystem implements IHenshinSystem {
             TRANSFORMED_PLAYERS.remove(player.getUUID());
         }
     }
-
 }

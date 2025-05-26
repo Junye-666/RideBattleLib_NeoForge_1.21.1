@@ -1,13 +1,16 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
 
+import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
+import java.util.*;
 
 
 /**
@@ -26,13 +29,14 @@ public class RiderConfig {
     private Item driverItem = Items.AIR;
     //定义驱动器位置
     private EquipmentSlot driverSlot = EquipmentSlot.LEGS;
-    //必要物品
-    private Item requiredItem = Items.AIR;
-    //是否依赖驱动器按键
-    private boolean requiresKeyActivate = false;
+    //触发变身方式
+    private TriggerType triggerType = TriggerType.KEY;
+    private Item triggerItem = Items.AIR;
     //定义盔甲
     private final Item[] armor = new Item[4];
-
+    //定义
+    private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
+    private final Set<ResourceLocation> requiredSlots = new HashSet<>();
 
     //====================初始化方法====================
 
@@ -59,14 +63,17 @@ public class RiderConfig {
         return driverSlot;
     }
 
-    //获取必须物品
-    public @Nullable Item getRequiredItem() {
-        return requiredItem;
+    //获取触发方式
+    public TriggerType getTriggerType() {
+        return triggerType;
     }
 
-    public boolean isRequiresKeyActivate() {
-        return requiresKeyActivate;
+    //获取必须物品
+    public @Nullable Item getTriggerItem() {
+        return triggerItem;
     }
+
+
 
     //获取盔甲
     public Item getArmorPiece(EquipmentSlot slot) {
@@ -99,6 +106,33 @@ public class RiderConfig {
         return armor[3];
     }
 
+    //通过玩家装备查找激活的驱动器配置
+    public static RiderConfig findActiveDriverConfig(Player player) {
+        for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
+            // 精确匹配驱动器槽位和物品
+            ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
+            if (driverStack.is(config.getDriverItem())) {
+                return config;
+            }
+        }
+        return null;
+    }
+
+    //获取必要槽位列表
+    public Set<ResourceLocation> getRequiredSlots() {
+        return Collections.unmodifiableSet(requiredSlots);
+    }
+
+    //获取槽位定义
+    public SlotDefinition getSlotDefinition(ResourceLocation slotId) {
+        return slotDefinitions.get(slotId);
+    }
+
+    //获取所有槽位定义的不可修改视图
+    public Map<ResourceLocation, SlotDefinition> getSlotDefinitions() {
+        return Collections.unmodifiableMap(slotDefinitions);
+    }
+
 
     //====================Setter方法====================
 
@@ -109,14 +143,15 @@ public class RiderConfig {
         return this;
     }
 
-    //指定需要物品
-    public RiderConfig setRequiredItem(@Nullable Item item) {
-        this.requiredItem = item != null ? item : Items.AIR;
+    //指定触发方式
+    public RiderConfig setTriggerType(TriggerType type) {
+        this.triggerType = type;
         return this;
     }
 
-    public RiderConfig setKeyActivate(Boolean requiresKeyActivate){
-        this.requiresKeyActivate = requiresKeyActivate;
+    //指定触发用物品
+    public RiderConfig setTriggerItem(@Nullable Item item) {
+        this.triggerItem = item != null ? item : Items.AIR;
         return this;
     }
 
@@ -129,7 +164,14 @@ public class RiderConfig {
         return this;
     }
 
+    //添加槽位
 
-
+    public RiderConfig addSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired) {
+        slotDefinitions.put(slotId, new SlotDefinition(allowedItems, null));
+        if (isRequired) {
+            requiredSlots.add(slotId); // 确保必要槽位被添加
+        }
+        return this;
+    }
 }
 

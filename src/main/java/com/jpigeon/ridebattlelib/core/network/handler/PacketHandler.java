@@ -2,6 +2,9 @@ package com.jpigeon.ridebattlelib.core.network.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
+import com.jpigeon.ridebattlelib.core.network.packet.BeltDataSyncPacket;
+import com.jpigeon.ridebattlelib.core.network.packet.ReturnItemsPacket;
+import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.network.packet.UnhenshinPacket;
@@ -24,8 +27,7 @@ public class PacketHandler {
                         HenshinPacket.STREAM_CODEC,
                         (payload, context) ->
                         {
-                            ServerPlayer player = (ServerPlayer) context.player();
-                            if (player != null) {
+                            if (context.player() instanceof ServerPlayer serverPlayer) {
                                 HENSHIN_SYSTEM.henshin(context.player(), payload.riderId());
                             }
 
@@ -35,16 +37,38 @@ public class PacketHandler {
                         UnhenshinPacket.TYPE,
                         UnhenshinPacket.STREAM_CODEC,
                         (payload, context) -> {
-                            ServerPlayer player = (ServerPlayer) context.player();
-                            if (player != null) {
-                                HENSHIN_SYSTEM.unHenshin(player);
+                            if (context.player() instanceof ServerPlayer) {
+                                HENSHIN_SYSTEM.unHenshin(context.player());
                             }
                         }
-                );
+                )
+                .playToClient(
+                        BeltDataSyncPacket.TYPE,
+                        BeltDataSyncPacket.STREAM_CODEC,
+                        (payload, context) -> {
+                            if (Minecraft.getInstance().player != null) {
+                                BeltSystem.beltData.put(payload.playerId(), payload.items());
+                            }
+                        }
+                )
+                .playToServer(
+                        ReturnItemsPacket.TYPE,
+                        ReturnItemsPacket.STREAM_CODEC,
+                        (payload, context) -> {
+                            if (context.player() instanceof ServerPlayer serverPlayer) {
+                                BeltSystem.INSTANCE.returnItems(serverPlayer);
+                            }
+                        }
+                )
+
         ;
     }
 
     public static void sendToServer(CustomPacketPayload packet) {
         Objects.requireNonNull(Minecraft.getInstance().getConnection()).send(packet);
+    }
+
+    public static void sendToClient(ServerPlayer player, CustomPacketPayload packet) {
+        player.connection.send(packet);
     }
 }

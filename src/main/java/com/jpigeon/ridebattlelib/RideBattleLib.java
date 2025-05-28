@@ -30,14 +30,11 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 @Mod(RideBattleLib.MODID)
 public class RideBattleLib
 {
-
     public static final String MODID = "ridebattlelib";
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public RideBattleLib(IEventBus modEventBus, ModContainer modContainer)
-    {
-
+    public RideBattleLib(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(PacketHandler::register);
 
@@ -54,8 +51,7 @@ public class RideBattleLib
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
-    private void commonSetup(final FMLCommonSetupEvent event)
-    {
+    private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("HELLO FROM COMMON SETUP");
 
 
@@ -67,19 +63,15 @@ public class RideBattleLib
 
     }
 
-    private void addCreative(BuildCreativeModeTabContentsEvent event)
-    {
+    private void addCreative(BuildCreativeModeTabContentsEvent event) {
     }
 
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event)
-    {
+    public void onServerStarting(ServerStartingEvent event) {
     }
 
-
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public static class ClientModEvents
-    {
+    public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {

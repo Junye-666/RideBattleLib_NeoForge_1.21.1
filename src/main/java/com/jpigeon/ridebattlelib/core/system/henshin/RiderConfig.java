@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
+import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -32,18 +33,18 @@ public class RiderConfig {
     //触发变身方式
     private TriggerType triggerType = TriggerType.KEY;
     private Item triggerItem = Items.AIR;
-    //定义盔甲
-    private final Item[] armor = new Item[4];
+    private ResourceLocation baseFormId;
     //定义
     private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
+    final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
 
     //====================初始化方法====================
 
     //骑士Id初始化
     public RiderConfig(ResourceLocation riderId) {
         this.riderId = riderId;
-        Arrays.fill(armor, Items.AIR);
+        // Arrays.fill(armor, Items.AIR);
     }
 
     //====================Getter方法====================
@@ -73,38 +74,6 @@ public class RiderConfig {
         return triggerItem;
     }
 
-
-
-    //获取盔甲
-    public Item getArmorPiece(EquipmentSlot slot) {
-        if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
-            return Items.AIR;
-        }
-
-        return switch (slot) {
-            case HEAD -> armor[0];
-            case CHEST -> armor[1];
-            case LEGS -> armor[2];
-            case FEET -> armor[3];
-            default -> Items.AIR;
-        };
-    }
-
-    public Item getHelmet() {
-        return armor[0];
-    }
-
-    public Item getChestplate() {
-        return armor[1];
-    }
-
-    public Item getLegging() {
-        return armor[2];
-    }
-
-    public Item getBoots() {
-        return armor[3];
-    }
 
     //通过玩家装备查找激活的驱动器配置
     public static RiderConfig findActiveDriverConfig(Player player) {
@@ -154,7 +123,7 @@ public class RiderConfig {
         this.triggerItem = item != null ? item : Items.AIR;
         return this;
     }
-
+/*
     //指定全身盔甲
     public RiderConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
         armor[0] = helmet;
@@ -163,7 +132,7 @@ public class RiderConfig {
         armor[3] = boots;
         return this;
     }
-
+*/
     //添加槽位
 
     public RiderConfig addSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired) {
@@ -172,6 +141,40 @@ public class RiderConfig {
             requiredSlots.add(slotId); // 确保必要槽位被添加
         }
         return this;
+    }
+
+    public RiderConfig addForm(FormConfig form) {
+        forms.put(form.getFormId(), form);
+        if (baseFormId == null) {
+            baseFormId = form.getFormId();
+        }
+        return this;
+    }
+
+    // 设置基础形态
+    public RiderConfig setBaseForm(ResourceLocation formId) {
+        if (forms.containsKey(formId)) {
+            baseFormId = formId;
+        }
+        return this;
+    }
+
+    // 形态匹配
+    public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
+        // 优先检查完全匹配的形态
+        for (FormConfig form : forms.values()) {
+            if (form.matches(beltItems)) {
+                return form.getFormId();
+            }
+        }
+
+        // 返回基础形态
+        return baseFormId;
+    }
+
+    // 添加形态获取方法
+    public FormConfig getForm(ResourceLocation formId) {
+        return forms.get(formId);
     }
 }
 

@@ -10,9 +10,20 @@ public interface IHenshinSystem {
     void unHenshin(Player player);
     // 检查是否已变身
     boolean isTransformed(Player player);
-    // 接口
-    default void onHenshinStart(Player player){}
-    default void onHenshinEnd(Player player){}
+
+    // 事件回调接口
+    default void onHenshinStart(Player player) {}
+    default void onHenshinEnd(Player player) {}
+
+    default void beforeEquipArmor(Player player, Runnable continuation) {
+        continuation.run(); // 默认立即执行装备
+    }
+
+    // 属性应用前回调
+    default void beforeApplyAttributes(Player player, Runnable continuation) {
+        continuation.run(); // 默认立即应用属性
+    }
+
     // 检查驱动器
     default boolean validateDriver(Player player, RiderConfig config) {
         return player != null && config != null &&

@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
+import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.resources.ResourceLocation;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -10,20 +10,35 @@ import java.util.*;
  */
 
 public class RiderRegistry {
-    public static final Map<ResourceLocation, RiderConfig> REGISTERED_RIDERS = new HashMap<>();    //创建已注册骑士列表
+    private static final Map<ResourceLocation, RiderConfig> RIDERS = new HashMap<>();
+    private static final Map<ResourceLocation, FormConfig> FORMS = new HashMap<>();
 
-    public static void registerRider(RiderConfig config){
-        REGISTERED_RIDERS.put(config.getRiderId(), config);  //将新的RiderConfig整体纳入到列表中
+    // 注册骑士配置
+    public static void registerRider(RiderConfig config) {
+        RIDERS.put(config.getRiderId(), config);
+        // 自动注册所有形态
+        for (FormConfig form : config.forms.values()) {
+            FORMS.put(form.getFormId(), form);
+        }
     }
 
-    //获取已注册骑士列表
+    // 注册形态配置
+    public static void registerForm(FormConfig form) {
+        FORMS.put(form.getFormId(), form);
+    }
+
+    // 获取骑士配置
+    public static RiderConfig getRider(ResourceLocation riderId) {
+        return RIDERS.get(riderId);
+    }
+
+    // 获取形态配置
+    public static FormConfig getForm(ResourceLocation formId) {
+        return FORMS.get(formId);
+    }
+
+    // 获取所有注册的骑士
     public static Collection<RiderConfig> getRegisteredRiders() {
-        return REGISTERED_RIDERS.values();
+        return RIDERS.values();
     }
-
-    @Nullable
-    public static RiderConfig getRider(ResourceLocation id) {
-        return REGISTERED_RIDERS.get(id);
-    }
-
 }

@@ -27,7 +27,7 @@ public class PacketHandler {
                         HenshinPacket.STREAM_CODEC,
                         (payload, context) ->
                         {
-                            if (context.player() instanceof ServerPlayer serverPlayer) {
+                            if (context.player() instanceof ServerPlayer) {
                                 HENSHIN_SYSTEM.henshin(context.player(), payload.riderId());
                             }
 

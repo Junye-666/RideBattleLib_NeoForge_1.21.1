@@ -21,7 +21,7 @@ public class PacketHandler {
 
     public static void register(final RegisterPayloadHandlersEvent event) {
         event.registrar(RideBattleLib.MODID)
-                .versioned("0.1.0")
+                .versioned("0.2.0")
                 .playToServer(
                         HenshinPacket.TYPE,
                         HenshinPacket.STREAM_CODEC,

@@ -53,13 +53,25 @@ public class BeltSystem implements IBeltSystem {
             return false;
         }
 
+        // 获取当前槽位物品
+        ItemStack existingStack = playerBelt.get(slotId);
 
-        // 深拷贝ItemStack以保留NBT
-        ItemStack copiedStack = stack.copy();
-        playerBelt.put(slotId, copiedStack);
+        // 创建新物品的独立副本
+        ItemStack newStack = stack.copy();
+        newStack.setCount(1); // 确保只插入一个物品
+
+        // 处理槽位已有物品的情况
+        if (existingStack != null && !existingStack.isEmpty()) {
+            // 返还旧物品
+            returnItemToPlayer(player, existingStack.copy());
+            RideBattleLib.LOGGER.debug("返还旧物品: {} -> {}", slotId, existingStack.getItem());
+        }
+
+        // 存入新物品
+        playerBelt.put(slotId, newStack);
         syncBeltData(player);
 
-        RideBattleLib.LOGGER.debug("插入物品到槽位: {} -> {}", slotId, stack.getItem());
+        RideBattleLib.LOGGER.debug("插入新物品到槽位: {} -> {}", slotId, newStack.getItem());
         return true;
     }
 
@@ -81,15 +93,18 @@ public class BeltSystem implements IBeltSystem {
         Map<ResourceLocation, ItemStack> items = getBeltItems(player);
         UUID playerId = player.getUUID();
 
-        // 明确遍历所有槽位（包括必要和非必要）
-        items.entrySet().stream()
-                .filter(entry -> !entry.getValue().isEmpty())
-                .forEach(entry -> {
-                    ResourceLocation slotId = entry.getKey();
-                    ItemStack stack = entry.getValue();
-                    returnItemToPlayer(player, stack);
-                    RideBattleLib.LOGGER.debug("返还物品: {} -> {}", slotId, stack.getItem());
-                });
+        if (items.isEmpty()) return;
+
+        // 创建物品副本避免修改原始数据
+        Map<ResourceLocation, ItemStack> itemsCopy = new HashMap<>(items);
+
+        // 返还所有物品
+        itemsCopy.forEach((slotId, stack) -> {
+            if (!stack.isEmpty()) {
+                returnItemToPlayer(player, stack.copy());
+                RideBattleLib.LOGGER.debug("返还物品: {} -> {}", slotId, stack.getItem());
+            }
+        });
 
         // 清空数据并同步
         beltData.remove(playerId);
@@ -109,20 +124,36 @@ public class BeltSystem implements IBeltSystem {
         RiderConfig config = RiderRegistry.getRider(riderId);
         if (config == null) return false;
 
+        Map<ResourceLocation, ItemStack> beltItems = getBeltItems(player);
+
         for (ResourceLocation slotId : config.getRequiredSlots()) {
-            ItemStack item = getBeltItems(player).get(slotId);
+            ItemStack item = beltItems.get(slotId);
             SlotDefinition slot = config.getSlotDefinition(slotId);
 
-            // 详细日志输出
-            RideBattleLib.LOGGER.info("验证槽位: {} | 物品: {} | 允许物品: {}",
-                    slotId, item.getItem(), slot.getAllowedItems()
-            );
+            if (item == null || item.isEmpty()) {
+                RideBattleLib.LOGGER.debug("验证失败: 槽位 {} 为空", slotId);
+                return false;
+            }
 
-            if (item.isEmpty() || !slot.getAllowedItems().contains(item.getItem())) {
+            if (!slot.getAllowedItems().contains(item.getItem())) {
+                RideBattleLib.LOGGER.debug("验证失败: 槽位 {} 物品 {} 不在允许列表中",
+                        slotId, item.getItem());
                 return false;
             }
         }
         return true;
+    }
+
+    // 检查槽位是否已被占用
+    @Override
+    public boolean isSlotOccupied(Player player, ResourceLocation slotId) {
+        Map<ResourceLocation, ItemStack> playerBelt = beltData.computeIfAbsent(
+                player.getUUID(),
+                k -> new HashMap<>()
+        );
+        ItemStack existingStack = playerBelt.get(slotId);
+        RideBattleLib.LOGGER.debug("槽位 {} 已被占用，自动返还物品", slotId);
+        return existingStack != null && !existingStack.isEmpty();
     }
     //====================Getters====================
 

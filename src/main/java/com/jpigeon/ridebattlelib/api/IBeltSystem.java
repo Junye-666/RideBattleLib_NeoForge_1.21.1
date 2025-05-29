@@ -16,4 +16,6 @@ public interface IBeltSystem {
 
     // 获取当前腰带物品
     Map<ResourceLocation, ItemStack> getBeltItems(Player player);
+
+    boolean isSlotOccupied(Player player, ResourceLocation slotId);
 }

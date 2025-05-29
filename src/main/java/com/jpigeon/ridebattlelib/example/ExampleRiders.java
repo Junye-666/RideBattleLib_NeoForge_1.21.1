@@ -21,7 +21,7 @@ public class ExampleRiders {
     private static void registerTestRider() {
         // 创建骑士配置
         RiderConfig testRider = new RiderConfig(TEST_RIDER_ALPHA)
-                .setDriverItem(Items.IRON_CHESTPLATE, EquipmentSlot.CHEST) // 驱动器: 铁胸甲(穿戴在胸部)
+                .setDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁胸甲(穿戴在胸部)
                 .setTriggerType(TriggerType.KEY) // 按键触发变身
                 .addSlot(
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot"),
@@ -40,7 +40,7 @@ public class ExampleRiders {
                 .setArmor(  // 设置盔甲
                         Items.IRON_HELMET,
                         Items.IRON_CHESTPLATE,
-                        Items.IRON_LEGGINGS,
+                        null,
                         Items.IRON_BOOTS
                 )
                 .addAttribute(  // 增加生命值
@@ -69,7 +69,7 @@ public class ExampleRiders {
                 .setArmor(  // 金色盔甲
                         Items.GOLDEN_HELMET,
                         Items.GOLDEN_CHESTPLATE,
-                        Items.GOLDEN_LEGGINGS,
+                        null,
                         Items.GOLDEN_BOOTS
                 )
                 .addAttribute(  // 更高生命值

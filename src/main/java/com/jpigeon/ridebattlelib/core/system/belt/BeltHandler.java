@@ -28,22 +28,25 @@ public class BeltHandler {
         if (config == null) return;
 
         boolean inserted = false;
+        ItemStack originalItem = heldItem.copy(); // 保存原始物品副本
+
+        // 只尝试插入一次
         for (ResourceLocation slotId : config.getSlotDefinitions().keySet()) {
-            if (BeltSystem.INSTANCE.insertItem(player, slotId, heldItem.copy())) {
+            if (BeltSystem.INSTANCE.insertItem(player, slotId, originalItem)) {
+                // 成功插入后减少手中物品数量
                 heldItem.shrink(1);
                 inserted = true;
-                break; // 插入成功后立即终止循环
+                break;
             }
-            RideBattleLib.LOGGER.debug("存入物品到槽位: {} (必要: {})", slotId, config.getRequiredSlots().contains(slotId));
         }
-
 
         if (inserted) {
             BeltSystem.INSTANCE.syncBeltData(player);
             event.setCanceled(true);
 
             // 仅在TriggerType为AUTO时自动触发
-            if (config.getTriggerType() == TriggerType.AUTO && BeltSystem.INSTANCE.validateItems(player, config.getRiderId())) {
+            if (config.getTriggerType() == TriggerType.AUTO &&
+                    BeltSystem.INSTANCE.validateItems(player, config.getRiderId())) {
                 HenshinSystem.INSTANCE.henshin(player, config.getRiderId());
             }
         }

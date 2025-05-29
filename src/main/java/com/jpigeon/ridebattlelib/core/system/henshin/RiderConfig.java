@@ -98,14 +98,16 @@ public class RiderConfig {
 
     // 形态匹配
     public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
-        // 优先检查完全匹配的形态
+        // 优先匹配完整形态
         for (FormConfig form : forms.values()) {
             if (form.matches(beltItems)) {
-                return form.getFormId();
+                // 检查腿部配置是否有效
+                if (form.getLeggings() != null || form.getLeggings() == Items.AIR) {
+                    return form.getFormId();
+                }
             }
         }
-
-        // 返回基础形态
+        // 回退基础形态
         return baseFormId;
     }
 

@@ -9,6 +9,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -33,10 +34,10 @@ public class FormConfig {
     //====================Setter方法====================
 
     // 盔甲设置方法
-    public FormConfig setArmor(Item helmet, Item chestplate, Item leggings, Item boots) {
+    public FormConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
         this.helmet = helmet;
         this.chestplate = chestplate;
-        this.leggings = leggings;
+        this.leggings = leggings != null ? leggings : Items.AIR;
         this.boots = boots;
         return this;
     }

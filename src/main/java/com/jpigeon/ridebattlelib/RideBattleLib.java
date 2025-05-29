@@ -2,7 +2,9 @@ package com.jpigeon.ridebattlelib;
 
 import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinHandler;
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.TriggerItemHandler;
 import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
@@ -81,6 +83,44 @@ public class RideBattleLib
     @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
+
+        // 加载数据前记录状态
+        RideBattleLib.LOGGER.debug("玩家登录: {}", player.getName());
+        RideBattleLib.LOGGER.debug("登录前腰带数据: {}", BeltSystem.INSTANCE.getBeltItems(player));
+
+        // 加载数据
+        BeltSystem.INSTANCE.loadBeltData(player);
+        HenshinSystem.INSTANCE.loadTransformedState(player);
+
+        // 加载后记录状态
+        RideBattleLib.LOGGER.debug("登录后腰带数据: {}", BeltSystem.INSTANCE.getBeltItems(player));
+
+        // 同步数据
         BeltSystem.INSTANCE.syncBeltData(player);
+
+        // 不需要重新应用属性，只需确保盔甲正确
+        if (HenshinSystem.INSTANCE.isTransformed(player)) {
+            HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
+            if (data != null) {
+                FormConfig form = data.config().getForm(data.formId());
+                if (form != null) {
+                    // 确保盔甲装备正确
+                    HenshinSystem.INSTANCE.equipArmor(player, form);
+
+                    HenshinSystem.INSTANCE.applyAttributes(player, form);
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        Player player = event.getEntity();
+
+        // 保存腰带数据
+        BeltSystem.INSTANCE.saveBeltData(player);
+
+        // 保存变身状态
+        HenshinSystem.INSTANCE.saveTransformedState(player);
     }
 }

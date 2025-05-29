@@ -6,10 +6,12 @@ import com.jpigeon.ridebattlelib.core.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.network.packet.BeltDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -93,27 +95,25 @@ public class BeltSystem implements IBeltSystem {
         Map<ResourceLocation, ItemStack> items = getBeltItems(player);
         UUID playerId = player.getUUID();
 
-        if (items.isEmpty()) return;
+        RideBattleLib.LOGGER.debug("返还玩家 {} 的腰带物品: {}", player.getName(), items);
 
-        // 创建物品副本避免修改原始数据
-        Map<ResourceLocation, ItemStack> itemsCopy = new HashMap<>(items);
-
-        // 返还所有物品
-        itemsCopy.forEach((slotId, stack) -> {
-            if (!stack.isEmpty()) {
+        // 返还所有非空气物品
+        items.forEach((slotId, stack) -> {
+            if (!stack.isEmpty() && stack.getItem() != Items.AIR) {
                 returnItemToPlayer(player, stack.copy());
                 RideBattleLib.LOGGER.debug("返还物品: {} -> {}", slotId, stack.getItem());
             }
         });
 
-        // 清空数据并同步
+        // 清空腰带数据并同步
         beltData.remove(playerId);
         syncBeltData(player);
+        saveBeltData(player); // 保存空状态
     }
 
     private void returnItemToPlayer(Player player, ItemStack stack) {
-        if (!player.addItem(stack.copy())) {
-            player.drop(stack.copy(), false);
+        if (!player.addItem(stack)) {
+            player.drop(stack, false);
         }
     }
 
@@ -167,10 +167,79 @@ public class BeltSystem implements IBeltSystem {
 
     public void syncBeltData(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            // 创建数据副本避免并发修改
             Map<ResourceLocation, ItemStack> items = new HashMap<>(getBeltItems(player));
-            RideBattleLib.LOGGER.debug("同步腰带数据到客户端: {}", items);
+
+            // 调试日志：记录物品详情
+            items.forEach((slotId, stack) -> {
+                RideBattleLib.LOGGER.debug("同步槽位 {}: {}x{}",
+                        slotId, stack.getCount(), stack.getItem());
+            });
+
             PacketHandler.sendToClient(serverPlayer, new BeltDataSyncPacket(player.getUUID(), items));
         }
+    }
+
+    public void saveBeltData(Player player) {
+        if (player instanceof ServerPlayer) {
+            // 传入玩家对象用于序列化
+            player.getPersistentData().put("RideBattleBelt",
+                    serializeBeltData(getBeltItems(player), player));
+        }
+    }
+
+    public void loadBeltData(Player player) {
+        CompoundTag tag = player.getPersistentData().getCompound("RideBattleBelt");
+        if (!tag.isEmpty()) {
+            Map<ResourceLocation, ItemStack> savedItems = deserializeBeltData(tag, player);
+            Map<ResourceLocation, ItemStack> currentItems = beltData.computeIfAbsent(
+                    player.getUUID(),
+                    k -> new HashMap<>()
+            );
+
+            // 合并数据：保留当前数据，只覆盖NBT中存在的槽位
+            savedItems.forEach((slotId, stack) -> {
+                // 只添加有效的物品栈
+                if (!stack.isEmpty() || stack.getItem() != Items.AIR) {
+                    currentItems.put(slotId, stack);
+                }
+            });
+        }
+    }
+
+    private CompoundTag serializeBeltData(Map<ResourceLocation, ItemStack> items, Player player) {
+        CompoundTag tag = new CompoundTag();
+        items.forEach((slotId, stack) -> {
+            CompoundTag itemTag = new CompoundTag();
+            if (!stack.isEmpty()) {
+                stack.save(player.registryAccess(), itemTag);
+            } else {
+                // 明确标记为空物品栈
+                itemTag.putString("id", "minecraft:air");
+                itemTag.putInt("Count", 0);
+            }
+            tag.put(slotId.toString(), itemTag);
+        });
+        return tag;
+    }
+
+    private Map<ResourceLocation, ItemStack> deserializeBeltData(CompoundTag tag, Player player) {
+        Map<ResourceLocation, ItemStack> items = new HashMap<>();
+        for (String key : tag.getAllKeys()) {
+            ResourceLocation slotId = ResourceLocation.tryParse(key);
+            if (slotId != null) {
+                CompoundTag itemTag = tag.getCompound(key);
+
+                // 处理空物品栈的特殊情况
+                if (itemTag.contains("id")) {
+                    ItemStack stack = ItemStack.parse(player.registryAccess(), itemTag)
+                            .orElse(ItemStack.EMPTY);
+                    items.put(slotId, stack);
+                } else {
+                    // 兼容旧格式的空物品
+                    items.put(slotId, ItemStack.EMPTY);
+                }
+            }
+        }
+        return items;
     }
 }

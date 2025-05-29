@@ -9,4 +9,11 @@ public interface IAnimationSystem {
     void playHenshin(Player player, ResourceLocation formId);
     void playUnhenshin(Player player, ResourceLocation riderId);
     void playHenshinSequence(Player player, ResourceLocation formId, AnimationPhase phase);
+
+    default void playFormSwitch(Player player,
+                                ResourceLocation oldFormId,
+                                ResourceLocation newFormId,
+                                AnimationPhase phase) {
+        // 默认实现（可被覆盖）
+    }
 }

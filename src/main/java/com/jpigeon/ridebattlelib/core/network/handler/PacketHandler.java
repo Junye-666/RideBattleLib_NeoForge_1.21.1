@@ -5,6 +5,7 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.network.packet.BeltDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.network.packet.ReturnItemsPacket;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.network.packet.SwitchFormPacket;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.network.packet.UnhenshinPacket;
@@ -57,6 +58,15 @@ public class PacketHandler {
                         (payload, context) -> {
                             if (context.player() instanceof ServerPlayer serverPlayer) {
                                 BeltSystem.INSTANCE.returnItems(serverPlayer);
+                            }
+                        }
+                )
+                .playToServer(
+                        SwitchFormPacket.TYPE,
+                        SwitchFormPacket.STREAM_CODEC,
+                        (payload, context) -> {
+                            if (context.player() instanceof ServerPlayer) {
+                                HenshinSystem.INSTANCE.switchForm(context.player(), payload.formId());
                             }
                         }
                 )

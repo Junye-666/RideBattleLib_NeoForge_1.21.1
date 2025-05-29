@@ -6,10 +6,17 @@ import com.jpigeon.ridebattlelib.core.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.network.packet.ReturnItemsPacket;
 import com.jpigeon.ridebattlelib.core.network.packet.UnhenshinPacket;
+import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.network.packet.SwitchFormPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
+
+import java.util.Map;
+import java.util.Objects;
 
 public class HenshinHandler {
     // 右键变身逻辑已迁移至BeltHandler中
@@ -21,11 +28,21 @@ public class HenshinHandler {
         if (player == null) return;
 
         if (KeyBindings.HENSHIN_KEY.consumeClick()) {
-            RideBattleLib.LOGGER.debug("检测到变身按键按下");
             RiderConfig activeConfig = RiderConfig.findActiveDriverConfig(player);
-            if (activeConfig != null && activeConfig.getTriggerType() == TriggerType.KEY) {
-                RideBattleLib.LOGGER.debug("发送按键变身请求: {}", activeConfig.getRiderId());
-                PacketHandler.sendToServer(new HenshinPacket(activeConfig.getRiderId()));
+
+            if (activeConfig != null) {
+                if (HenshinSystem.INSTANCE.isTransformed(player)) {
+                    // 形态切换逻辑
+                    Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+                    ResourceLocation newFormId = activeConfig.matchForm(beltItems);
+
+                    if (!newFormId.equals(Objects.requireNonNull(HenshinSystem.INSTANCE.getTransformedData(player)).formId())) {
+                        PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
+                    }
+                } else if (activeConfig.getTriggerType() == TriggerType.KEY) {
+                    // 标准变身逻辑
+                    PacketHandler.sendToServer(new HenshinPacket(activeConfig.getRiderId()));
+                }
             }
         }
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {

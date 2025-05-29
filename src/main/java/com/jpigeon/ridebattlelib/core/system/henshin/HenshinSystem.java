@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.mojang.datafixers.util.Pair;
@@ -10,6 +11,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.resources.ResourceKey;
@@ -23,6 +25,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -40,7 +43,8 @@ public class HenshinSystem implements IHenshinSystem {
             RiderConfig config,
             ResourceLocation formId,
             Map<EquipmentSlot, ItemStack> originalGear
-    ) {}
+    ) {
+    }
 
     @Override
     public boolean henshin(Player player, ResourceLocation riderId) {
@@ -119,14 +123,64 @@ public class HenshinSystem implements IHenshinSystem {
     public void unHenshin(Player player) {
         TransformedData data = getTransformedData(player);
         if (data != null) {
+            // 确保玩家在线且世界已加载
+            if (!player.isAlive() || player.level().isClientSide) {
+                RideBattleLib.LOGGER.warn("无法为离线或客户端玩家解除变身");
+                return;
+            }
+            RideBattleLib.LOGGER.debug("解除变身: {}", player.getName());
+            RideBattleLib.LOGGER.debug("腰带物品: {}", BeltSystem.INSTANCE.getBeltItems(player));
             // 移除属性
             removeAttributes(player, data.formId());
 
+            // 恢复原装备
             restoreOriginalGear(player, data);
             syncEquipment(player);
-            removeTransformed(player);
+
+            // 返还腰带物品
             BeltSystem.INSTANCE.returnItems(player);
+
+            // 清除变身状态
+            removeTransformed(player);
+
+            // 保存状态
+            saveTransformedState(player);
         }
+    }
+
+    public boolean switchForm(Player player, ResourceLocation newFormId) {
+        if (!isTransformed(player)) {
+            return false;
+        }
+
+        TransformedData data = getTransformedData(player);
+        if (data == null) {
+            return false;
+        }
+
+        RiderConfig config = data.config();
+        FormConfig newForm = config.getForm(newFormId);
+        if (newForm == null) {
+            return false;
+        }
+
+        // 1. 移除旧形态效果
+        removeAttributes(player, data.formId());
+
+        // 2. 应用新形态
+        equipArmor(player, newForm);
+        applyAttributes(player, newForm);
+
+        // 3. 更新变身数据
+        setTransformed(player, config, newFormId, data.originalGear());
+
+        // 4. 保存状态
+        saveTransformedState(player);
+
+        // 5. 触发事件
+        NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, data.formId(), newFormId));
+
+        return true;
     }
 
     //====================变身辅助方法====================
@@ -179,7 +233,7 @@ public class HenshinSystem implements IHenshinSystem {
         return originalGear;
     }
 
-    private void applyAttributes(Player player, FormConfig form) {
+    public void applyAttributes(Player player, FormConfig form) {
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
         for (AttributeModifier modifier : form.getAttributes()) {
@@ -256,6 +310,66 @@ public class HenshinSystem implements IHenshinSystem {
     public void removeTransformed(Player player) {
         if (player != null) {
             TRANSFORMED_PLAYERS.remove(player.getUUID());
+        }
+    }
+
+    //====================网络通讯方法====================
+
+    public void saveTransformedState(Player player) {
+        if (player instanceof ServerPlayer) {
+            CompoundTag tag = new CompoundTag();
+            TransformedData data = getTransformedData(player);
+            if (data != null) {
+                tag.putString("RiderId", data.config().getRiderId().toString());
+                tag.putString("FormId", data.formId().toString());
+
+                // 保存原装备 - 跳过空物品栈
+                CompoundTag gearTag = new CompoundTag();
+                data.originalGear().forEach((slot, stack) -> {
+                    // 跳过空物品栈
+                    if (!stack.isEmpty()) {
+                        CompoundTag stackTag = new CompoundTag();
+                        stack.save(player.registryAccess(), stackTag);
+                        gearTag.put(slot.name(), stackTag);
+                    }
+                });
+                tag.put("OriginalGear", gearTag);
+            }
+            player.getPersistentData().put("RideBattleTransformed", tag);
+        }
+    }
+
+    public void loadTransformedState(Player player) {
+        CompoundTag tag = player.getPersistentData().getCompound("RideBattleTransformed");
+        if (!tag.isEmpty()) {
+            ResourceLocation riderId = ResourceLocation.tryParse(tag.getString("RiderId"));
+            ResourceLocation formId = ResourceLocation.tryParse(tag.getString("FormId"));
+            RiderConfig config = RiderRegistry.getRider(riderId);
+
+            if (config != null) {
+                Map<EquipmentSlot, ItemStack> originalGear = new EnumMap<>(EquipmentSlot.class);
+                CompoundTag gearTag = tag.getCompound("OriginalGear");
+
+                for (EquipmentSlot slot : EquipmentSlot.values()) {
+                    if (gearTag.contains(slot.name())) {
+                        ItemStack stack = ItemStack.parse(player.registryAccess(), gearTag.getCompound(slot.name()))
+                                .orElse(ItemStack.EMPTY);
+                        originalGear.put(slot, stack);
+                    } else {
+                        originalGear.put(slot, ItemStack.EMPTY);
+                    }
+                }
+
+                TRANSFORMED_PLAYERS.put(player.getUUID(),
+                        new TransformedData(config, formId, originalGear));
+
+                // 不需要重新应用属性，因为玩家实体创建时会自动恢复
+                // 只需确保盔甲装备正确
+                FormConfig form = config.getForm(formId);
+                if (form != null) {
+                    equipArmor(player, form);
+                }
+            }
         }
     }
 }

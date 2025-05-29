@@ -24,9 +24,13 @@ public class FormConfig {
     private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
     private final List<ResourceLocation> attributeIds = new ArrayList<>(); // 存储属性ID
 
+    //====================初始化方法====================
+
     public FormConfig(ResourceLocation formId) {
         this.formId = formId;
     }
+
+    //====================Setter方法====================
 
     // 盔甲设置方法
     public FormConfig setArmor(Item helmet, Item chestplate, Item leggings, Item boots) {
@@ -72,7 +76,8 @@ public class FormConfig {
         return true;
     }
 
-    // Getter方法
+    //====================Getter方法====================
+
     public ResourceLocation getFormId() {
         return formId;
     }

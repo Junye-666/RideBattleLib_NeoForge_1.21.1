@@ -47,6 +47,68 @@ public class RiderConfig {
         // Arrays.fill(armor, Items.AIR);
     }
 
+    //====================Setter方法====================
+
+    //指定驱动器物品
+    public RiderConfig setDriverItem(Item item, EquipmentSlot slot) {
+        this.driverItem = item;
+        this.driverSlot = slot;
+        return this;
+    }
+
+    //指定触发方式
+    public RiderConfig setTriggerType(TriggerType type) {
+        this.triggerType = type;
+        return this;
+    }
+
+    //指定触发用物品
+    public RiderConfig setTriggerItem(@Nullable Item item) {
+        this.triggerItem = item != null ? item : Items.AIR;
+        return this;
+    }
+
+    //添加槽位
+    public RiderConfig addSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired) {
+        slotDefinitions.put(slotId, new SlotDefinition(allowedItems, null));
+        if (isRequired) {
+            requiredSlots.add(slotId); // 确保必要槽位被添加
+        }
+        return this;
+    }
+
+    //添加形态
+    public RiderConfig addForm(FormConfig form) {
+        forms.put(form.getFormId(), form);
+        if (baseFormId == null) {
+            baseFormId = form.getFormId();
+        }
+        return this;
+    }
+
+    // 设置基础形态
+    public RiderConfig setBaseForm(ResourceLocation formId) {
+        if (forms.containsKey(formId)) {
+            baseFormId = formId;
+        }
+        return this;
+    }
+
+    //====================检查方法====================
+
+    // 形态匹配
+    public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
+        // 优先检查完全匹配的形态
+        for (FormConfig form : forms.values()) {
+            if (form.matches(beltItems)) {
+                return form.getFormId();
+            }
+        }
+
+        // 返回基础形态
+        return baseFormId;
+    }
+
     //====================Getter方法====================
 
     //获取骑士Id
@@ -74,7 +136,6 @@ public class RiderConfig {
         return triggerItem;
     }
 
-
     //通过玩家装备查找激活的驱动器配置
     public static RiderConfig findActiveDriverConfig(Player player) {
         for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
@@ -100,76 +161,6 @@ public class RiderConfig {
     //获取所有槽位定义的不可修改视图
     public Map<ResourceLocation, SlotDefinition> getSlotDefinitions() {
         return Collections.unmodifiableMap(slotDefinitions);
-    }
-
-
-    //====================Setter方法====================
-
-    //指定驱动器物品
-    public RiderConfig setDriverItem(Item item, EquipmentSlot slot) {
-        this.driverItem = item;
-        this.driverSlot = slot;
-        return this;
-    }
-
-    //指定触发方式
-    public RiderConfig setTriggerType(TriggerType type) {
-        this.triggerType = type;
-        return this;
-    }
-
-    //指定触发用物品
-    public RiderConfig setTriggerItem(@Nullable Item item) {
-        this.triggerItem = item != null ? item : Items.AIR;
-        return this;
-    }
-/*
-    //指定全身盔甲
-    public RiderConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
-        armor[0] = helmet;
-        armor[1] = chestplate;
-        armor[2] = leggings != null ? leggings : Items.AIR;
-        armor[3] = boots;
-        return this;
-    }
-*/
-    //添加槽位
-
-    public RiderConfig addSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired) {
-        slotDefinitions.put(slotId, new SlotDefinition(allowedItems, null));
-        if (isRequired) {
-            requiredSlots.add(slotId); // 确保必要槽位被添加
-        }
-        return this;
-    }
-
-    public RiderConfig addForm(FormConfig form) {
-        forms.put(form.getFormId(), form);
-        if (baseFormId == null) {
-            baseFormId = form.getFormId();
-        }
-        return this;
-    }
-
-    // 设置基础形态
-    public RiderConfig setBaseForm(ResourceLocation formId) {
-        if (forms.containsKey(formId)) {
-            baseFormId = formId;
-        }
-        return this;
-    }
-
-    // 形态匹配
-    public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
-        // 优先检查完全匹配的形态
-        for (FormConfig form : forms.values()) {
-            if (form.matches(beltItems)) {
-                return form.getFormId();
-            }
-        }
-
-        // 返回基础形态
-        return baseFormId;
     }
 
     // 添加形态获取方法

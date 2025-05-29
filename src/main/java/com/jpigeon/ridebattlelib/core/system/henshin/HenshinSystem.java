@@ -38,7 +38,7 @@ public class HenshinSystem implements IHenshinSystem {
 
     public record TransformedData(
             RiderConfig config,
-            ResourceLocation formId, // 新增形态ID
+            ResourceLocation formId,
             Map<EquipmentSlot, ItemStack> originalGear
     ) {}
 
@@ -157,8 +157,6 @@ public class HenshinSystem implements IHenshinSystem {
             }
         });
     }
-
-
 
     //====================辅助方法====================
 

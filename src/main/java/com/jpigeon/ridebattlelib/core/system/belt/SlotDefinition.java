@@ -28,4 +28,5 @@ public class SlotDefinition {
     public boolean isAllowReplace() {
         return allowReplace;
     }
+
 }

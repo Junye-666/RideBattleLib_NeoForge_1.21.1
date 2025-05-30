@@ -112,7 +112,6 @@ public class ExampleRiders {
 // 注册骑士
         RiderRegistry.registerRider(testRider);
     }
-
     public static void init() {
         registerTestRider();
     }

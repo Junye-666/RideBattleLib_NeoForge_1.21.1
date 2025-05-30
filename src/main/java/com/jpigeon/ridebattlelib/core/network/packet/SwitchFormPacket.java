@@ -22,4 +22,5 @@ public record SwitchFormPacket(ResourceLocation formId) implements CustomPacketP
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
+
 }

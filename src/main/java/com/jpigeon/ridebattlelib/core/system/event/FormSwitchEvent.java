@@ -15,18 +15,6 @@ public class FormSwitchEvent extends Event {
         this.newFormId = newFormId;
     }
 
-    public Player getPlayer() {
-        return player;
-    }
-
-    public ResourceLocation getOldFormId() {
-        return oldFormId;
-    }
-
-    public ResourceLocation getNewFormId() {
-        return newFormId;
-    }
-
     // 可取消的Pre事件
     public static class Pre extends FormSwitchEvent {
         private boolean canceled = false;
@@ -56,5 +44,18 @@ public class FormSwitchEvent extends Event {
         public Post(Player player, ResourceLocation oldFormId, ResourceLocation newFormId) {
             super(player, oldFormId, newFormId);
         }
+    }
+
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public ResourceLocation getOldFormId() {
+        return oldFormId;
+    }
+
+    public ResourceLocation getNewFormId() {
+        return newFormId;
     }
 }

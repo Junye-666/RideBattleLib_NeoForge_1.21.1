@@ -10,7 +10,6 @@ public interface IHenshinSystem {
     void unHenshin(Player player);
     // 检查是否已变身
     boolean isTransformed(Player player);
-
     // 事件回调接口
     default void onHenshinStart(Player player) {}
     default void onHenshinEnd(Player player) {}

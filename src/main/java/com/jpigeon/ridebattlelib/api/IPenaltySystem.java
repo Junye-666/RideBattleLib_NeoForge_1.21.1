@@ -9,4 +9,5 @@ public interface IPenaltySystem {
     void startCooldown(Player player, int seconds);
     // 检查
     boolean isInCooldown(Player player);
+
 }

@@ -7,7 +7,6 @@ public interface IFormSystem {
     // 形态匹配
     ResourceLocation matchForm(Player player, ResourceLocation formId);
     // 切换形态
-    void applyForm(Player player, ResourceLocation formId);
-    // 形态回滚
-    void revertForm(Player player);
+    void switchForm(Player player, ResourceLocation formId);
+
 }

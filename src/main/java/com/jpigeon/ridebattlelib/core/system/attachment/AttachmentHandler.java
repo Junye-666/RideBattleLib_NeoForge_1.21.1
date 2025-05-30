@@ -14,10 +14,9 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import java.util.HashMap;
 import java.util.Objects;
 
-@EventBusSubscriber(modid = RideBattleLib.MODID)
 public class AttachmentHandler {
     @SubscribeEvent
-    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
 
@@ -47,7 +46,7 @@ public class AttachmentHandler {
     }
 
     @SubscribeEvent
-    public void onPlayerClone(PlayerEvent.Clone event) {
+    public static void onPlayerClone(PlayerEvent.Clone event) {
         if (!event.isWasDeath()) return;
 
         Player original = event.getOriginal();

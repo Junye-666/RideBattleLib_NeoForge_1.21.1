@@ -74,7 +74,6 @@ public class PacketHandler {
     public static void sendToServer(CustomPacketPayload packet) {
         Objects.requireNonNull(Minecraft.getInstance().getConnection()).send(packet);
     }
-
     public static void sendToClient(ServerPlayer player, CustomPacketPayload packet) {
         player.connection.send(packet);
     }

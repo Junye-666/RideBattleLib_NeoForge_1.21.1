@@ -19,9 +19,9 @@ public class ExampleRiders {
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_alpha");
 
     private static void registerTestRider() {
-        // 创建骑士配置
+// 创建骑士配置
         RiderConfig testRider = new RiderConfig(TEST_RIDER_ALPHA)
-                .setDriverItem(Items.IRON_CHESTPLATE, EquipmentSlot.CHEST) // 驱动器: 铁胸甲(穿戴在胸部)
+                .setDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁胸甲(穿戴在胸部)
                 .setTriggerType(TriggerType.KEY) // 按键触发变身
                 .addSlot(
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot"),
@@ -34,75 +34,80 @@ public class ExampleRiders {
                         false
                 ); // 能量槽位: 接受红石或荧石粉(非必要)
 
-        // 创建基础形态配置
+// 创建基础形态配置
         FormConfig baseForm = new FormConfig(
                 ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "alpha_base_form"))
-                .setArmor(  // 设置盔甲
+                .setArmor(// 设置盔甲
                         Items.IRON_HELMET,
                         Items.IRON_CHESTPLATE,
-                        Items.IRON_LEGGINGS,
+                        null,
                         Items.IRON_BOOTS
                 )
-                .addAttribute(  // 增加生命值
+                .addAttribute(// 增加生命值
                         ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
                         8.0,
                         AttributeModifier.Operation.ADD_VALUE
                 )
-                .addAttribute(  // 增加移动速度
+                .addAttribute(// 增加移动速度
                         ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"),
                         0.1,
                         AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
-                .addEffect(  // 增加夜视效果
+                .addEffect(// 增加夜视效果
                         MobEffects.NIGHT_VISION,
                         999999,
                         0
                 )
-                .addRequiredItem(  // 要求核心槽位有铁锭
+                .addRequiredItem(// 要求核心槽位有铁锭
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot"),
                         Items.IRON_INGOT
                 );
 
-        // 创建强化形态配置
+// 创建强化形态配置
         FormConfig poweredForm = new FormConfig(
                 ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "alpha_powered_form"))
-                .setArmor(  // 金色盔甲
+                .setArmor(// 金色盔甲
                         Items.GOLDEN_HELMET,
                         Items.GOLDEN_CHESTPLATE,
-                        Items.GOLDEN_LEGGINGS,
+                        null,
                         Items.GOLDEN_BOOTS
                 )
-                .addAttribute(  // 更高生命值
+                .addAttribute(// 更高生命值
                         ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
                         12.0,
                         AttributeModifier.Operation.ADD_VALUE
                 )
-                .addAttribute(  // 更高移动速度
+                .addAttribute(// 更高移动速度
                         ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"),
                         0.2,
                         AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
-                .addEffect(  // 增加力量效果
+                .addEffect(// 增加力量效果
                         MobEffects.DAMAGE_BOOST,
                         999999,
                         0
                 )
-                .addRequiredItem(  // 要求核心槽位有金锭
+                .addEffect(
+                        MobEffects.NIGHT_VISION,
+                        999999,
+                        0
+                )
+                .addRequiredItem(// 要求核心槽位有金锭
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot"),
                         Items.GOLD_INGOT
                 )
-                .addRequiredItem(  // 要求能量槽位有物品
+                .addRequiredItem(// 要求能量槽位有物品
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "energy_slot"),
                         Items.REDSTONE
                 );
 
-        // 将形态添加到骑士配置
+// 将形态添加到骑士配置
         testRider
                 .addForm(baseForm)
                 .addForm(poweredForm)
-                .setBaseForm(baseForm.getFormId());  // 设置基础形态
+                .setBaseForm(baseForm.getFormId());// 设置基础形态
 
-        // 注册骑士
+// 注册骑士
         RiderRegistry.registerRider(testRider);
     }
 

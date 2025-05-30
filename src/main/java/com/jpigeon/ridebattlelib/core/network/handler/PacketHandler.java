@@ -6,6 +6,7 @@ import com.jpigeon.ridebattlelib.core.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;

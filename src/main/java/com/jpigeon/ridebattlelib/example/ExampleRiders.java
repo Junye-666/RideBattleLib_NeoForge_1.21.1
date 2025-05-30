@@ -58,7 +58,8 @@ public class ExampleRiders {
                 .addEffect(// 增加夜视效果
                         MobEffects.NIGHT_VISION,
                         999999,
-                        0
+                        0,
+                        true
                 )
                 .addRequiredItem(// 要求核心槽位有铁锭
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot"),
@@ -87,12 +88,14 @@ public class ExampleRiders {
                 .addEffect(// 增加力量效果
                         MobEffects.DAMAGE_BOOST,
                         999999,
-                        0
+                        0,
+                        true
                 )
                 .addEffect(
                         MobEffects.NIGHT_VISION,
                         999999,
-                        0
+                        0,
+                        true
                 )
                 .addRequiredItem(// 要求核心槽位有金锭
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot"),

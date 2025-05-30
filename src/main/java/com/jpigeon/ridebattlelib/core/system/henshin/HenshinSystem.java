@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.mojang.datafixers.util.Pair;
@@ -23,6 +24,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -127,6 +129,37 @@ public class HenshinSystem implements IHenshinSystem {
             removeTransformed(player);
             BeltSystem.INSTANCE.returnItems(player);
         }
+    }
+
+    public boolean switchForm(Player player, ResourceLocation newFormId) {
+        if (!isTransformed(player)) {
+            return false;
+        }
+
+        TransformedData data = getTransformedData(player);
+        if (data == null) {
+            return false;
+        }
+
+        RiderConfig config = data.config();
+        FormConfig newForm = config.getForm(newFormId);
+        if (newForm == null) {
+            return false;
+        }
+
+        // 移除旧形态效果
+        removeAttributes(player, data.formId());
+
+        // 应用新形态
+        equipArmor(player, newForm);
+        applyAttributes(player, newForm);
+
+        // 更新变身数据
+        setTransformed(player, config, newFormId, data.originalGear());
+
+        // 触发事件
+        NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, data.formId(), newFormId));
+        return true;
     }
 
     //====================变身辅助方法====================

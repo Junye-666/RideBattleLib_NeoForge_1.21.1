@@ -1,18 +1,16 @@
 package com.jpigeon.ridebattlelib;
 
+import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
+import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
-import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
-import com.jpigeon.ridebattlelib.core.system.henshin.HenshinHandler;
-import com.jpigeon.ridebattlelib.core.system.henshin.TriggerItemHandler;
+import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.example.ExampleRiders;
-import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
-import com.jpigeon.ridebattlelib.core.network.handler.PacketHandler;
-import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import net.neoforged.neoforge.attachment.AttachmentType;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-
 
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -26,6 +24,8 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+
+import java.util.HashMap;
 
 @Mod(RideBattleLib.MODID)
 public class RideBattleLib
@@ -43,6 +43,8 @@ public class RideBattleLib
         NeoForge.EVENT_BUS.register(HenshinHandler.class);
         NeoForge.EVENT_BUS.register(BeltHandler.class);
         NeoForge.EVENT_BUS.register(TriggerItemHandler.class);
+        NeoForge.EVENT_BUS.register(AttachmentHandler.class);
+        ModAttachments.ATTACHMENTS.register(modEventBus);
 
         ExampleRiders.init();
 
@@ -75,11 +77,5 @@ public class RideBattleLib
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
         }
-    }
-
-    @SubscribeEvent
-    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        Player player = event.getEntity();
-        BeltSystem.INSTANCE.syncBeltData(player);
     }
 }

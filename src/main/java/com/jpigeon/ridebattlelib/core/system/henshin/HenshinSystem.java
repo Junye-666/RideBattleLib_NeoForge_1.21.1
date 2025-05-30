@@ -2,6 +2,9 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
@@ -212,7 +215,7 @@ public class HenshinSystem implements IHenshinSystem {
         return originalGear;
     }
 
-    private void applyAttributes(Player player, FormConfig form) {
+    public void applyAttributes(Player player, FormConfig form) {
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
         for (AttributeModifier modifier : form.getAttributes()) {
@@ -259,10 +262,9 @@ public class HenshinSystem implements IHenshinSystem {
 
     //====================检查方法====================
 
-
     @Override
     public boolean isTransformed(Player player) {
-        return player != null && TRANSFORMED_PLAYERS.containsKey(player.getUUID());
+        return player.getData(ModAttachments.PLAYER_DATA).transformedData() != null;
     }
 
     //====================Getter方法====================
@@ -275,20 +277,28 @@ public class HenshinSystem implements IHenshinSystem {
 
     @Nullable
     public TransformedData getTransformedData(Player player) {
-        return player != null ? TRANSFORMED_PLAYERS.get(player.getUUID()) : null;
+        TransformedAttachmentData attachmentData = player.getData(ModAttachments.PLAYER_DATA).transformedData();
+        if (attachmentData == null) return null;
+
+        RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());
+        if (config == null) return null;
+
+        return new TransformedData(config, attachmentData.formId(), attachmentData.originalGear());
     }
 
     //====================Setter方法====================
 
     public void setTransformed(Player player, RiderConfig config, ResourceLocation formId,
                                Map<EquipmentSlot, ItemStack> originalGear) {
-        TRANSFORMED_PLAYERS.put(player.getUUID(),
-                new TransformedData(config, formId, originalGear));
+        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        player.setData(ModAttachments.PLAYER_DATA,
+                new PlayerPersistentData(oldData.beltItems(),
+                        new TransformedAttachmentData(config.getRiderId(), formId, originalGear)));
     }
 
     public void removeTransformed(Player player) {
-        if (player != null) {
-            TRANSFORMED_PLAYERS.remove(player.getUUID());
-        }
+        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        player.setData(ModAttachments.PLAYER_DATA,
+                new PlayerPersistentData(oldData.beltItems(), null));
     }
 }

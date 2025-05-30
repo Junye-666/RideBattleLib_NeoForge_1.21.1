@@ -1,10 +1,9 @@
-package com.jpigeon.ridebattlelib.core.network.handler;
+package com.jpigeon.ridebattlelib.core.system.network.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
-import com.jpigeon.ridebattlelib.core.network.packet.*;
+import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
-import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
 import net.minecraft.client.Minecraft;
@@ -56,7 +55,7 @@ public class PacketHandler {
                         BeltDataSyncPacket.STREAM_CODEC,
                         (payload, context) -> {
                             if (Minecraft.getInstance().player != null) {
-                                BeltSystem.beltData.put(payload.playerId(), payload.items());
+                                BeltSystem.INSTANCE.setBeltItems(context.player(), payload.items());
                             }
                         }
                 )

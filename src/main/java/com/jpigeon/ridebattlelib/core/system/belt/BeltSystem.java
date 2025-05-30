@@ -2,6 +2,8 @@ package com.jpigeon.ridebattlelib.core.system.belt;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IBeltSystem;
+import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
@@ -17,7 +19,7 @@ import java.util.UUID;
 
 public class BeltSystem implements IBeltSystem {
     // 存储玩家的腰带数据
-    public static final Map<UUID, Map<ResourceLocation, ItemStack>> beltData = new HashMap<>();
+    // public static final Map<UUID, Map<ResourceLocation, ItemStack>> beltData = new HashMap<>();
     public static final BeltSystem INSTANCE = new BeltSystem();
 
     //====================核心方法====================
@@ -29,11 +31,6 @@ public class BeltSystem implements IBeltSystem {
             RideBattleLib.LOGGER.error("无法插入空物品");
             return false;
         }
-
-        Map<ResourceLocation, ItemStack> playerBelt = beltData.computeIfAbsent(
-                player.getUUID(),
-                k -> new HashMap<>()
-        );
 
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return false;
@@ -53,32 +50,34 @@ public class BeltSystem implements IBeltSystem {
             return false;
         }
 
-        ItemStack existingStack = playerBelt.get(slotId);
-        if (existingStack != null && !existingStack.isEmpty()) {
-            // 行为选择：1. 禁止插入 或 2. 替换模式
-            if (slot.isAllowReplace()) {
-                // 替换模式：返还旧物品
-                returnItemToPlayer(player, existingStack);
-                playerBelt.remove(slotId);
-            } else {
-                // 禁止插入模式：直接拒绝
-                return false;
+        Map<ResourceLocation, ItemStack> playerBelt = getBeltItems(player);
+
+        // 检查槽位是否被占用
+        if (playerBelt.containsKey(slotId)) {
+            ItemStack existing = playerBelt.get(slotId);
+            if (!existing.isEmpty()) {
+                if (slot.isAllowReplace()) {
+                    // 返还旧物品
+                    returnItemToPlayer(player, existing);
+                } else {
+                    // 禁止替换
+                    return false;
+                }
             }
         }
 
-        // 深拷贝ItemStack以保留NBT
-        ItemStack copiedStack = stack.copy();
-        playerBelt.put(slotId, copiedStack);
+        // 插入新物品
+        playerBelt.put(slotId, stack.copy());
+        setBeltItems(player, playerBelt);
         syncBeltData(player);
 
-        RideBattleLib.LOGGER.debug("插入物品到槽位: {} -> {}", slotId, stack.getItem());
         return true;
     }
 
     // 提取物品
     @Override
     public ItemStack extractItem(Player player, ResourceLocation slotId) {
-        Map<ResourceLocation, ItemStack> playerBelt = beltData.get(player.getUUID());
+        Map<ResourceLocation, ItemStack> playerBelt = getBeltItems(player);
         if (playerBelt == null) return ItemStack.EMPTY;
 
         ItemStack extracted = playerBelt.remove(slotId);
@@ -104,7 +103,7 @@ public class BeltSystem implements IBeltSystem {
                 });
 
         // 清空数据并同步
-        beltData.remove(playerId);
+        setBeltItems(player, new HashMap<>());
         syncBeltData(player);
     }
 
@@ -140,8 +139,14 @@ public class BeltSystem implements IBeltSystem {
 
     @Override
     public Map<ResourceLocation, ItemStack> getBeltItems(Player player) {
-        Map<ResourceLocation, ItemStack> items = beltData.getOrDefault(player.getUUID(), new HashMap<>());
-        return new HashMap<>(items);
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        return new HashMap<>(data.beltItems());
+    }
+
+    public void setBeltItems(Player player, Map<ResourceLocation, ItemStack> items) {
+        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        player.setData(ModAttachments.PLAYER_DATA,
+                new PlayerPersistentData(new HashMap<>(items), oldData.transformedData()));
     }
 
     //====================网络通信方法====================

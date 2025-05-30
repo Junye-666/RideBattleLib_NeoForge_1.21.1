@@ -69,7 +69,7 @@ public record BeltDataSyncPacket(UUID playerId, Map<ResourceLocation, ItemStack>
             if (!(player instanceof ServerPlayer)) return;
 
             RideBattleLib.LOGGER.debug("接收到腰带同步数据: {}", items);
-            BeltSystem.beltData.put(playerId, items);
+            BeltSystem.INSTANCE.setBeltItems(player, items);
         });
     }
 

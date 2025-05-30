@@ -54,7 +54,7 @@ public class PacketHandler {
                         BeltDataSyncPacket.STREAM_CODEC,
                         (payload, context) -> {
                             if (Minecraft.getInstance().player != null) {
-                                BeltSystem.beltData.put(payload.playerId(), payload.items());
+                                BeltSystem.INSTANCE.setBeltItems(context.player(), payload.items());
                             }
                         }
                 )

@@ -2,8 +2,8 @@ package com.jpigeon.ridebattlelib.core.system.belt;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IBeltSystem;
-import com.jpigeon.ridebattlelib.core.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.core.network.packet.BeltDataSyncPacket;
+import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import net.minecraft.resources.ResourceLocation;

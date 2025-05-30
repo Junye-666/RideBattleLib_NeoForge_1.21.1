@@ -123,22 +123,17 @@ public class RiderConfig {
         this.triggerItem = item != null ? item : Items.AIR;
         return this;
     }
-/*
-    //指定全身盔甲
-    public RiderConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
-        armor[0] = helmet;
-        armor[1] = chestplate;
-        armor[2] = leggings != null ? leggings : Items.AIR;
-        armor[3] = boots;
-        return this;
-    }
-*/
-    //添加槽位
 
-    public RiderConfig addSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired) {
-        slotDefinitions.put(slotId, new SlotDefinition(allowedItems, null));
+    public RiderConfig addSlot(ResourceLocation slotId,
+                               List<Item> allowedItems,
+                               boolean isRequired,
+                               boolean allowReplace) { // 新增参数
+
+        slotDefinitions.put(slotId,
+                new SlotDefinition(allowedItems, null, allowReplace)); // 传递新参数
+
         if (isRequired) {
-            requiredSlots.add(slotId); // 确保必要槽位被添加
+            requiredSlots.add(slotId);
         }
         return this;
     }

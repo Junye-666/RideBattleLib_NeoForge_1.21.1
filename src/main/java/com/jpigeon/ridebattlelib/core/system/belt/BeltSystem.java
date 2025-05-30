@@ -53,6 +53,19 @@ public class BeltSystem implements IBeltSystem {
             return false;
         }
 
+        ItemStack existingStack = playerBelt.get(slotId);
+        if (existingStack != null && !existingStack.isEmpty()) {
+            // 行为选择：1. 禁止插入 或 2. 替换模式
+            if (slot.isAllowReplace()) {
+                // 替换模式：返还旧物品
+                returnItemToPlayer(player, existingStack);
+                playerBelt.remove(slotId);
+            } else {
+                // 禁止插入模式：直接拒绝
+                return false;
+            }
+        }
+
 
         // 深拷贝ItemStack以保留NBT
         ItemStack copiedStack = stack.copy();

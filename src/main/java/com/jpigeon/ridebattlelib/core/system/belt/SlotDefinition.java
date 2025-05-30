@@ -9,10 +9,12 @@ import java.util.function.Consumer;
 public class SlotDefinition {
     private final List<Item> allowedItems; // 允许插入的物品
     private final Consumer<Player> onInsertCallback; // 插入时的回调
+    private final boolean allowReplace;
 
-    public SlotDefinition(List<Item> allowedItems, Consumer<Player> onInsertCallback) {
+    public SlotDefinition(List<Item> allowedItems, Consumer<Player> onInsertCallback, boolean allowReplace) { // 修改构造函数
         this.allowedItems = allowedItems;
         this.onInsertCallback = onInsertCallback;
+        this.allowReplace = allowReplace;
     }
 
     public List<Item> getAllowedItems() {
@@ -21,5 +23,9 @@ public class SlotDefinition {
 
     public Consumer<Player> getOnInsertCallback() {
         return onInsertCallback;
+    }
+
+    public boolean isAllowReplace() {
+        return allowReplace;
     }
 }

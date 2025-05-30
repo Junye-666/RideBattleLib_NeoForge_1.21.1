@@ -26,11 +26,13 @@ public class ExampleRiders {
                 .addSlot(
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot"),
                         List.of(Items.IRON_INGOT, Items.GOLD_INGOT),
+                        true,
                         true
                 ) // 核心槽位: 接受铁锭或金锭(必要槽位)
                 .addSlot(
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "energy_slot"),
                         List.of(Items.REDSTONE, Items.GLOWSTONE_DUST),
+                        false,
                         false
                 ); // 能量槽位: 接受红石或荧石粉(非必要)
 

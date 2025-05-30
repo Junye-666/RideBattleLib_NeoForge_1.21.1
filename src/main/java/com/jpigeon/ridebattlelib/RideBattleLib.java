@@ -6,7 +6,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.HenshinHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.TriggerItemHandler;
 import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
-import com.jpigeon.ridebattlelib.core.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import org.slf4j.Logger;
@@ -47,6 +47,7 @@ public class RideBattleLib
         ExampleRiders.init();
 
         modEventBus.addListener(this::addCreative);
+        modEventBus.addListener(this::initAttachments);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
@@ -81,5 +82,13 @@ public class RideBattleLib
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
         BeltSystem.INSTANCE.syncBeltData(player);
+    }
+
+    public static final AttachmentType<PlayerPersistentData> PLAYER_DATA =
+            AttachmentType.serializable(() -> PlayerPersistentData.CODEC)
+                    .build();
+
+    public static void initAttachments(RegisterDataAttachmentTypesEvent event) {
+        event.register(PLAYER_DATA);
     }
 }

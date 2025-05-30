@@ -3,11 +3,11 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.KeyBindings;
 
-import com.jpigeon.ridebattlelib.core.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.core.network.packet.HenshinPacket;
-import com.jpigeon.ridebattlelib.core.network.packet.ReturnItemsPacket;
-import com.jpigeon.ridebattlelib.core.network.packet.SwitchFormPacket;
-import com.jpigeon.ridebattlelib.core.network.packet.UnhenshinPacket;
+import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.ReturnItemsPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.UnhenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;

@@ -12,6 +12,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 @EventBusSubscriber(modid = RideBattleLib.MODID)
 public class AttachmentHandler {
@@ -28,8 +29,8 @@ public class AttachmentHandler {
 
         // 恢复变身状态
         if (data.transformedData() != null) {
-            ResourceLocation riderId = data.transformedData().riderId();
-            ResourceLocation formId = data.transformedData().formId();
+            ResourceLocation riderId = Objects.requireNonNull(data.transformedData()).riderId();
+            ResourceLocation formId = Objects.requireNonNull(data.transformedData()).formId();
             RiderConfig config = RiderRegistry.getRider(riderId);
             FormConfig form = RiderRegistry.getForm(formId);
 
@@ -58,8 +59,8 @@ public class AttachmentHandler {
 
         // 恢复变身状态
         if (originalData.transformedData() != null) {
-            RiderConfig config = RiderRegistry.getRider(originalData.transformedData().riderId());
-            FormConfig form = RiderRegistry.getForm(originalData.transformedData().formId());
+            RiderConfig config = RiderRegistry.getRider(Objects.requireNonNull(originalData.transformedData()).riderId());
+            FormConfig form = RiderRegistry.getForm(Objects.requireNonNull(originalData.transformedData()).formId());
 
             if (config != null && form != null) {
                 HenshinSystem.INSTANCE.equipArmor(newPlayer, form);

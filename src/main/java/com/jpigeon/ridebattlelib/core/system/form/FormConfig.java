@@ -9,6 +9,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -17,7 +18,7 @@ public class FormConfig {
     private final ResourceLocation formId;
     private Item helmet = Items.AIR;
     private Item chestplate = Items.AIR;
-    private Item leggings = Items.AIR;
+    private @Nullable Item leggings = Items.AIR;
     private Item boots = Items.AIR;
     private final List<AttributeModifier> attributes = new ArrayList<>();
     private final List<MobEffectInstance> effects = new ArrayList<>();
@@ -29,10 +30,10 @@ public class FormConfig {
     }
 
     // 盔甲设置方法
-    public FormConfig setArmor(Item helmet, Item chestplate, Item leggings, Item boots) {
+    public FormConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
         this.helmet = helmet;
         this.chestplate = chestplate;
-        this.leggings = leggings;
+        this.leggings = leggings != null ? leggings : Items.AIR;
         this.boots = boots;
         return this;
     }
@@ -85,7 +86,7 @@ public class FormConfig {
         return chestplate;
     }
 
-    public Item getLeggings() {
+    public @Nullable Item getLeggings() {
         return leggings;
     }
 

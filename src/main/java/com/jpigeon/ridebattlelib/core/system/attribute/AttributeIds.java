@@ -12,5 +12,4 @@ public class AttributeIds {
     public static final ResourceLocation ARMOR_TOUGHNESS = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "generic.armor_toughness");
     public static final ResourceLocation LUCK = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "generic.luck");
     public static final ResourceLocation JUMP_STRENGTH = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "horse.jump_strength");
-
 }

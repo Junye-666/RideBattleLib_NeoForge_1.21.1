@@ -22,5 +22,4 @@ public record HenshinPacket(ResourceLocation riderId) implements CustomPacketPay
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }
-
 }

@@ -21,5 +21,4 @@ public record UnhenshinPacket() implements CustomPacketPayload {
     public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
-
 }

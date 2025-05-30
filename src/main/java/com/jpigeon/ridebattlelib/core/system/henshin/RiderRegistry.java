@@ -42,4 +42,9 @@ public class RiderRegistry {
     public static Collection<RiderConfig> getRegisteredRiders() {
         return RIDERS.values();
     }
+
+    // 获取所有已注册的形态
+    public static Collection<FormConfig> getAllForms() {
+        return FORMS.values();
+    }
 }

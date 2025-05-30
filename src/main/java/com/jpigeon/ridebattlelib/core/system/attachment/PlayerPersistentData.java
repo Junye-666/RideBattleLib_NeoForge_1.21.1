@@ -64,15 +64,17 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
     public CompoundTag serializeNBT(HolderLookup.@NotNull Provider provider) {
         CompoundTag tag = new CompoundTag();
 
-        CompoundTag beltItemsTag = new CompoundTag();
+        // 过滤空物品堆栈
+        Map<ResourceLocation, ItemStack> validBeltItems = new HashMap<>();
         beltItems.forEach((key, stack) -> {
-            beltItemsTag.put(key.toString(), stack.save(provider));
+            if (!stack.isEmpty() && stack.getCount() > 0) {
+                validBeltItems.put(key, stack);
+            }
         });
-        tag.put("BeltItems", beltItemsTag);
 
-        if (transformedData != null) {
-            tag.put("TransformedData", transformedData.serializeNBT(provider));
-        }
+        CompoundTag beltItemsTag = new CompoundTag();
+        validBeltItems.forEach((key, stack) -> beltItemsTag.put(key.toString(), stack.save(provider)));
+        tag.put("BeltItems", beltItemsTag);
 
         return tag;
     }
@@ -89,7 +91,9 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
                 if (id != null) {
                     ItemStack stack = ItemStack.parse(provider, beltItemsTag.getCompound(key))
                             .orElse(ItemStack.EMPTY);
-                    beltItems.put(id, stack);
+                    if (!stack.isEmpty()) {
+                        beltItems.put(id, stack);
+                    }
                 }
             }
         }
@@ -111,8 +115,14 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
         for (String key : gearTag.getAllKeys()) {
             EquipmentSlot slot = EquipmentSlot.byName(key);
             if (slot != null) {
-                gear.put(slot, ItemStack.parse(provider, gearTag.getCompound(key))
-                        .orElse(ItemStack.EMPTY));
+                if (gearTag.getString(key).equals("EMPTY")) {
+                    // 特殊标记的空物品
+                    gear.put(slot, ItemStack.EMPTY);
+                } else {
+                    ItemStack stack = ItemStack.parse(provider, gearTag.getCompound(key))
+                            .orElse(ItemStack.EMPTY);
+                    gear.put(slot, stack);
+                }
             }
         }
         return gear;

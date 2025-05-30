@@ -6,7 +6,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -66,10 +65,11 @@ public record BeltDataSyncPacket(UUID playerId, Map<ResourceLocation, ItemStack>
     public void handle(IPayloadContext context) {
         context.enqueueWork(() -> {
             Player player = context.player();
-            if (!(player instanceof ServerPlayer)) return;
+            if (player == null) return;
 
-            RideBattleLib.LOGGER.debug("接收到腰带同步数据: {}", items);
+            // 使用正确的方法设置腰带数据
             BeltSystem.INSTANCE.setBeltItems(player, items);
+            RideBattleLib.LOGGER.debug("同步腰带数据: {}", items);
         });
     }
 

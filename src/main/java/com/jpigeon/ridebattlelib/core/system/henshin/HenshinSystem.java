@@ -175,23 +175,14 @@ public class HenshinSystem implements IHenshinSystem {
             player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(form.getChestplate()));
         }
         if (form.getLeggings() != Items.AIR) {
-            player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(form.getLeggings()));
+            if (form.getLeggings() != null) {
+                player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(form.getLeggings()));
+            }
         }
         if (form.getBoots() != Items.AIR) {
             player.setItemSlot(EquipmentSlot.FEET, new ItemStack(form.getBoots()));
         }
         syncEquipment(player);
-    }
-
-    private void restoreOriginalGear(Player player, TransformedData data) {
-        if (data == null || player == null) return;
-
-        // 恢复原装备（不包括驱动器）
-        data.originalGear.forEach((slot, stack) -> {
-            if (slot != data.config().getDriverSlot()) {
-                player.setItemSlot(slot, stack);
-            }
-        });
     }
 
     //====================辅助方法====================
@@ -205,11 +196,36 @@ public class HenshinSystem implements IHenshinSystem {
         }
     }
 
+    public void restoreOriginalGear(Player player, TransformedData data) {
+        if (data == null || player == null) return;
+
+        // 恢复所有槽位，包括空槽位
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR ||
+                    slot == data.config().getDriverSlot()) {
+
+                ItemStack original = data.originalGear().get(slot);
+
+                // 如果原始装备为空，则清空槽位
+                if (original == null || original.isEmpty()) {
+                    player.setItemSlot(slot, ItemStack.EMPTY);
+                } else {
+                    player.setItemSlot(slot, original);
+                }
+            }
+        }
+        syncEquipment(player);
+    }
+
     public Map<EquipmentSlot, ItemStack> saveOriginalGear(Player player, RiderConfig config) {
         Map<EquipmentSlot, ItemStack> originalGear = new EnumMap<>(EquipmentSlot.class);
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == config.getDriverSlot()) {
-                originalGear.put(slot, player.getItemBySlot(slot).copy());
+            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR ||
+                    slot == config.getDriverSlot()) {
+
+                ItemStack stack = player.getItemBySlot(slot);
+                // 即使为空也要保存
+                originalGear.put(slot, stack.copy());
             }
         }
         return originalGear;
@@ -258,8 +274,6 @@ public class HenshinSystem implements IHenshinSystem {
             player.removeEffect(effect.getEffect());
         }
     }
-
-
     //====================检查方法====================
 
     @Override

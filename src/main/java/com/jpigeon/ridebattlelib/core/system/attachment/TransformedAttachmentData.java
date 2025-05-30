@@ -19,9 +19,18 @@ public record TransformedAttachmentData(
             instance.group(
                     ResourceLocation.CODEC.fieldOf("riderId").forGetter(TransformedAttachmentData::riderId),
                     ResourceLocation.CODEC.fieldOf("formId").forGetter(TransformedAttachmentData::formId),
-                    Codec.unboundedMap(EquipmentSlot.CODEC, ItemStack.CODEC).fieldOf("originalGear").forGetter(TransformedAttachmentData::originalGear)
+                    // 使用自定义编解码器处理原始装备
+                    originalGearCodec().fieldOf("originalGear").forGetter(TransformedAttachmentData::originalGear)
             ).apply(instance, TransformedAttachmentData::new)
     );
+
+    // 自定义原始装备编解码器
+    private static Codec<Map<EquipmentSlot, ItemStack>> originalGearCodec() {
+        return Codec.unboundedMap(
+                EquipmentSlot.CODEC,
+                ItemStack.OPTIONAL_CODEC // 使用OPTIONAL_CODEC处理空物品
+        );
+    }
 
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
@@ -29,7 +38,14 @@ public record TransformedAttachmentData(
         tag.putString("formId", formId.toString());
 
         CompoundTag gearTag = new CompoundTag();
-        originalGear.forEach((slot, stack) -> gearTag.put(slot.getName(), stack.save(provider)));
+        originalGear.forEach((slot, stack) -> {
+            // 使用特殊标记保存空物品
+            if (stack.isEmpty()) {
+                gearTag.putString(slot.getName(), "EMPTY");
+            } else {
+                gearTag.put(slot.getName(), stack.save(provider));
+            }
+        });
         tag.put("originalGear", gearTag);
 
         return tag;

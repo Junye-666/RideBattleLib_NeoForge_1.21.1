@@ -27,8 +27,8 @@ public class BeltSystem implements IBeltSystem {
     // 存入物品
     @Override
     public boolean insertItem(Player player, ResourceLocation slotId, ItemStack stack) {
-        if (stack.isEmpty()) {
-            RideBattleLib.LOGGER.error("无法插入空物品");
+        if (stack.isEmpty() || stack.getCount() <= 0) {
+            RideBattleLib.LOGGER.error("无法插入无效物品");
             return false;
         }
 

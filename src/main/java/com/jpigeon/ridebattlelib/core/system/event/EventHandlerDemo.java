@@ -14,7 +14,6 @@ public class EventHandlerDemo {
         Player player = event.getPlayer();
         RideBattleLib.LOGGER.info("变身即将开始: {} -> {}",
                 player.getName(), event.getRiderId());
-
         // 示例：检查权限
         if (!player.hasPermissions(2)) {
             player.displayClientMessage(Component.literal("权限不足，无法变身"), true);

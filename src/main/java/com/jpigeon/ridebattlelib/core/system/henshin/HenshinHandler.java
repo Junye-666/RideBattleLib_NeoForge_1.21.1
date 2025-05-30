@@ -44,10 +44,12 @@ public class HenshinHandler {
                 }
             }
         }
+
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
             RideBattleLib.LOGGER.debug("发送解除变身数据包");
             PacketHandler.sendToServer(new UnhenshinPacket());
         }
+
         if (KeyBindings.RETURN_ITEMS_KEY.consumeClick()) {
             // 触发物品返还
             PacketHandler.sendToServer(new ReturnItemsPacket());

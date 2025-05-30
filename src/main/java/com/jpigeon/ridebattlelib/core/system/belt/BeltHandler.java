@@ -37,7 +37,6 @@ public class BeltHandler {
             RideBattleLib.LOGGER.debug("存入物品到槽位: {} (必要: {})", slotId, config.getRequiredSlots().contains(slotId));
         }
 
-
         if (inserted) {
             BeltSystem.INSTANCE.syncBeltData(player);
             event.setCanceled(true);

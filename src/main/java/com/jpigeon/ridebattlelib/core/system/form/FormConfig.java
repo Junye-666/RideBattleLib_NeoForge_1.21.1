@@ -38,7 +38,6 @@ public class FormConfig {
         return this;
     }
 
-
     // 添加属性修饰符
     public FormConfig addAttribute(ResourceLocation attributeId, double amount, AttributeModifier.Operation operation) {
         UUID uuid = UUID.nameUUIDFromBytes(

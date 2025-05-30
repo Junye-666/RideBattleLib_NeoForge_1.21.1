@@ -191,8 +191,6 @@ public class HenshinSystem implements IHenshinSystem {
         });
     }
 
-
-
     //====================辅助方法====================
 
     private void syncEquipment(Player player) {

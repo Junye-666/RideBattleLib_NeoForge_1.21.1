@@ -66,7 +66,6 @@ public class BeltSystem implements IBeltSystem {
             }
         }
 
-
         // 深拷贝ItemStack以保留NBT
         ItemStack copiedStack = stack.copy();
         playerBelt.put(slotId, copiedStack);

@@ -18,4 +18,5 @@ public record ReturnItemsPacket() implements CustomPacketPayload {
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }
+
 }

@@ -15,18 +15,6 @@ public class HenshinEvent extends Event {
         this.formId = formId;
     }
 
-    public Player getPlayer() {
-        return player;
-    }
-
-    public ResourceLocation getRiderId() {
-        return riderId;
-    }
-
-    public ResourceLocation getFormId() {
-        return formId;
-    }
-
     // Pre事件（可取消）
     public static class Pre extends HenshinEvent {
         private boolean canceled = false;
@@ -56,5 +44,17 @@ public class HenshinEvent extends Event {
         public Post(Player player, ResourceLocation riderId, ResourceLocation formId) {
             super(player, riderId, formId);
         }
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public ResourceLocation getRiderId() {
+        return riderId;
+    }
+
+    public ResourceLocation getFormId() {
+        return formId;
     }
 }

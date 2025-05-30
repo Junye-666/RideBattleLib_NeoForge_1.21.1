@@ -74,7 +74,6 @@ public class RiderConfig {
         return triggerItem;
     }
 
-
     //通过玩家装备查找激活的驱动器配置
     public static RiderConfig findActiveDriverConfig(Player player) {
         for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
@@ -101,7 +100,6 @@ public class RiderConfig {
     public Map<ResourceLocation, SlotDefinition> getSlotDefinitions() {
         return Collections.unmodifiableMap(slotDefinitions);
     }
-
 
     //====================Setter方法====================
 

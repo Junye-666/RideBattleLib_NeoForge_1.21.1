@@ -27,6 +27,7 @@ public class RiderRegistry {
         FORMS.put(form.getFormId(), form);
     }
 
+
     // 获取骑士配置
     public static RiderConfig getRider(ResourceLocation riderId) {
         return RIDERS.get(riderId);

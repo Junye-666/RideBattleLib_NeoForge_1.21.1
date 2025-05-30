@@ -36,7 +36,6 @@ public class UnhenshinEvent extends Event {
             }
             this.canceled = canceled;
         }
-
     }
 
     // Post事件（不可取消）

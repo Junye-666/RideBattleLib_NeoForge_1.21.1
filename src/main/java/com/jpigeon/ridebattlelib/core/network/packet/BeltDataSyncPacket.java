@@ -77,4 +77,5 @@ public record BeltDataSyncPacket(UUID playerId, Map<ResourceLocation, ItemStack>
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }
+
 }

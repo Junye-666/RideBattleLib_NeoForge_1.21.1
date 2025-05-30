@@ -23,4 +23,5 @@ public class KeyBindings {
             GLFW.GLFW_KEY_X,
             "category.ridebattlelib"
     );
+
 }

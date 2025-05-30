@@ -18,7 +18,6 @@ public class TriggerItemHandler {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
 
         if (player.level().isClientSide()) return;
-
         if (config != null && heldItem.is(config.getTriggerItem())) {
             // 取消事件传播，避免物品被消耗
             event.setCanceled(true);

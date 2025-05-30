@@ -2,12 +2,10 @@ package com.jpigeon.ridebattlelib.core.network.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
-import com.jpigeon.ridebattlelib.core.network.packet.BeltDataSyncPacket;
-import com.jpigeon.ridebattlelib.core.network.packet.ReturnItemsPacket;
+import com.jpigeon.ridebattlelib.core.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
-import com.jpigeon.ridebattlelib.core.network.packet.HenshinPacket;
-import com.jpigeon.ridebattlelib.core.network.packet.UnhenshinPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,7 +15,6 @@ import java.util.Objects;
 
 
 public class PacketHandler {
-    private static final HenshinSystem HENSHIN_SYSTEM = new HenshinSystem();
 
     public static void register(final RegisterPayloadHandlersEvent event) {
         event.registrar(RideBattleLib.MODID)
@@ -28,7 +25,7 @@ public class PacketHandler {
                         (payload, context) ->
                         {
                             if (context.player() instanceof ServerPlayer serverPlayer) {
-                                HENSHIN_SYSTEM.henshin(context.player(), payload.riderId());
+                                HenshinSystem.INSTANCE.henshin(context.player(), payload.riderId());
                             }
 
                         }
@@ -38,8 +35,19 @@ public class PacketHandler {
                         UnhenshinPacket.STREAM_CODEC,
                         (payload, context) -> {
                             if (context.player() instanceof ServerPlayer) {
-                                HENSHIN_SYSTEM.unHenshin(context.player());
+                                HenshinSystem.INSTANCE.unHenshin(context.player());
                             }
+                        }
+                )
+                .playToServer(
+                        SwitchFormPacket.TYPE,
+                        SwitchFormPacket.STREAM_CODEC,
+                        (payload, context) ->
+                        {
+                            if (context.player() instanceof ServerPlayer serverPlayer) {
+                                HenshinSystem.INSTANCE.switchForm(context.player(), payload.formId());
+                            }
+
                         }
                 )
                 .playToClient(

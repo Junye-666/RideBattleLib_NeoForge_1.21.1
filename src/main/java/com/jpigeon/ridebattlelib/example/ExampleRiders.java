@@ -57,7 +57,7 @@ public class ExampleRiders {
                 )
                 .addEffect(// 增加夜视效果
                         MobEffects.NIGHT_VISION,
-                        999999,
+                        114514,
                         0,
                         true
                 )
@@ -87,13 +87,13 @@ public class ExampleRiders {
                 )
                 .addEffect(// 增加力量效果
                         MobEffects.DAMAGE_BOOST,
-                        999999,
+                        114514,
                         0,
                         true
                 )
                 .addEffect(
                         MobEffects.NIGHT_VISION,
-                        999999,
+                        114514,
                         0,
                         true
                 )

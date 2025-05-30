@@ -248,7 +248,9 @@ public class HenshinSystem implements IHenshinSystem {
 
         for (MobEffectInstance effect : form.getEffects()) {
             player.addEffect(new MobEffectInstance(effect));
+            RideBattleLib.LOGGER.debug("应用效果: {} 给玩家 {}", effect, player.getName());
         }
+
     }
 
     private void removeAttributes(Player player, ResourceLocation formId) {
@@ -272,6 +274,7 @@ public class HenshinSystem implements IHenshinSystem {
 
         for (MobEffectInstance effect : form.getEffects()) {
             player.removeEffect(effect.getEffect());
+            RideBattleLib.LOGGER.debug("移除效果: {} 从玩家 {}", effect, player.getName());
         }
     }
     //====================检查方法====================

@@ -8,5 +8,4 @@ public interface IFormSystem {
     ResourceLocation matchForm(Player player, ResourceLocation formId);
     // 切换形态
     void switchForm(Player player, ResourceLocation formId);
-
 }

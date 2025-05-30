@@ -4,5 +4,4 @@ public enum AnimationPhase {
     START,
     ARMOR_EQUIP,
     END
-
 }

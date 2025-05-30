@@ -50,8 +50,9 @@ public class FormConfig {
     }
 
     // 修复 addEffect 方法
-    public FormConfig addEffect(Holder<MobEffect> effect, int duration, int amplifier, boolean hideParicles) {
-        effects.add(new MobEffectInstance(effect));
+    public FormConfig addEffect(Holder<MobEffect> effect, int duration, int amplifier, boolean hideParticles) {
+        // 确保每次都创建新的实例
+        effects.add(new MobEffectInstance(effect, duration, amplifier, false, hideParticles));
         return this;
     }
 

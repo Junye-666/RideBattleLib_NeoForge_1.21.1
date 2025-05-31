@@ -15,7 +15,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 public class PacketHandler {
     public static void register(final RegisterPayloadHandlersEvent event) {
         event.registrar(RideBattleLib.MODID)
-                .versioned("0.2.0")
+                .versioned("0.9.0")
                 .playToServer(HenshinPacket.TYPE, HenshinPacket.STREAM_CODEC,
                         (payload, context) -> {
                             if (!HenshinCore.isOnCooldown(context.player())) {

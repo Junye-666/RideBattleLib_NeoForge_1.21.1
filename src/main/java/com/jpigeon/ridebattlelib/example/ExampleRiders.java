@@ -72,7 +72,7 @@ public class ExampleRiders {
                         Items.IRON_INGOT
                 );
 
-// 创建强化形态配置
+        // 创建强化形态配置
         FormConfig alphaPoweredForm = new FormConfig(
                 ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "alpha_powered_form"))
                 .setArmor(// 金色盔甲
@@ -112,14 +112,14 @@ public class ExampleRiders {
                         Items.REDSTONE
                 );
 
-// 将形态添加到骑士配置
+        // 将形态添加到骑士配置
         riderAlpha
                 .addForm(alphaBaseForm)
                 .addForm(alphaPoweredForm)
                 .setBaseForm(alphaBaseForm.getFormId());// 设置基础形态
         alphaBaseForm.setAllowsEmptyBelt(false);
 
-// 注册骑士
+        // 注册骑士
         RiderRegistry.registerRider(riderAlpha);
     }
 

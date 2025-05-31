@@ -125,8 +125,7 @@ public class ExampleRiders {
     public static void betaRider() {
         RiderConfig riderBeta = new RiderConfig(TEST_RIDER_BETA)
                 .setDriverItem(Items.BRICK, EquipmentSlot.OFFHAND)
-                .setTriggerType(TriggerType.ITEM)
-                .setTriggerItem(Items.REDSTONE)
+                .setTriggerType(TriggerType.KEY)
                 .setUniversalGear(EquipmentSlot.FEET, Items.LEATHER_BOOTS)
                 .addSlot(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "beta_slot_head"),
                         List.of(Items.IRON_INGOT, Items.GOLD_INGOT, Items.DIAMOND), true, false)
@@ -210,14 +209,14 @@ public class ExampleRiders {
 
         betaDynamicForm.addDynamicPart(
                 ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "beta_slot_leggings"), // 修改为beta_slot_leggings
-                EquipmentSlot.LEGS, // 保持为FEET，这是装备位置
+                EquipmentSlot.LEGS,
                 legMapping,
                 legEffects
         );
         riderBeta
                 .addForm(betaBaseForm)
                 .addForm(betaDynamicForm)
-                .setBaseForm(betaBaseForm.getFormId());
+        ;
         RiderRegistry.registerRider(riderBeta);
     }
 

@@ -42,12 +42,11 @@ public class PacketHandler {
                 .playToServer(
                         SwitchFormPacket.TYPE,
                         SwitchFormPacket.STREAM_CODEC,
-                        (payload, context) ->
-                        {
+                        (payload, context) -> {
                             if (context.player() instanceof ServerPlayer serverPlayer) {
-                                HenshinSystem.INSTANCE.switchForm(context.player(), payload.formId());
+                                // 调用实际的切换方法
+                                HenshinSystem.INSTANCE.switchForm(serverPlayer, payload.formId());
                             }
-
                         }
                 )
                 .playToClient(

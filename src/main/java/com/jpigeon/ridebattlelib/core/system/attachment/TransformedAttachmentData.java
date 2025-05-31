@@ -13,15 +13,20 @@ import java.util.Map;
 public record TransformedAttachmentData(
         ResourceLocation riderId,
         ResourceLocation formId,
-        Map<EquipmentSlot, ItemStack> originalGear
+        Map<EquipmentSlot, ItemStack> originalGear,
+        Map<ResourceLocation, ItemStack> beltSnapshot // 新增：变身时的腰带快照
 ) {
     public static final Codec<TransformedAttachmentData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     ResourceLocation.CODEC.fieldOf("riderId").forGetter(TransformedAttachmentData::riderId),
                     ResourceLocation.CODEC.fieldOf("formId").forGetter(TransformedAttachmentData::formId),
-                    // 使用自定义编解码器处理原始装备
-                    originalGearCodec().fieldOf("originalGear").forGetter(TransformedAttachmentData::originalGear)
-            ).apply(instance, TransformedAttachmentData::new)
+                    originalGearCodec().fieldOf("originalGear").forGetter(TransformedAttachmentData::originalGear),
+                    // 新增 beltSnapshot 的编解码器（与 originalGear 相同结构）
+                    Codec.unboundedMap(
+                            ResourceLocation.CODEC,
+                            ItemStack.OPTIONAL_CODEC
+                    ).fieldOf("beltSnapshot").forGetter(TransformedAttachmentData::beltSnapshot)
+            ).apply(instance, TransformedAttachmentData::new) // 现在参数数量匹配
     );
 
     // 自定义原始装备编解码器
@@ -37,16 +42,19 @@ public record TransformedAttachmentData(
         tag.putString("riderId", riderId.toString());
         tag.putString("formId", formId.toString());
 
+        // 序列化 originalGear
         CompoundTag gearTag = new CompoundTag();
         originalGear.forEach((slot, stack) -> {
-            // 使用特殊标记保存空物品
-            if (stack.isEmpty()) {
-                gearTag.putString(slot.getName(), "EMPTY");
-            } else {
-                gearTag.put(slot.getName(), stack.save(provider));
-            }
+            gearTag.put(slot.getName(), stack.isEmpty() ? new CompoundTag() : stack.save(provider));
         });
         tag.put("originalGear", gearTag);
+
+        // 序列化 beltSnapshot
+        CompoundTag beltTag = new CompoundTag();
+        beltSnapshot.forEach((slotId, stack) -> {
+            beltTag.put(slotId.toString(), stack.isEmpty() ? new CompoundTag() : stack.save(provider));
+        });
+        tag.put("beltSnapshot", beltTag);
 
         return tag;
     }

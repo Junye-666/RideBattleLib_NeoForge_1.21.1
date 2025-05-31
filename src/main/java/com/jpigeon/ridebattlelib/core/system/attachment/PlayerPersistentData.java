@@ -76,6 +76,28 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
         validBeltItems.forEach((key, stack) -> beltItemsTag.put(key.toString(), stack.save(provider)));
         tag.put("BeltItems", beltItemsTag);
 
+        if (transformedData != null) {
+            CompoundTag dataTag = new CompoundTag();
+            dataTag.putString("riderId", transformedData.riderId().toString());
+            dataTag.putString("formId", transformedData.formId().toString());
+
+            // 序列化 originalGear
+            CompoundTag gearTag = new CompoundTag();
+            transformedData.originalGear().forEach((slot, stack) -> {
+                gearTag.put(slot.getName(), stack.isEmpty() ? new CompoundTag() : stack.save(provider));
+            });
+            dataTag.put("originalGear", gearTag);
+
+            // 新增 beltSnapshot 序列化
+            CompoundTag snapshotTag = new CompoundTag();
+            transformedData.beltSnapshot().forEach((id, stack) -> {
+                snapshotTag.put(id.toString(), stack.isEmpty() ? new CompoundTag() : stack.save(provider));
+            });
+            dataTag.put("beltSnapshot", snapshotTag);
+
+            tag.put("TransformedData", dataTag);
+        }
+
         return tag;
     }
 
@@ -103,7 +125,9 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
             transformedData = new TransformedAttachmentData(
                     ResourceLocation.tryParse(dataTag.getString("riderId")),
                     ResourceLocation.tryParse(dataTag.getString("formId")),
-                    loadOriginalGear(provider, dataTag.getCompound("originalGear"))
+                    loadOriginalGear(provider, dataTag.getCompound("originalGear")),
+                    // 新增 beltSnapshot 的反序列化
+                    loadBeltSnapshot(provider, dataTag.getCompound("beltSnapshot"))
             );
         } else {
             transformedData = null;
@@ -126,6 +150,28 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
             }
         }
         return gear;
+    }
+
+    private Map<ResourceLocation, ItemStack> loadBeltSnapshot(HolderLookup.Provider provider, CompoundTag beltTag) {
+        Map<ResourceLocation, ItemStack> snapshot = new HashMap<>();
+        for (String key : beltTag.getAllKeys()) {
+            ResourceLocation id = ResourceLocation.tryParse(key);
+            if (id != null) {
+                ItemStack stack = ItemStack.parse(provider, beltTag.getCompound(key))
+                        .orElse(ItemStack.EMPTY);
+                if (!stack.isEmpty()) {
+                    snapshot.put(id, stack);
+                }
+            }
+        }
+        return snapshot;
+    }
+
+    public String toString() {
+        return "PlayerPersistentData{" +
+                "beltItems=" + beltItems +
+                ", transformedData=" + transformedData +
+                '}';
     }
 }
 

@@ -84,6 +84,22 @@ public class BeltSystem implements IBeltSystem {
         if (!extracted.isEmpty()) {
             returnItemToPlayer(player, extracted);
             syncBeltData(player);
+
+            // 根据触发类型分发事件
+            RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+            if (config != null) {
+                switch (config.getTriggerType()) {
+                    case AUTO:
+                        BeltHandler.onAutoItemExtracted(player, slotId);
+                        break;
+                    case ITEM:
+                        // ITEM 类型通常不需要响应提取事件
+                        break;
+                    case KEY:
+                        // KEY 类型通常不需要响应提取事件
+                        break;
+                }
+            }
         }
         return extracted;
     }

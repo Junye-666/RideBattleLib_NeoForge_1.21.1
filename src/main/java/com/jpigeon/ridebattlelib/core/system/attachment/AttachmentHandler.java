@@ -37,20 +37,22 @@ public class AttachmentHandler {
                         new HenshinSystem.TransformedData(
                                 config,
                                 formId,
-                                Objects.requireNonNull(data.transformedData()).originalGear()
+                                Objects.requireNonNull(data.transformedData()).originalGear(),
+                                Objects.requireNonNull(data.transformedData()).beltSnapshot() // 新增
                         )
                 );
 
-                Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-                // 2. 重新装备盔甲
-                HenshinSystem.INSTANCE.equipArmor(player, form, beltItems);
+                // 2. 重新装备盔甲（使用登录时的实时腰带数据）
+                Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
+                HenshinSystem.INSTANCE.equipArmor(player, form, currentBelt);
 
-                // 3. 重新应用属性
-                HenshinSystem.INSTANCE.applyAttributes(player, form, beltItems);
+                // 3. 重新应用属性（使用登录时的实时腰带数据）
+                HenshinSystem.INSTANCE.applyAttributes(player, form, currentBelt);
 
-                // 4. 更新变身状态
+                // 4. 更新变身状态（保留原始装备，更新腰带快照为当前状态）
                 HenshinSystem.INSTANCE.setTransformed(player, config, formId,
-                        Objects.requireNonNull(data.transformedData()).originalGear());
+                        Objects.requireNonNull(data.transformedData()).originalGear(),
+                        currentBelt); // 更新为当前腰带状态
 
                 RideBattleLib.LOGGER.info("恢复玩家变身状态: {}", player.getName());
             }
@@ -79,21 +81,23 @@ public class AttachmentHandler {
                         new HenshinSystem.TransformedData(
                                 config,
                                 Objects.requireNonNull(originalData.transformedData()).formId(),
-                                Objects.requireNonNull(originalData.transformedData()).originalGear()
+                                Objects.requireNonNull(originalData.transformedData()).originalGear(),
+                                Objects.requireNonNull(originalData.transformedData()).beltSnapshot() // 新增
                         )
                 );
 
-                Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(newPlayer);
-                // 2. 重新装备盔甲
-                HenshinSystem.INSTANCE.equipArmor(newPlayer, form, beltItems);
+                // 2. 重新装备盔甲（使用复活时的实时腰带数据）
+                Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(newPlayer);
+                HenshinSystem.INSTANCE.equipArmor(newPlayer, form, currentBelt);
 
-                // 3. 重新应用属性
-                HenshinSystem.INSTANCE.applyAttributes(newPlayer, form, beltItems);
+                // 3. 重新应用属性（使用复活时的实时腰带数据）
+                HenshinSystem.INSTANCE.applyAttributes(newPlayer, form, currentBelt);
 
-                // 4. 更新变身状态
+                // 4. 更新变身状态（保留原始装备，更新腰带快照为当前状态）
                 HenshinSystem.INSTANCE.setTransformed(newPlayer, config,
                         Objects.requireNonNull(originalData.transformedData()).formId(),
-                        Objects.requireNonNull(originalData.transformedData()).originalGear());
+                        Objects.requireNonNull(originalData.transformedData()).originalGear(),
+                        currentBelt); // 更新为当前腰带状态
             }
         }
     }

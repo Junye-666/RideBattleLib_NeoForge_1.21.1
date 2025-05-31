@@ -1,7 +1,9 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
 
+import com.jpigeon.ridebattlelib.RideBattleLib;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -14,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FormConfig {
     private final ResourceLocation formId;
@@ -90,17 +93,42 @@ public class FormConfig {
     }
 
     public boolean matchesDynamic(Map<ResourceLocation, ItemStack> beltItems) {
-        // 没有动态部件时不匹配
         if (dynamicParts.isEmpty()) {
             return false;
         }
 
-        for (ResourceLocation slotId : dynamicParts.keySet()) {
+        RideBattleLib.LOGGER.info("检查动态形态 {} 的匹配:", formId);
+        dynamicParts.forEach((slotId, part) -> {
             ItemStack stack = beltItems.getOrDefault(slotId, ItemStack.EMPTY);
-            if (stack.isEmpty()) return false;
+            RideBattleLib.LOGGER.info("- 槽位 {}: {}", slotId,
+                    stack.isEmpty() ? "空" : stack.getItem().getDescriptionId());
+
+            if (!stack.isEmpty()) {
+                RideBattleLib.LOGGER.info("  允许物品: {}",
+                        part.itemToArmor.keySet().stream()
+                                .map(Item::getDescriptionId)
+                                .collect(Collectors.joining(", ")));
+            }
+        });
+
+        for (ResourceLocation slotId : dynamicParts.keySet()) {
+            ItemStack stack = beltItems.get(slotId);
+            // 修复：允许空堆栈但必须有槽位定义
+            if (stack == null || stack.isEmpty()) {
+                RideBattleLib.LOGGER.debug("动态部件槽位 {} 为空", slotId);
+                return false;
+            }
 
             DynamicPart part = dynamicParts.get(slotId);
-            if (part == null || !part.itemToArmor.containsKey(stack.getItem())) {
+            if (part == null) {
+                RideBattleLib.LOGGER.error("动态部件 {} 未定义", slotId);
+                return false;
+            }
+
+            // 修复：检查物品是否在允许列表中
+            if (!part.itemToArmor.containsKey(stack.getItem())) {
+                RideBattleLib.LOGGER.debug("物品 {} 不在动态部件 {} 的允许列表中",
+                        stack.getItem().getDescriptionId(), slotId);
                 return false;
             }
         }
@@ -171,5 +199,18 @@ public class FormConfig {
             this.itemToArmor = itemToArmor;
             this.itemToEffect = itemToEffect;
         }
+    }
+
+    public ResourceLocation getDynamicFormId(Map<ResourceLocation, ItemStack> beltItems) {
+        if (dynamicParts.isEmpty()) return formId;
+
+        StringBuilder idBuilder = new StringBuilder(formId.toString());
+        for (ResourceLocation slotId : dynamicParts.keySet()) {
+            ItemStack stack = beltItems.get(slotId);
+            if (!stack.isEmpty()) {
+                idBuilder.append("_").append(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+            }
+        }
+        return ResourceLocation.parse(idBuilder.toString());
     }
 }

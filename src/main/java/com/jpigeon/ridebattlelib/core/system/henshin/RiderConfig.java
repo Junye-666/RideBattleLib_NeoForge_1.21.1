@@ -166,25 +166,29 @@ public class RiderConfig {
 
     // 形态匹配
     public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
-        // 优先检查动态形态匹配
-        for (FormConfig form : forms.values()) {
-            if (form.matchesDynamic(beltItems)) {
-                return form.getFormId();
-            }
+        if (beltItems == null || beltItems.isEmpty()) {
+            return baseFormId; // 返回基础形态
         }
 
-        // 再检查固定形态匹配
+        beltItems.forEach((id, stack) ->
+                RideBattleLib.LOGGER.info("- {}: {} x{}", id, stack.getItem().getDescriptionId(), stack.getCount()));
+        // 优先匹配
         for (FormConfig form : forms.values()) {
             if (form.matches(beltItems)) {
+                RideBattleLib.LOGGER.info("匹配到固定形态: {}", form.getFormId());
                 return form.getFormId();
             }
-            RideBattleLib.LOGGER.debug("匹配形态: {} - 动态匹配:{} 固定匹配:{}",
-                    form.getFormId(),
-                    form.matchesDynamic(beltItems),
-                    form.matches(beltItems));
         }
 
+        // 其次匹配
+        for (FormConfig form : forms.values()) {
+            if (!form.dynamicParts.isEmpty() && form.matchesDynamic(beltItems)) {
+                return form.getDynamicFormId(beltItems);
+            }
+        }
 
+        // 回退到基础形态
+        RideBattleLib.LOGGER.info("未匹配到形态，使用基础形态: {}", baseFormId);
         return baseFormId;
     }
 
@@ -193,4 +197,3 @@ public class RiderConfig {
         return this;
     }
 }
-

@@ -7,8 +7,10 @@ import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
+import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
+import com.jpigeon.ridebattlelib.core.system.event.FormDynamicUpdateEvent;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
@@ -46,8 +48,9 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
     public record TransformedData(
             RiderConfig config,
-            ResourceLocation formId, // 新增形态ID
-            Map<EquipmentSlot, ItemStack> originalGear
+            ResourceLocation formId,
+            Map<EquipmentSlot, ItemStack> originalGear,
+            Map<ResourceLocation, ItemStack> beltSnapshot // 新增字段
     ) {}
 
     @Override
@@ -58,8 +61,14 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         }
 
         if (isTransformed(player)) {
-            RideBattleLib.LOGGER.warn("玩家已处于变身状态");
-            return false;
+            // 已变身时改为形态切换而非拒绝
+            RiderConfig currentConfig = getConfig(player);
+            if (currentConfig != null && currentConfig.getRiderId().equals(riderId)) {
+                Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+                ResourceLocation newFormId = currentConfig.matchForm(beltItems);
+                switchForm(player, newFormId);
+                return true;
+            }
         }
 
         RiderConfig config = RiderRegistry.getRider(riderId);
@@ -85,9 +94,13 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         // 播放开始动画
         playHenshinSequence(player, formId, AnimationPhase.START);
 
-        // 执行变身逻辑
+
         RideBattleLib.LOGGER.info("玩家 {} 尝试变身为 {}", player.getName(), riderId);
         Map<EquipmentSlot, ItemStack> originalGear = saveOriginalGear(player, config);
+        Map<ResourceLocation, ItemStack> beltSnapshot =
+                new HashMap<>(BeltSystem.INSTANCE.getBeltItems(player));
+
+        // 执行变身逻辑
         beforeEquipArmor(player, () -> {
             // 播放装备盔甲动画
             playHenshinSequence(player, formId, AnimationPhase.ARMOR_EQUIP);
@@ -95,7 +108,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             // 装备盔甲
             equipArmor(player, form, beltItems);
         });
-        setTransformed(player, config, formId, originalGear);
+        setTransformed(player, config, formId, originalGear, beltSnapshot);
 
         beforeApplyAttributes(player, () -> {
             applyAttributes(player, form, beltItems);
@@ -129,7 +142,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             }
 
             // 移除属性
-            removeAttributes(player, data.formId());
+            removeAttributes(player, data.formId(), data.beltSnapshot);
             restoreOriginalGear(player, data);
             syncEquipment(player);
             removeTransformed(player);
@@ -139,34 +152,28 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     }
 
     public void switchForm(Player player, ResourceLocation newFormId) {
-        if (!isTransformed(player)) {
-            return;
-        }
-
         TransformedData data = getTransformedData(player);
-        if (data == null) {
+        if (data == null) return;
+
+        ResourceLocation currentFormId = data.formId();
+        RideBattleLib.LOGGER.debug("收到切换形态请求: {} -> {}", currentFormId, newFormId);
+
+        // 检查是否相同形态（需要处理动态部件更新）
+        if (currentFormId.equals(newFormId)) {
+            updateDynamicForm(player); // 调用动态更新方法
             return;
         }
 
-        RiderConfig config = data.config();
-        FormConfig newForm = config.getForm(newFormId);
-        if (newForm == null) {
-            return;
+        // 根据触发类型处理形态切换
+        switch (data.config().getTriggerType()) {
+            case KEY -> HenshinHandler.handleKeyFormSwitch(player, newFormId);
+            case AUTO -> BeltHandler.handleAutoFormSwitch(player, newFormId);
+            case ITEM -> TriggerItemHandler.handleItemFormSwitch(player, newFormId);
+            default -> RideBattleLib.LOGGER.error("未知触发类型: {}", data.config().getTriggerType());
         }
 
-        // 移除旧形态效果
-        removeAttributes(player, data.formId());
-
-        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-        // 应用新形态
-        equipArmor(player, newForm, beltItems);
-        applyAttributes(player, newForm, beltItems);
-
-        // 更新变身数据
-        setTransformed(player, config, newFormId, data.originalGear());
-
-        // 触发事件
-        NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, data.formId(), newFormId));
+        // 触发事件（仅在形态ID变化时）
+        NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, currentFormId, newFormId));
     }
 
     //====================变身辅助方法====================
@@ -218,6 +225,54 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         }
 
         syncEquipment(player);
+    }
+
+    public void performFormSwitch(Player player, ResourceLocation newFormId) {
+        TransformedData data = getTransformedData(player);
+        if (data == null) {
+            RideBattleLib.LOGGER.error("无法获取变身数据");
+            return;
+        }
+
+        ResourceLocation oldFormId = data.formId();
+        FormConfig oldForm = RiderRegistry.getForm(oldFormId);
+        FormConfig newForm = RiderRegistry.getForm(newFormId);
+        Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
+
+        // 检查是否需要更新（形态ID变化或动态部件变化）
+        boolean needsUpdate = !newFormId.equals(oldFormId);
+        if (!needsUpdate && oldForm != null && newForm != null) {
+            for (ResourceLocation slotId : newForm.dynamicParts.keySet()) {
+                ItemStack newStack = currentBelt.get(slotId);
+                ItemStack oldStack = data.beltSnapshot().get(slotId);
+                if (!ItemStack.matches(newStack, oldStack)) {
+                    needsUpdate = true;
+                    break;
+                }
+            }
+        }
+
+        if (needsUpdate) {
+            // 1. 移除旧效果
+            removeAttributes(player, oldFormId, data.beltSnapshot());
+
+            // 2. 应用新效果（如果新形态有效）
+            if (newForm != null) {
+                equipArmor(player, newForm, currentBelt);
+                applyAttributes(player, newForm, currentBelt);
+            }
+
+            // 3. 更新变身状态
+            setTransformed(player, data.config(), newFormId,
+                    data.originalGear(), currentBelt);
+
+            // 4. 触发事件
+            if (!newFormId.equals(oldFormId)) {
+                NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, oldFormId, newFormId));
+            } else {
+                NeoForge.EVENT_BUS.post(new FormDynamicUpdateEvent(player, newFormId));
+            }
+        }
     }
 
     //====================辅助方法====================
@@ -294,10 +349,27 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
     }
 
-    private void removeAttributes(Player player, ResourceLocation formId) {
+    public void removeAttributes(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltSnapshot) {
         FormConfig form = RiderRegistry.getForm(formId);
-        if (form == null) {
-            return;
+        if (form == null) return;
+
+        // 移除固定效果
+        for (MobEffectInstance effect : form.getEffects()) {
+            player.removeEffect(effect.getEffect());
+        }
+
+        // 移除动态效果（使用快照数据）
+        for (ResourceLocation slotId : form.dynamicParts.keySet()) {
+            ItemStack stack = beltSnapshot.getOrDefault(slotId, ItemStack.EMPTY);
+            if (!stack.isEmpty()) {
+                FormConfig.DynamicPart part = form.dynamicParts.get(slotId);
+                if (part != null) {
+                    MobEffectInstance effect = part.itemToEffect.get(stack.getItem());
+                    if (effect != null) {
+                        player.removeEffect(effect.getEffect());
+                    }
+                }
+            }
         }
 
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
@@ -374,22 +446,51 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());
         if (config == null) return null;
 
-        return new TransformedData(config, attachmentData.formId(), attachmentData.originalGear());
+        return new TransformedData(
+                config,
+                attachmentData.formId(),
+                attachmentData.originalGear(),
+                attachmentData.beltSnapshot() // 传递快照数据
+        );
     }
 
     //====================Setter方法====================
 
     public void setTransformed(Player player, RiderConfig config, ResourceLocation formId,
-                               Map<EquipmentSlot, ItemStack> originalGear) {
+                               Map<EquipmentSlot, ItemStack> originalGear,
+                               Map<ResourceLocation, ItemStack> beltSnapshot) {
+
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
         player.setData(ModAttachments.PLAYER_DATA,
                 new PlayerPersistentData(oldData.beltItems(),
-                        new TransformedAttachmentData(config.getRiderId(), formId, originalGear)));
+                        new TransformedAttachmentData(
+                                config.getRiderId(),
+                                formId,
+                                originalGear,
+                                beltSnapshot)));
     }
 
     public void removeTransformed(Player player) {
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
         player.setData(ModAttachments.PLAYER_DATA,
                 new PlayerPersistentData(oldData.beltItems(), null));
+    }
+
+    public void updateDynamicForm(Player player) {
+        TransformedData data = getTransformedData(player);
+        if (data == null) return;
+
+        ResourceLocation formId = data.formId();
+        FormConfig form = RiderRegistry.getForm(formId);
+        Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
+
+        if (form != null && !form.dynamicParts.isEmpty()) {
+            equipArmor(player, form, currentBelt);
+            applyAttributes(player, form, currentBelt);
+            setTransformed(player, data.config(), formId,
+                    data.originalGear(), currentBelt);
+
+            NeoForge.EVENT_BUS.post(new FormDynamicUpdateEvent(player, formId));
+        }
     }
 }

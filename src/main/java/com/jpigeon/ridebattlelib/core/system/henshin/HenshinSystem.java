@@ -1,11 +1,14 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.IAnimationSystem;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
@@ -37,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 故事从此开始!
  * 假面骑士的变身系统
  */
-public class HenshinSystem implements IHenshinSystem {
+public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     private static final Map<UUID, TransformedData> TRANSFORMED_PLAYERS = new ConcurrentHashMap<>();
     public static final HenshinSystem INSTANCE = new HenshinSystem();
 
@@ -98,16 +101,29 @@ public class HenshinSystem implements IHenshinSystem {
             return false;
         }
         HenshinEvent.Pre preEvent = new HenshinEvent.Pre(player, riderId, formId);
+        // 播放开始动画
+        playHenshinSequence(player, formId, AnimationPhase.START);
 
         // 执行变身逻辑
         RideBattleLib.LOGGER.info("玩家 {} 成功变身为 {}", player.getName(), riderId);
         Map<EquipmentSlot, ItemStack> originalGear = saveOriginalGear(player, config);
         beforeEquipArmor(player, () -> {
-            // 使用form配置装备盔甲
+            // 播放装备盔甲动画
+            playHenshinSequence(player, formId, AnimationPhase.ARMOR_EQUIP);
+
+            // 装备盔甲
             equipArmor(player, form);
             setTransformed(player, config, formId, originalGear);
 
-            beforeApplyAttributes(player, () -> applyAttributes(player, form));
+            beforeApplyAttributes(player, () -> {
+                applyAttributes(player, form);
+
+                // 播放结束动画
+                playHenshinSequence(player, formId, AnimationPhase.END);
+
+                // 触发变身完成事件
+                NeoForge.EVENT_BUS.post(new HenshinEvent.Post(player, riderId, formId));
+            });
         });
 
         // 日志输出
@@ -131,6 +147,7 @@ public class HenshinSystem implements IHenshinSystem {
             syncEquipment(player);
             removeTransformed(player);
             BeltSystem.INSTANCE.returnItems(player);
+            onHenshinEnd(player);
         }
     }
 
@@ -282,6 +299,12 @@ public class HenshinSystem implements IHenshinSystem {
     @Override
     public boolean isTransformed(Player player) {
         return player.getData(ModAttachments.PLAYER_DATA).transformedData() != null;
+    }
+
+    @Override
+    public void playHenshinSequence(Player player, ResourceLocation formId, AnimationPhase phase) {
+        // 触发动画事件供其他模组扩展
+        NeoForge.EVENT_BUS.post(new AnimationEvent(player, formId, phase));
     }
 
     //====================Getter方法====================

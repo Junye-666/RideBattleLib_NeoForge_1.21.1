@@ -17,7 +17,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -28,6 +27,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.NeoForge;
@@ -69,61 +69,42 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             return false;
         }
 
-        // 验证驱动器
-        if (!validateDriver(player, config)) {
-            RideBattleLib.LOGGER.warn("驱动器验证失败: 玩家未穿戴 {} 或槽位错误", config.getDriverItem());
-            return false;
-        }
-
-        // 验证腰带物品
-        if (!BeltSystem.INSTANCE.validateItems(player, riderId)) {
-            RideBattleLib.LOGGER.warn("槽位验证失败: 必要槽位未正确填充");
-            player.displayClientMessage(Component.translatable("ridebattlelib.validateItems.fail"), true);
-            return false;
-        }
-
-        // 检查驱动器
-        ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
-        boolean isDriverValid = driverStack.is(config.getDriverItem());
-        RideBattleLib.LOGGER.info("驱动器验证: 槽位 {} | 物品 {} | 有效: {}",
-                config.getDriverSlot(), driverStack.getItem(), isDriverValid
-        );
-        if (!isDriverValid) {
-            return false;
-        }
-
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+        if (beltItems == null) {
+            RideBattleLib.LOGGER.error("腰带数据为空!");
+            return false;
+        }
         ResourceLocation formId = config.matchForm(beltItems);
         FormConfig form = config.getForm(formId);
-
         if (form == null) {
-            RideBattleLib.LOGGER.error("未找到匹配的形态配置");
+            RideBattleLib.LOGGER.error("未找到匹配的形态配置: {}", formId);
             return false;
         }
+
         HenshinEvent.Pre preEvent = new HenshinEvent.Pre(player, riderId, formId);
         // 播放开始动画
         playHenshinSequence(player, formId, AnimationPhase.START);
 
         // 执行变身逻辑
-        RideBattleLib.LOGGER.info("玩家 {} 成功变身为 {}", player.getName(), riderId);
+        RideBattleLib.LOGGER.info("玩家 {} 尝试变身为 {}", player.getName(), riderId);
         Map<EquipmentSlot, ItemStack> originalGear = saveOriginalGear(player, config);
         beforeEquipArmor(player, () -> {
             // 播放装备盔甲动画
             playHenshinSequence(player, formId, AnimationPhase.ARMOR_EQUIP);
 
             // 装备盔甲
-            equipArmor(player, form);
-            setTransformed(player, config, formId, originalGear);
+            equipArmor(player, form, beltItems);
+        });
+        setTransformed(player, config, formId, originalGear);
 
-            beforeApplyAttributes(player, () -> {
-                applyAttributes(player, form);
+        beforeApplyAttributes(player, () -> {
+            applyAttributes(player, form, beltItems);
 
-                // 播放结束动画
-                playHenshinSequence(player, formId, AnimationPhase.END);
+            // 播放结束动画
+            playHenshinSequence(player, formId, AnimationPhase.END);
 
-                // 触发变身完成事件
-                NeoForge.EVENT_BUS.post(new HenshinEvent.Post(player, riderId, formId));
-            });
+            // 触发变身完成事件
+            NeoForge.EVENT_BUS.post(new HenshinEvent.Post(player, riderId, formId));
         });
 
         // 日志输出
@@ -140,9 +121,15 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     public void unHenshin(Player player) {
         TransformedData data = getTransformedData(player);
         if (data != null) {
+            FormConfig form = RiderRegistry.getForm(data.formId());
+            if (form != null) {
+                Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+                List<MobEffectInstance> dynamicEffects = form.getDynamicEffects(beltItems);
+                RideBattleLib.LOGGER.info("解除变身时将移除动态效果: {}", dynamicEffects);
+            }
+
             // 移除属性
             removeAttributes(player, data.formId());
-
             restoreOriginalGear(player, data);
             syncEquipment(player);
             removeTransformed(player);
@@ -151,54 +138,85 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         }
     }
 
-    public boolean switchForm(Player player, ResourceLocation newFormId) {
+    public void switchForm(Player player, ResourceLocation newFormId) {
         if (!isTransformed(player)) {
-            return false;
+            return;
         }
 
         TransformedData data = getTransformedData(player);
         if (data == null) {
-            return false;
+            return;
         }
 
         RiderConfig config = data.config();
         FormConfig newForm = config.getForm(newFormId);
         if (newForm == null) {
-            return false;
+            return;
         }
 
         // 移除旧形态效果
         removeAttributes(player, data.formId());
 
+        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         // 应用新形态
-        equipArmor(player, newForm);
-        applyAttributes(player, newForm);
+        equipArmor(player, newForm, beltItems);
+        applyAttributes(player, newForm, beltItems);
 
         // 更新变身数据
         setTransformed(player, config, newFormId, data.originalGear());
 
         // 触发事件
         NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, data.formId(), newFormId));
-        return true;
     }
 
     //====================变身辅助方法====================
 
-    public void equipArmor(Player player, FormConfig form) {
+    public void equipArmor(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
+        // 先设置通用装备（固定槽位）
+        RiderConfig config = getConfig(player);
+        if (config != null) {
+            for (Map.Entry<EquipmentSlot, Item> entry : config.getUniversalGear().entrySet()) {
+                EquipmentSlot slot = entry.getKey();
+                Item item = entry.getValue();
+                if (item != Items.AIR) {
+                    player.setItemSlot(slot, new ItemStack(item));
+                }
+            }
+        }
+
+        // 设置固定形态盔甲
         if (form.getHelmet() != Items.AIR) {
             player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(form.getHelmet()));
         }
         if (form.getChestplate() != Items.AIR) {
             player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(form.getChestplate()));
         }
-        if (form.getLeggings() != Items.AIR) {
-            if (form.getLeggings() != null) {
-                player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(form.getLeggings()));
-            }
+        if (form.getLeggings() != null && form.getLeggings() != Items.AIR) {
+            player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(form.getLeggings()));
         }
         if (form.getBoots() != Items.AIR) {
             player.setItemSlot(EquipmentSlot.FEET, new ItemStack(form.getBoots()));
         }
+
+        // 设置动态部件盔甲（覆盖固定盔甲）
+        for (ResourceLocation slotId : form.dynamicParts.keySet()) {
+            // 安全获取物品堆栈，避免null
+            ItemStack stack = beltItems.getOrDefault(slotId, ItemStack.EMPTY);
+            if (stack.isEmpty()) {
+                RideBattleLib.LOGGER.warn("动态部件槽位 {} 为空", slotId);
+                continue;
+            }
+
+            FormConfig.DynamicPart part = form.dynamicParts.get(slotId);
+            if (part == null) continue; // 额外的空检查
+
+            Item armor = part.itemToArmor.get(stack.getItem());
+
+            if (armor != null && armor != Items.AIR) {
+                player.setItemSlot(part.slot, new ItemStack(armor));
+            }
+        }
+
         syncEquipment(player);
     }
 
@@ -248,7 +266,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         return originalGear;
     }
 
-    public void applyAttributes(Player player, FormConfig form) {
+    public void applyAttributes(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
         for (AttributeModifier modifier : form.getAttributes()) {
@@ -268,14 +286,23 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             RideBattleLib.LOGGER.debug("应用效果: {} 给玩家 {}", effect, player.getName());
         }
 
+        if (form.matchesDynamic(beltItems)) {
+            for (MobEffectInstance effect : form.getDynamicEffects(beltItems)) {
+                player.addEffect(new MobEffectInstance(effect));
+            }
+        }
+
     }
 
     private void removeAttributes(Player player, ResourceLocation formId) {
         FormConfig form = RiderRegistry.getForm(formId);
-        if (form == null) return;
+        if (form == null) {
+            return;
+        }
 
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
+        // 移除固定属性
         for (AttributeModifier modifier : form.getAttributes()) {
             Holder<Attribute> holder = attributeRegistry.getHolder(
                     ResourceKey.create(Registries.ATTRIBUTE, modifier.id())
@@ -284,16 +311,40 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             if (holder != null) {
                 AttributeInstance instance = player.getAttribute(holder);
                 if (instance != null) {
-                    instance.removeModifier(modifier.id()); // 使用UUID
+                    instance.removeModifier(modifier.id());
                 }
             }
         }
 
+        // 移除固定效果
         for (MobEffectInstance effect : form.getEffects()) {
             player.removeEffect(effect.getEffect());
-            RideBattleLib.LOGGER.debug("移除效果: {} 从玩家 {}", effect, player.getName());
+            RideBattleLib.LOGGER.debug("移除固定效果: {} 从玩家 {}", effect, player.getName());
+        }
+
+        // +++ 新增：移除动态效果 +++
+        // 获取变身时的腰带数据
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        Map<ResourceLocation, ItemStack> beltItems = data.beltItems();
+
+        // 移除动态效果
+        if (!form.dynamicParts.isEmpty()) {
+            for (ResourceLocation slotId : form.dynamicParts.keySet()) {
+                ItemStack stack = beltItems.getOrDefault(slotId, ItemStack.EMPTY);
+                if (!stack.isEmpty()) {
+                    FormConfig.DynamicPart part = form.dynamicParts.get(slotId);
+                    if (part != null) {
+                        MobEffectInstance effect = part.itemToEffect.get(stack.getItem());
+                        if (effect != null) {
+                            player.removeEffect(effect.getEffect());
+                            RideBattleLib.LOGGER.debug("移除动态效果: {} (来自槽位 {})", effect, slotId);
+                        }
+                    }
+                }
+            }
         }
     }
+
     //====================检查方法====================
 
     @Override

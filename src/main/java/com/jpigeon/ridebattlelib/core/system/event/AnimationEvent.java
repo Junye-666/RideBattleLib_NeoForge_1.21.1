@@ -16,7 +16,6 @@ public class AnimationEvent extends Event {
         this.phase = phase;
     }
 
-
     public Player getPlayer() {
         return player;
     }

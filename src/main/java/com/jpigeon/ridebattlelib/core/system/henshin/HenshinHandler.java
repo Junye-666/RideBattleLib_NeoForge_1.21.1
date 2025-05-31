@@ -17,7 +17,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class HenshinHandler {
     // 右键变身逻辑已迁移至BeltHandler中
@@ -32,15 +31,12 @@ public class HenshinHandler {
             RiderConfig activeConfig = RiderConfig.findActiveDriverConfig(player);
             if (activeConfig != null) {
                 if (HenshinSystem.INSTANCE.isTransformed(player)) {
-                    // 形态切换逻辑
                     Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
                     ResourceLocation newFormId = activeConfig.matchForm(beltItems);
 
-                    if (!newFormId.equals(Objects.requireNonNull(HenshinSystem.INSTANCE.getTransformedData(player)).formId())) {
-                        PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
-                    }
+                    // 发送形态切换包
+                    PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
                 } else if (activeConfig.getTriggerType() == TriggerType.KEY) {
-                    // 标准变身逻辑
                     PacketHandler.sendToServer(new HenshinPacket(activeConfig.getRiderId()));
                 }
             }

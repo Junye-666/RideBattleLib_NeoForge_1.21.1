@@ -17,6 +17,5 @@ public class ClientModEvents {
         event.register(KeyBindings.HENSHIN_KEY);
         event.register(KeyBindings.RETURN_ITEMS_KEY);
     }
-
 }
 

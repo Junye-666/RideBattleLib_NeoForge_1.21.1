@@ -5,6 +5,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -24,6 +25,7 @@ public class FormConfig {
     private final List<MobEffectInstance> effects = new ArrayList<>();
     private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
     private final List<ResourceLocation> attributeIds = new ArrayList<>(); // 存储属性ID
+    public final Map<ResourceLocation, DynamicPart> dynamicParts = new HashMap<>();
 
     public FormConfig(ResourceLocation formId) {
         this.formId = formId;
@@ -62,11 +64,43 @@ public class FormConfig {
         return this;
     }
 
+    public FormConfig addDynamicPart(ResourceLocation slotId, EquipmentSlot slot,
+                                     Map<Item, Item> itemToArmor,
+                                     Map<Item, MobEffectInstance> itemToEffect) {
+        Objects.requireNonNull(itemToArmor, "itemToArmor不能为null");
+        Objects.requireNonNull(itemToEffect, "itemToEffect不能为null");
+        // 验证输入参数
+        if (slotId == null || slot == null) {
+            throw new IllegalArgumentException("动态部件参数不能为空");
+        }
+
+        dynamicParts.put(slotId, new DynamicPart(slot, itemToArmor, itemToEffect));
+        return this;
+    }
+
     // 匹配验证
     public boolean matches(Map<ResourceLocation, ItemStack> beltItems) {
         for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
             ItemStack stack = beltItems.get(entry.getKey());
             if (stack == null || stack.isEmpty() || !stack.is(entry.getValue())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean matchesDynamic(Map<ResourceLocation, ItemStack> beltItems) {
+        // 没有动态部件时不匹配
+        if (dynamicParts.isEmpty()) {
+            return false;
+        }
+
+        for (ResourceLocation slotId : dynamicParts.keySet()) {
+            ItemStack stack = beltItems.getOrDefault(slotId, ItemStack.EMPTY);
+            if (stack.isEmpty()) return false;
+
+            DynamicPart part = dynamicParts.get(slotId);
+            if (part == null || !part.itemToArmor.containsKey(stack.getItem())) {
                 return false;
             }
         }
@@ -105,4 +139,37 @@ public class FormConfig {
     public List<ResourceLocation> getAttributeIds() {
         return Collections.unmodifiableList(attributeIds);
     } // 获取属性ID列表
+
+    public Item getDynamicArmor(ResourceLocation slotId, ItemStack stack) {
+        DynamicPart part = dynamicParts.get(slotId);
+        return part != null ? part.itemToArmor.get(stack.getItem()) : Items.AIR;
+    }
+
+    public List<MobEffectInstance> getDynamicEffects(Map<ResourceLocation, ItemStack> beltItems) {
+        List<MobEffectInstance> effects = new ArrayList<>();
+        for (ResourceLocation slotId : dynamicParts.keySet()) {
+            ItemStack stack = beltItems.getOrDefault(slotId, ItemStack.EMPTY);
+            if (!stack.isEmpty()) {
+                DynamicPart part = dynamicParts.get(slotId);
+                MobEffectInstance effect = part.itemToEffect.get(stack.getItem());
+                if (effect != null) {
+                    effects.add(new MobEffectInstance(effect));
+                }
+            }
+        }
+        return effects;
+    }
+
+    public static class DynamicPart {
+        public final EquipmentSlot slot;
+        public final Map<Item, Item> itemToArmor;
+        public final Map<Item, MobEffectInstance> itemToEffect;
+
+        DynamicPart(EquipmentSlot slot, Map<Item, Item> itemToArmor,
+                    Map<Item, MobEffectInstance> itemToEffect) {
+            this.slot = slot;
+            this.itemToArmor = itemToArmor;
+            this.itemToEffect = itemToEffect;
+        }
+    }
 }

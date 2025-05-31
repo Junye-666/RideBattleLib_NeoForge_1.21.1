@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
 
+import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.resources.ResourceLocation;
@@ -38,6 +39,7 @@ public class RiderConfig {
     private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
+    private final Map<EquipmentSlot, Item> universalGear = new EnumMap<>(EquipmentSlot.class);
 
     //====================初始化方法====================
 
@@ -101,6 +103,16 @@ public class RiderConfig {
         return Collections.unmodifiableMap(slotDefinitions);
     }
 
+    // 添加形态获取方法
+    public FormConfig getForm(ResourceLocation formId) {
+        return forms.get(formId);
+    }
+
+    // 通用装备
+    public Map<EquipmentSlot, Item> getUniversalGear() {
+        return Collections.unmodifiableMap(universalGear);
+    }
+
     //====================Setter方法====================
 
     //指定驱动器物品
@@ -154,20 +166,31 @@ public class RiderConfig {
 
     // 形态匹配
     public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
-        // 优先检查完全匹配的形态
+        // 优先检查动态形态匹配
         for (FormConfig form : forms.values()) {
-            if (form.matches(beltItems)) {
+            if (form.matchesDynamic(beltItems)) {
                 return form.getFormId();
             }
         }
 
-        // 返回基础形态
+        // 再检查固定形态匹配
+        for (FormConfig form : forms.values()) {
+            if (form.matches(beltItems)) {
+                return form.getFormId();
+            }
+            RideBattleLib.LOGGER.debug("匹配形态: {} - 动态匹配:{} 固定匹配:{}",
+                    form.getFormId(),
+                    form.matchesDynamic(beltItems),
+                    form.matches(beltItems));
+        }
+
+
         return baseFormId;
     }
 
-    // 添加形态获取方法
-    public FormConfig getForm(ResourceLocation formId) {
-        return forms.get(formId);
+    public RiderConfig setUniversalGear(EquipmentSlot slot, Item item) {
+        universalGear.put(slot, item);
+        return this;
     }
 }
 

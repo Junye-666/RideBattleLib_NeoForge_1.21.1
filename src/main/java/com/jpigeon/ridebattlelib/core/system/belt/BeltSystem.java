@@ -144,9 +144,17 @@ public class BeltSystem implements IBeltSystem {
     }
 
     public void setBeltItems(Player player, Map<ResourceLocation, ItemStack> items) {
+        // 创建安全的副本，过滤null值
+        Map<ResourceLocation, ItemStack> safeItems = new HashMap<>();
+        items.forEach((key, value) -> {
+            if (key != null && value != null && !value.isEmpty()) {
+                safeItems.put(key, value);
+            }
+        });
+
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
         player.setData(ModAttachments.PLAYER_DATA,
-                new PlayerPersistentData(new HashMap<>(items), oldData.transformedData()));
+                new PlayerPersistentData(safeItems, oldData.transformedData()));
     }
 
     //====================网络通信方法====================

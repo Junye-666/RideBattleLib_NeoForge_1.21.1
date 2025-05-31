@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
@@ -10,11 +11,14 @@ import com.jpigeon.ridebattlelib.core.system.event.FormDynamicUpdateEvent;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
+import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -35,13 +39,34 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class HenshinCore {
-    private static final Map<UUID, Long> COOLDOWN_MAP = new ConcurrentHashMap<>();
+    public static final Map<UUID, Long> COOLDOWN_MAP = new ConcurrentHashMap<>();
     public static final HenshinCore INSTANCE = new HenshinCore();
 
     public static void executeTransform(Player player, RiderConfig config,
                                         ResourceLocation formId,
                                         Map<ResourceLocation, ItemStack> beltItems) {
-        // 1. 保存原始装备
+        // 1. 检查变身冷却
+        if (isOnCooldown(player)) {
+            int remaining = (int) Math.ceil(
+                    (INSTANCE.getHenshinCooldown() * 1000 -
+                            (System.currentTimeMillis() - COOLDOWN_MAP.get(player.getUUID()))) / 1000.0
+            );
+
+            player.displayClientMessage(
+                    Component.literal("变身冷却中! 剩余时间: " + remaining + "秒")
+                            .withStyle(ChatFormatting.YELLOW),
+                    true
+            );
+            return;
+        }
+
+        // 检查吃瘪冷却
+        if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
+
+            return;
+        }
+
+        //保存原始装备
         Map<EquipmentSlot, ItemStack> originalGear = INSTANCE.saveOriginalGear(player, config);
 
         // 2. 装备盔甲
@@ -58,6 +83,7 @@ public final class HenshinCore {
                 originalGear, new HashMap<>(beltItems));
 
         // 5. 触发事件
+        startCooldown(player);
         NeoForge.EVENT_BUS.post(new HenshinEvent.Post(player, config.getRiderId(), formId));
     }
 
@@ -97,14 +123,29 @@ public final class HenshinCore {
         }
     }
 
+    public int getHenshinCooldown() {
+        return Config.HENSHIN_COOLDOWN.get();
+    }
+
     public static boolean isOnCooldown(Player player) {
         Long lastHenshin = COOLDOWN_MAP.get(player.getUUID());
+        int cooldown = INSTANCE.getHenshinCooldown() * 1000; // 转换为毫秒
         return lastHenshin != null &&
-                (System.currentTimeMillis() - lastHenshin) < 5000; // 5秒冷却
+                (System.currentTimeMillis() - lastHenshin) < cooldown;
     }
 
     public static void startCooldown(Player player) {
         COOLDOWN_MAP.put(player.getUUID(), System.currentTimeMillis());
+    }
+
+    public int getRemainingCooldown(Player player) {
+        Long lastHenshin = HenshinCore.COOLDOWN_MAP.get(player.getUUID());
+        if (lastHenshin == null) return 0;
+
+        int cooldown = Config.HENSHIN_COOLDOWN.get() * 1000;
+        long elapsed = System.currentTimeMillis() - lastHenshin;
+        long remaining = Math.max(0, cooldown - elapsed);
+        return (int) Math.ceil(remaining / 1000.0);
     }
 
     public void equipArmor(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {

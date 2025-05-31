@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.api.IAnimationSystem;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
@@ -9,8 +10,12 @@ import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.event.FormDynamicUpdateEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
+import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -36,7 +41,24 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     @Override
     public boolean henshin(Player player, ResourceLocation riderId) {
         if (player.level().isClientSide()) return false;
-        if (HenshinCore.isOnCooldown(player)) return false;
+        if (HenshinCore.isOnCooldown(player)) {
+            int cooldown = Config.HENSHIN_COOLDOWN.get();
+            player.displayClientMessage(
+                    Component.literal("变身冷却中! 剩余时间: " +
+                                    HenshinCore.INSTANCE.getRemainingCooldown(player) + "秒")
+                            .withStyle(ChatFormatting.YELLOW),
+                    true
+            );
+            return false;
+        }
+
+        if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
+            player.displayClientMessage(
+                    Component.literal("身体残☆破☆不☆堪，无法变身！").withStyle(ChatFormatting.RED),
+                    true
+            );
+            return false;
+        }
 
         RiderConfig config = RiderRegistry.getRider(riderId);
         if (config == null) return false;
@@ -65,8 +87,8 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
         // 使用核心逻辑执行变身
         HenshinCore.executeTransform(player, config, formId, beltItems);
-        HenshinCore.startCooldown(player);
 
+        HenshinCore.startCooldown(player);
         return true;
     }
 
@@ -74,6 +96,8 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     public void unHenshin(Player player) {
         TransformedData data = getTransformedData(player);
         if (data != null) {
+            boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
+
             // 1. 清除效果（复用HenshinCore逻辑）
             HenshinCore.INSTANCE.clearAllModEffects(player);
 
@@ -90,6 +114,13 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             HenshinCore.startCooldown(player); // 添加变身冷却
             HenshinCore.INSTANCE.removeTransformed(player);
             BeltSystem.INSTANCE.returnItems(player);
+
+            if (isPenalty) {
+                // 播放特殊解除音效
+                player.level().playSound(null, player.blockPosition(),
+                        SoundEvents.ANVIL_LAND, SoundSource.PLAYERS,
+                        0.8F, 0.5F);
+            }
 
             // 6. 事件触发（建议移至HenshinCore）
             onHenshinEnd(player);

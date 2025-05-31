@@ -112,15 +112,19 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
             }
         }
 
-        if (tag.contains("TransformedData", CompoundTag.TAG_COMPOUND)) {
-            CompoundTag dataTag = tag.getCompound("TransformedData");
-            transformedData = new TransformedAttachmentData(
-                    ResourceLocation.tryParse(dataTag.getString("riderId")),
-                    ResourceLocation.tryParse(dataTag.getString("formId")),
-                    loadOriginalGear(provider, dataTag.getCompound("originalGear")),
-                    // 新增 beltSnapshot 的反序列化
-                    loadBeltSnapshot(provider, dataTag.getCompound("beltSnapshot"))
-            );
+        // 如果玩家有吃瘪冷却标记，则不恢复变身状态
+        if (tag.contains("penalty_cooldown")) {
+            if (tag.contains("TransformedData", CompoundTag.TAG_COMPOUND)) {
+                CompoundTag dataTag = tag.getCompound("TransformedData");
+                transformedData = new TransformedAttachmentData(
+                        ResourceLocation.tryParse(dataTag.getString("riderId")),
+                        ResourceLocation.tryParse(dataTag.getString("formId")),
+                        loadOriginalGear(provider, dataTag.getCompound("originalGear")),
+                        loadBeltSnapshot(provider, dataTag.getCompound("beltSnapshot"))
+                );
+            } else {
+                transformedData = null;
+            }
         } else {
             transformedData = null;
         }

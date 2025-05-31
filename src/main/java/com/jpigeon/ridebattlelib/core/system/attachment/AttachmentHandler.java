@@ -15,13 +15,16 @@ public class AttachmentHandler {
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
 
-        // 登录时强制完整同步
         if (player instanceof ServerPlayer serverPlayer) {
             BeltSystem.INSTANCE.syncBeltData(serverPlayer);
         }
+
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
 
-        if (data.transformedData() != null) {
+        // 只有在玩家不是死亡重生且没有吃瘪冷却时才恢复变身状态
+        if (data.transformedData() != null &&
+                !player.getTags().contains("penalty_cooldown") &&
+                !player.getTags().contains("just_respawned")) {
             HenshinSystem.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.transformedData()));
         }
     }
@@ -34,13 +37,13 @@ public class AttachmentHandler {
         Player newPlayer = event.getEntity();
         PlayerPersistentData originalData = original.getData(ModAttachments.PLAYER_DATA);
 
+        // 只复制腰带物品，不清除变身数据（但重生时不自动恢复）
         newPlayer.setData(ModAttachments.PLAYER_DATA, new PlayerPersistentData(
                 originalData.beltItems(),
-                originalData.transformedData()
+                originalData.transformedData() // 保留变身数据但不自动恢复
         ));
 
-        if (originalData.transformedData() != null) {
-            HenshinSystem.INSTANCE.restoreTransformedState(newPlayer, Objects.requireNonNull(originalData.transformedData()));
-        }
+        // 添加重生标记
+        newPlayer.addTag("just_respawned");
     }
 }

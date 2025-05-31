@@ -29,6 +29,7 @@ public class FormConfig {
     private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
     private final List<ResourceLocation> attributeIds = new ArrayList<>(); // 存储属性ID
     public final Map<ResourceLocation, DynamicPart> dynamicParts = new HashMap<>();
+    private final List<ResourceLocation> effectIds = new ArrayList<>();
 
     public FormConfig(ResourceLocation formId) {
         this.formId = formId;
@@ -56,7 +57,8 @@ public class FormConfig {
 
     // 修复 addEffect 方法
     public FormConfig addEffect(Holder<MobEffect> effect, int duration, int amplifier, boolean hideParticles) {
-        // 确保每次都创建新的实例
+        ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
+        effectIds.add(effectId);
         effects.add(new MobEffectInstance(effect, duration, amplifier, false, hideParticles));
         return this;
     }
@@ -212,5 +214,9 @@ public class FormConfig {
             }
         }
         return ResourceLocation.parse(idBuilder.toString());
+    }
+
+    public List<ResourceLocation> getEffectIds() {
+        return Collections.unmodifiableList(effectIds);
     }
 }

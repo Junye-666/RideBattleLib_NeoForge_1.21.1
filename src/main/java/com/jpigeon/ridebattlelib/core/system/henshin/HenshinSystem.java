@@ -23,7 +23,9 @@ import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -134,12 +136,8 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     public void unHenshin(Player player) {
         TransformedData data = getTransformedData(player);
         if (data != null) {
-            FormConfig form = RiderRegistry.getForm(data.formId());
-            if (form != null) {
-                Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-                List<MobEffectInstance> dynamicEffects = form.getDynamicEffects(beltItems);
-                RideBattleLib.LOGGER.info("解除变身时将移除动态效果: {}", dynamicEffects);
-            }
+            // 使用当前形态的快照移除所有效果
+            clearAllModEffects(player);
 
             // 移除属性
             removeAttributes(player, data.formId(), data.beltSnapshot);
@@ -157,6 +155,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
         ResourceLocation currentFormId = data.formId();
         RideBattleLib.LOGGER.debug("收到切换形态请求: {} -> {}", currentFormId, newFormId);
+        clearAllModEffects(player);
 
         // 检查是否相同形态（需要处理动态部件更新）
         if (currentFormId.equals(newFormId)) {
@@ -228,6 +227,9 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     }
 
     public void performFormSwitch(Player player, ResourceLocation newFormId) {
+        // 在切换形态前强制清除所有效果
+        clearAllModEffects(player);
+
         TransformedData data = getTransformedData(player);
         if (data == null) {
             RideBattleLib.LOGGER.error("无法获取变身数据");
@@ -235,11 +237,22 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         }
 
         ResourceLocation oldFormId = data.formId();
+
+        // 即使形态ID相同也强制移除旧效果
+        removeAttributes(player, oldFormId, data.beltSnapshot());
+
         FormConfig oldForm = RiderRegistry.getForm(oldFormId);
+
+        // === 先移除旧形态的所有效果和属性 ===
+        if (oldForm != null) {
+            // 使用旧形态的腰带快照移除效果
+            removeAttributes(player, oldFormId, data.beltSnapshot());
+        }
         FormConfig newForm = RiderRegistry.getForm(newFormId);
+        // 获取当前实时腰带数据
         Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
 
-        // 检查是否需要更新（形态ID变化或动态部件变化）
+        // 检查是否需要更新
         boolean needsUpdate = !newFormId.equals(oldFormId);
         if (!needsUpdate && oldForm != null && newForm != null) {
             for (ResourceLocation slotId : newForm.dynamicParts.keySet()) {
@@ -253,20 +266,20 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         }
 
         if (needsUpdate) {
-            // 1. 移除旧效果
-            removeAttributes(player, oldFormId, data.beltSnapshot());
+            // 使用当前腰带数据移除旧效果（关键修改）
+            removeAttributes(player, oldFormId, currentBelt);
 
-            // 2. 应用新效果（如果新形态有效）
+            // 应用新效果
             if (newForm != null) {
                 equipArmor(player, newForm, currentBelt);
                 applyAttributes(player, newForm, currentBelt);
             }
 
-            // 3. 更新变身状态
+            // 更新变身数据（同步当前腰带快照）
             setTransformed(player, data.config(), newFormId,
-                    data.originalGear(), currentBelt);
+                    data.originalGear(), currentBelt); // 更新为当前腰带状态
 
-            // 4. 触发事件
+            // 触发事件
             if (!newFormId.equals(oldFormId)) {
                 NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, oldFormId, newFormId));
             } else {
@@ -349,32 +362,15 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
     }
 
-    public void removeAttributes(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltSnapshot) {
+    public void removeAttributes(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems) {
+        // 先强制清除所有效果（三重保障）
+        clearAllModEffects(player);
+
         FormConfig form = RiderRegistry.getForm(formId);
         if (form == null) return;
 
-        // 移除固定效果
-        for (MobEffectInstance effect : form.getEffects()) {
-            player.removeEffect(effect.getEffect());
-        }
-
-        // 移除动态效果（使用快照数据）
-        for (ResourceLocation slotId : form.dynamicParts.keySet()) {
-            ItemStack stack = beltSnapshot.getOrDefault(slotId, ItemStack.EMPTY);
-            if (!stack.isEmpty()) {
-                FormConfig.DynamicPart part = form.dynamicParts.get(slotId);
-                if (part != null) {
-                    MobEffectInstance effect = part.itemToEffect.get(stack.getItem());
-                    if (effect != null) {
-                        player.removeEffect(effect.getEffect());
-                    }
-                }
-            }
-        }
-
+        // 移除属性修饰符
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
-
-        // 移除固定属性
         for (AttributeModifier modifier : form.getAttributes()) {
             Holder<Attribute> holder = attributeRegistry.getHolder(
                     ResourceKey.create(Registries.ATTRIBUTE, modifier.id())
@@ -388,33 +384,42 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             }
         }
 
-        // 移除固定效果
-        for (MobEffectInstance effect : form.getEffects()) {
-            player.removeEffect(effect.getEffect());
-            RideBattleLib.LOGGER.debug("移除固定效果: {} 从玩家 {}", effect, player.getName());
+        // 记录并报告任何残留效果
+        for (Holder<MobEffect> activeEffect : player.getActiveEffectsMap().keySet()) {
+            RideBattleLib.LOGGER.warn("残留效果: {}", BuiltInRegistries.MOB_EFFECT.getKey((MobEffect) activeEffect));
+        }
+    }
+
+    public void clearAllModEffects(Player player) {
+        // 清除所有固定效果
+        for (FormConfig form : RiderRegistry.getAllForms()) {
+            for (MobEffectInstance effect : form.getEffects()) {
+                player.removeEffect(effect.getEffect());
+            }
         }
 
-        // +++ 新增：移除动态效果 +++
-        // 获取变身时的腰带数据
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
-        Map<ResourceLocation, ItemStack> beltItems = data.beltItems();
-
-        // 移除动态效果
-        if (!form.dynamicParts.isEmpty()) {
-            for (ResourceLocation slotId : form.dynamicParts.keySet()) {
-                ItemStack stack = beltItems.getOrDefault(slotId, ItemStack.EMPTY);
-                if (!stack.isEmpty()) {
-                    FormConfig.DynamicPart part = form.dynamicParts.get(slotId);
-                    if (part != null) {
-                        MobEffectInstance effect = part.itemToEffect.get(stack.getItem());
-                        if (effect != null) {
-                            player.removeEffect(effect.getEffect());
-                            RideBattleLib.LOGGER.debug("移除动态效果: {} (来自槽位 {})", effect, slotId);
-                        }
-                    }
+        // 清除所有可能的动态效果
+        for (FormConfig form : RiderRegistry.getAllForms()) {
+            for (FormConfig.DynamicPart part : form.dynamicParts.values()) {
+                for (MobEffectInstance effect : part.itemToEffect.values()) {
+                    player.removeEffect(effect.getEffect());
                 }
             }
         }
+/*
+        // 额外清除常见效果（双重保障）
+        player.removeEffect(MobEffects.NIGHT_VISION);
+        player.removeEffect(MobEffects.DAMAGE_BOOST);
+        player.removeEffect(MobEffects.HEALTH_BOOST);
+        player.removeEffect(MobEffects.ABSORPTION);
+        player.removeEffect(MobEffects.JUMP);
+        player.removeEffect(MobEffects.MOVEMENT_SPEED);
+        player.removeEffect(MobEffects.DIG_SPEED);
+        player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+        player.removeEffect(MobEffects.SLOW_FALLING);
+        player.removeEffect(MobEffects.GLOWING);
+*/
+        RideBattleLib.LOGGER.warn("强制清除玩家所有模组效果: {}", player.getName());
     }
 
     //====================检查方法====================

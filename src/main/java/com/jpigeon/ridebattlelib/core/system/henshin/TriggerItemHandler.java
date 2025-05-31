@@ -2,7 +2,6 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
-import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -51,6 +50,6 @@ public class TriggerItemHandler {
 
     public static void handleItemFormSwitch(Player player, ResourceLocation newFormId) {
         RideBattleLib.LOGGER.info("处理ITEM类型形态切换: {}", newFormId);
-        HenshinSystem.INSTANCE.performFormSwitch(player, newFormId);
+        HenshinCore.INSTANCE.performFormSwitch(player, newFormId);
     }
 }

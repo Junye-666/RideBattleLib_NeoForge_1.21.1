@@ -11,10 +11,10 @@ import java.util.function.Supplier;
 public class ModAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, RideBattleLib.MODID);
+
     public static final Supplier<AttachmentType<PlayerPersistentData>> PLAYER_DATA =
             ATTACHMENTS.register("player_data",
                     () -> AttachmentType.builder(() -> new PlayerPersistentData(new HashMap<>(), null))
                             .serialize(PlayerPersistentData.CODEC)
                             .build());
-
 }

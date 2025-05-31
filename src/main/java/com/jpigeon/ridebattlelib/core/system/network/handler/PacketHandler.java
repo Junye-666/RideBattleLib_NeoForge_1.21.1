@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.network.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinCore;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -11,68 +12,40 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
-import java.util.Objects;
-
-
 public class PacketHandler {
-
     public static void register(final RegisterPayloadHandlersEvent event) {
         event.registrar(RideBattleLib.MODID)
-                .versioned("0.1.0")
-                .playToServer(
-                        HenshinPacket.TYPE,
-                        HenshinPacket.STREAM_CODEC,
-                        (payload, context) ->
-                        {
-                            if (context.player() instanceof ServerPlayer serverPlayer) {
+                .versioned("0.2.0")
+                .playToServer(HenshinPacket.TYPE, HenshinPacket.STREAM_CODEC,
+                        (payload, context) -> {
+                            if (!HenshinCore.isOnCooldown(context.player())) {
                                 HenshinSystem.INSTANCE.henshin(context.player(), payload.riderId());
                             }
-
-                        }
-                )
-                .playToServer(
-                        UnhenshinPacket.TYPE,
-                        UnhenshinPacket.STREAM_CODEC,
-                        (payload, context) -> {
-                            if (context.player() instanceof ServerPlayer) {
-                                HenshinSystem.INSTANCE.unHenshin(context.player());
-                            }
-                        }
-                )
-                .playToServer(
-                        SwitchFormPacket.TYPE,
-                        SwitchFormPacket.STREAM_CODEC,
-                        (payload, context) -> {
-                            if (context.player() instanceof ServerPlayer serverPlayer) {
-                                // 调用实际的切换方法
-                                HenshinSystem.INSTANCE.switchForm(serverPlayer, payload.formId());
-                            }
-                        }
-                )
-                .playToClient(
-                        BeltDataSyncPacket.TYPE,
-                        BeltDataSyncPacket.STREAM_CODEC,
-                        (payload, context) -> {
-                            if (Minecraft.getInstance().player != null) {
-                                BeltSystem.INSTANCE.setBeltItems(context.player(), payload.items());
-                            }
-                        }
-                )
-                .playToServer(
-                        ReturnItemsPacket.TYPE,
-                        ReturnItemsPacket.STREAM_CODEC,
-                        (payload, context) -> {
-                            if (context.player() instanceof ServerPlayer serverPlayer) {
-                                BeltSystem.INSTANCE.returnItems(serverPlayer);
-                            }
-                        }
+                        })
+                .playToServer(UnhenshinPacket.TYPE, UnhenshinPacket.STREAM_CODEC,
+                        (payload, context) ->
+                                HenshinSystem.INSTANCE.unHenshin(context.player()))
+                .playToServer(SwitchFormPacket.TYPE, SwitchFormPacket.STREAM_CODEC,
+                        (payload, context) ->
+                                HenshinSystem.INSTANCE.switchForm(context.player(), payload.formId()))
+                .playToClient(BeltDataSyncPacket.TYPE, BeltDataSyncPacket.STREAM_CODEC,
+                        (payload, context) ->
+                                BeltSystem.INSTANCE.setBeltItems(context.player(), payload.items()))
+                .playToServer(ReturnItemsPacket.TYPE, ReturnItemsPacket.STREAM_CODEC,
+                        (payload, context) ->
+                                BeltSystem.INSTANCE.returnItems(context.player()))
+                .playToClient(BeltDataDiffPacket.TYPE, BeltDataDiffPacket.STREAM_CODEC,
+                        (payload, context) -> BeltSystem.INSTANCE.applyDiffPacket(payload)
                 )
         ;
     }
 
     public static void sendToServer(CustomPacketPayload packet) {
-        Objects.requireNonNull(Minecraft.getInstance().getConnection()).send(packet);
+        if (Minecraft.getInstance().getConnection() != null) {
+            Minecraft.getInstance().getConnection().send(packet);
+        }
     }
+
     public static void sendToClient(ServerPlayer player, CustomPacketPayload packet) {
         player.connection.send(packet);
     }

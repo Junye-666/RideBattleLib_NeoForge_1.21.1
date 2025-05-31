@@ -1,7 +1,5 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
-
-import com.jpigeon.ridebattlelib.RideBattleLib;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class FormConfig {
     private final ResourceLocation formId;
@@ -26,10 +23,12 @@ public class FormConfig {
     private Item boots = Items.AIR;
     private final List<AttributeModifier> attributes = new ArrayList<>();
     private final List<MobEffectInstance> effects = new ArrayList<>();
-    private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
-    private final List<ResourceLocation> attributeIds = new ArrayList<>(); // 存储属性ID
-    public final Map<ResourceLocation, DynamicPart> dynamicParts = new HashMap<>();
+    private final List<ResourceLocation> attributeIds = new ArrayList<>();
     private final List<ResourceLocation> effectIds = new ArrayList<>();
+    private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
+    public final Map<ResourceLocation, DynamicPart> dynamicParts = new HashMap<>();
+    private final DynamicFormMatcher dynamicMatcher = new DynamicFormMatcher(this);
+    private boolean allowsEmptyBelt = false;
 
     public FormConfig(ResourceLocation formId) {
         this.formId = formId;
@@ -44,21 +43,27 @@ public class FormConfig {
         return this;
     }
 
+    public FormConfig setAllowsEmptyBelt(boolean allow) {
+        this.allowsEmptyBelt = allow;
+        return this;
+    }
+
     // 添加属性修饰符
-    public FormConfig addAttribute(ResourceLocation attributeId, double amount, AttributeModifier.Operation operation) {
+    public FormConfig addAttribute(ResourceLocation attributeId, double amount,
+                                   AttributeModifier.Operation operation) {
         UUID uuid = UUID.nameUUIDFromBytes(
                 (formId + attributeId.toString()).getBytes(StandardCharsets.UTF_8)
         );
-        // 使用ResourceLocation作为ID
         attributes.add(new AttributeModifier(attributeId, amount, operation));
-        attributeIds.add(attributeId); // 存储属性ID
+        attributeIds.add(attributeId); // 保留ID存储
         return this;
     }
 
     // 修复 addEffect 方法
-    public FormConfig addEffect(Holder<MobEffect> effect, int duration, int amplifier, boolean hideParticles) {
+    public FormConfig addEffect(Holder<MobEffect> effect, int duration,
+                                int amplifier, boolean hideParticles) {
         ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
-        effectIds.add(effectId);
+        effectIds.add(effectId); // 保留ID存储
         effects.add(new MobEffectInstance(effect, duration, amplifier, false, hideParticles));
         return this;
     }
@@ -85,6 +90,7 @@ public class FormConfig {
 
     // 匹配验证
     public boolean matches(Map<ResourceLocation, ItemStack> beltItems) {
+        // 优化匹配逻辑
         for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
             ItemStack stack = beltItems.get(entry.getKey());
             if (stack == null || stack.isEmpty() || !stack.is(entry.getValue())) {
@@ -95,45 +101,26 @@ public class FormConfig {
     }
 
     public boolean matchesDynamic(Map<ResourceLocation, ItemStack> beltItems) {
-        if (dynamicParts.isEmpty()) {
-            return false;
-        }
+        if (dynamicParts.isEmpty()) return false;
 
-        RideBattleLib.LOGGER.info("检查动态形态 {} 的匹配:", formId);
-        dynamicParts.forEach((slotId, part) -> {
-            ItemStack stack = beltItems.getOrDefault(slotId, ItemStack.EMPTY);
-            RideBattleLib.LOGGER.info("- 槽位 {}: {}", slotId,
-                    stack.isEmpty() ? "空" : stack.getItem().getDescriptionId());
-
-            if (!stack.isEmpty()) {
-                RideBattleLib.LOGGER.info("  允许物品: {}",
-                        part.itemToArmor.keySet().stream()
-                                .map(Item::getDescriptionId)
-                                .collect(Collectors.joining(", ")));
-            }
-        });
-
+        // 快速检查：确保所有动态槽位都有物品
         for (ResourceLocation slotId : dynamicParts.keySet()) {
             ItemStack stack = beltItems.get(slotId);
-            // 修复：允许空堆栈但必须有槽位定义
             if (stack == null || stack.isEmpty()) {
-                RideBattleLib.LOGGER.debug("动态部件槽位 {} 为空", slotId);
-                return false;
-            }
-
-            DynamicPart part = dynamicParts.get(slotId);
-            if (part == null) {
-                RideBattleLib.LOGGER.error("动态部件 {} 未定义", slotId);
-                return false;
-            }
-
-            // 修复：检查物品是否在允许列表中
-            if (!part.itemToArmor.containsKey(stack.getItem())) {
-                RideBattleLib.LOGGER.debug("物品 {} 不在动态部件 {} 的允许列表中",
-                        stack.getItem().getDescriptionId(), slotId);
                 return false;
             }
         }
+
+        // 详细检查：物品是否在允许列表中
+        for (ResourceLocation slotId : dynamicParts.keySet()) {
+            ItemStack stack = beltItems.get(slotId);
+            DynamicPart part = dynamicParts.get(slotId);
+
+            if (!part.itemToArmor.containsKey(stack.getItem())) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -165,10 +152,6 @@ public class FormConfig {
     public List<MobEffectInstance> getEffects() {
         return Collections.unmodifiableList(effects);
     }
-
-    public List<ResourceLocation> getAttributeIds() {
-        return Collections.unmodifiableList(attributeIds);
-    } // 获取属性ID列表
 
     public Item getDynamicArmor(ResourceLocation slotId, ItemStack stack) {
         DynamicPart part = dynamicParts.get(slotId);
@@ -204,19 +187,44 @@ public class FormConfig {
     }
 
     public ResourceLocation getDynamicFormId(Map<ResourceLocation, ItemStack> beltItems) {
-        if (dynamicParts.isEmpty()) return formId;
+        return dynamicMatcher.matchForm(beltItems);
+    }
 
-        StringBuilder idBuilder = new StringBuilder(formId.toString());
-        for (ResourceLocation slotId : dynamicParts.keySet()) {
-            ItemStack stack = beltItems.get(slotId);
-            if (!stack.isEmpty()) {
-                idBuilder.append("_").append(BuiltInRegistries.ITEM.getKey(stack.getItem()));
-            }
-        }
-        return ResourceLocation.parse(idBuilder.toString());
+    public List<ResourceLocation> getAttributeIds() {
+        return Collections.unmodifiableList(attributeIds);
     }
 
     public List<ResourceLocation> getEffectIds() {
         return Collections.unmodifiableList(effectIds);
+    }
+
+    public ResourceLocation createDynamicFormId(Map<ResourceLocation, ItemStack> beltItems) {
+        if (dynamicParts.isEmpty()) {
+            return formId; // 不是动态形态，返回基础ID
+        }
+
+        // 构建动态形态ID路径部分
+        StringBuilder pathBuilder = new StringBuilder(formId.getPath());
+        for (ResourceLocation slotId : dynamicParts.keySet()) {
+            ItemStack stack = beltItems.get(slotId);
+            if (!stack.isEmpty()) {
+                ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+                pathBuilder.append("_").append(itemId.getPath());
+            }
+        }
+
+        // 处理过长路径
+        String finalPath = pathBuilder.toString();
+        if (finalPath.length() > 64) {
+            finalPath = formId.getPath() + "_" +
+                    Integer.toHexString(finalPath.hashCode());
+        }
+
+        // 正确构造ResourceLocation（显式指定命名空间和路径）
+        return ResourceLocation.fromNamespaceAndPath(formId.getNamespace(), finalPath);
+    }
+
+    public boolean allowsEmptyBelt() {
+        return allowsEmptyBelt;
     }
 }

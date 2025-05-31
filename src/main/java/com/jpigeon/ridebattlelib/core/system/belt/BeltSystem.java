@@ -4,23 +4,26 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IBeltSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BeltSystem implements IBeltSystem {
-    // 存储玩家的腰带数据
-    // public static final Map<UUID, Map<ResourceLocation, ItemStack>> beltData = new HashMap<>();
     public static final BeltSystem INSTANCE = new BeltSystem();
+    private final Map<UUID, Map<ResourceLocation, ItemStack>> lastSyncedStates = new ConcurrentHashMap<>();
 
     //====================核心方法====================
 
@@ -104,21 +107,14 @@ public class BeltSystem implements IBeltSystem {
         return extracted;
     }
 
+    @Override
     public void returnItems(Player player) {
         Map<ResourceLocation, ItemStack> items = getBeltItems(player);
-        UUID playerId = player.getUUID();
 
-        // 明确遍历所有槽位（包括必要和非必要）
         items.entrySet().stream()
                 .filter(entry -> !entry.getValue().isEmpty())
-                .forEach(entry -> {
-                    ResourceLocation slotId = entry.getKey();
-                    ItemStack stack = entry.getValue();
-                    returnItemToPlayer(player, stack);
-                    RideBattleLib.LOGGER.debug("返还物品: {} -> {}", slotId, stack.getItem());
-                });
+                .forEach(entry -> returnItemToPlayer(player, entry.getValue()));
 
-        // 清空数据并同步
         setBeltItems(player, new HashMap<>());
         syncBeltData(player);
     }
@@ -160,27 +156,118 @@ public class BeltSystem implements IBeltSystem {
     }
 
     public void setBeltItems(Player player, Map<ResourceLocation, ItemStack> items) {
-        // 创建安全的副本，过滤null值
-        Map<ResourceLocation, ItemStack> safeItems = new HashMap<>();
-        items.forEach((key, value) -> {
-            if (key != null && value != null && !value.isEmpty()) {
-                safeItems.put(key, value);
-            }
-        });
-
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
         player.setData(ModAttachments.PLAYER_DATA,
-                new PlayerPersistentData(safeItems, oldData.transformedData()));
+                new PlayerPersistentData(items, oldData.transformedData()));
     }
 
     //====================网络通信方法====================
 
     public void syncBeltData(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            // 创建数据副本避免并发修改
-            Map<ResourceLocation, ItemStack> items = new HashMap<>(getBeltItems(player));
-            RideBattleLib.LOGGER.debug("同步腰带数据到客户端: {}", items);
-            PacketHandler.sendToClient(serverPlayer, new BeltDataSyncPacket(player.getUUID(), items));
+            Map<ResourceLocation, ItemStack> currentItems = getBeltItems(player);
+            UUID playerId = player.getUUID();
+
+            // 首次同步或需要完整同步
+            if (!lastSyncedStates.containsKey(playerId)) {
+                sendFullSync(serverPlayer, currentItems, playerId);
+            } else {
+                sendDiffSync(serverPlayer, currentItems, playerId);
+            }
         }
+    }
+
+    private void sendFullSync(ServerPlayer player,
+                              Map<ResourceLocation, ItemStack> currentItems,
+                              UUID playerId) {
+        // 发送完整同步包
+        PacketHandler.sendToClient(player, new BeltDataDiffPacket(
+                playerId, new HashMap<>(currentItems), true
+        ));
+        lastSyncedStates.put(playerId, new HashMap<>(currentItems));
+    }
+
+    private void sendDiffSync(ServerPlayer player,
+                              Map<ResourceLocation, ItemStack> currentItems,
+                              UUID playerId) {
+        Map<ResourceLocation, ItemStack> lastState = lastSyncedStates.get(playerId);
+        Map<ResourceLocation, ItemStack> changes = new HashMap<>();
+
+        // 1. 检测变更：新增/修改的槽位
+        for (Map.Entry<ResourceLocation, ItemStack> entry : currentItems.entrySet()) {
+            ResourceLocation slotId = entry.getKey();
+            ItemStack currentStack = entry.getValue();
+            ItemStack lastStack = lastState.get(slotId);
+
+            // 新槽位或物品变化
+            if (lastStack == null || !stacksEqual(currentStack, lastStack)) {
+                changes.put(slotId, currentStack.copy());
+            }
+        }
+
+        // 2. 检测删除的槽位
+        for (ResourceLocation slotId : lastState.keySet()) {
+            if (!currentItems.containsKey(slotId)) {
+                changes.put(slotId, ItemStack.EMPTY);
+            }
+        }
+
+        // 3. 发送差异包（如果有变化）
+        if (!changes.isEmpty()) {
+            PacketHandler.sendToClient(player, new BeltDataDiffPacket(
+                    playerId, changes, false
+            ));
+            lastSyncedStates.put(playerId, new HashMap<>(currentItems));
+        }
+    }
+
+    // 优化物品堆栈比较（忽略数量变化）
+    private boolean stacksEqual(ItemStack a, ItemStack b) {
+        if (a.isEmpty() && b.isEmpty()) return true;
+        if (a.isEmpty() || b.isEmpty()) return false;
+
+        return ItemStack.isSameItemSameComponents(a, b);
+    }
+
+    // 客户端应用差异包
+    public void applyDiffPacket(BeltDataDiffPacket packet) {
+        Player player = findPlayer(packet.playerId());
+        if (player == null) return;
+
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        Map<ResourceLocation, ItemStack> beltItems = new HashMap<>(data.beltItems());
+
+        if (packet.fullSync()) {
+            // 完整同步：直接替换
+            beltItems = packet.changes();
+        } else {
+            // 差异同步：应用变化
+            for (Map.Entry<ResourceLocation, ItemStack> entry : packet.changes().entrySet()) {
+                ResourceLocation slotId = entry.getKey();
+                ItemStack stack = entry.getValue();
+
+                if (stack.isEmpty()) {
+                    beltItems.remove(slotId);
+                } else {
+                    beltItems.put(slotId, stack);
+                }
+            }
+        }
+
+        // 更新玩家数据
+        player.setData(ModAttachments.PLAYER_DATA, new PlayerPersistentData(
+                beltItems, data.transformedData()
+        ));
+    }
+
+    private Player findPlayer(UUID playerId) {
+        if (Minecraft.getInstance().level == null) return null;
+        return Minecraft.getInstance().level.getPlayerByUUID(playerId);
+    }
+
+    // 清理玩家状态缓存
+    @SubscribeEvent
+    public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        lastSyncedStates.remove(event.getEntity().getUUID());
     }
 }

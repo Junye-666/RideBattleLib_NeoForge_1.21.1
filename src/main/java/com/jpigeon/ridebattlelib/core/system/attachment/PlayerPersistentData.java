@@ -19,10 +19,6 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
     private Map<ResourceLocation, ItemStack> beltItems;
     private @Nullable TransformedAttachmentData transformedData;
 
-    public PlayerPersistentData() {
-        this(new HashMap<>(), null);
-    }
-
     public PlayerPersistentData(Map<ResourceLocation, ItemStack> beltItems,
                                 @Nullable TransformedAttachmentData transformedData) {
         this.beltItems = new HashMap<>(beltItems);
@@ -83,16 +79,12 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
 
             // 序列化 originalGear
             CompoundTag gearTag = new CompoundTag();
-            transformedData.originalGear().forEach((slot, stack) -> {
-                gearTag.put(slot.getName(), stack.isEmpty() ? new CompoundTag() : stack.save(provider));
-            });
+            transformedData.originalGear().forEach((slot, stack) -> gearTag.put(slot.getName(), stack.isEmpty() ? new CompoundTag() : stack.save(provider)));
             dataTag.put("originalGear", gearTag);
 
             // 新增 beltSnapshot 序列化
             CompoundTag snapshotTag = new CompoundTag();
-            transformedData.beltSnapshot().forEach((id, stack) -> {
-                snapshotTag.put(id.toString(), stack.isEmpty() ? new CompoundTag() : stack.save(provider));
-            });
+            transformedData.beltSnapshot().forEach((id, stack) -> snapshotTag.put(id.toString(), stack.isEmpty() ? new CompoundTag() : stack.save(provider)));
             dataTag.put("beltSnapshot", snapshotTag);
 
             tag.put("TransformedData", dataTag);

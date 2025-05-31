@@ -2,12 +2,10 @@ package com.jpigeon.ridebattlelib;
 
 import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
-import net.neoforged.neoforge.attachment.AttachmentType;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -25,7 +23,6 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
-import java.util.HashMap;
 
 @Mod(RideBattleLib.MODID)
 public class RideBattleLib

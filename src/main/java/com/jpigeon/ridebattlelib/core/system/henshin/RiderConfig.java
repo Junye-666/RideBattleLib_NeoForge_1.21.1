@@ -1,7 +1,5 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
-
-import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.resources.ResourceLocation;
@@ -25,28 +23,24 @@ import java.util.*;
  * 等等
  */
 public class RiderConfig {
-    //定义骑士Id
     private final ResourceLocation riderId;
-    //定义驱动器
     private Item driverItem = Items.AIR;
-    //定义驱动器位置
     private EquipmentSlot driverSlot = EquipmentSlot.LEGS;
-    //触发变身方式
     private TriggerType triggerType = TriggerType.KEY;
     private Item triggerItem = Items.AIR;
     private ResourceLocation baseFormId;
-    //定义
     private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
     private final Map<EquipmentSlot, Item> universalGear = new EnumMap<>(EquipmentSlot.class);
+
+
 
     //====================初始化方法====================
 
     //骑士Id初始化
     public RiderConfig(ResourceLocation riderId) {
         this.riderId = riderId;
-        // Arrays.fill(armor, Items.AIR);
     }
 
     //====================Getter方法====================
@@ -113,6 +107,18 @@ public class RiderConfig {
         return Collections.unmodifiableMap(universalGear);
     }
 
+    private boolean isBeltEmpty(Map<ResourceLocation, ItemStack> beltItems) {
+        if (beltItems.isEmpty()) return true;
+
+        for (ItemStack stack : beltItems.values()) {
+            if (!stack.isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     //====================Setter方法====================
 
     //指定驱动器物品
@@ -166,34 +172,42 @@ public class RiderConfig {
 
     // 形态匹配
     public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
-        if (beltItems == null || beltItems.isEmpty()) {
-            return baseFormId; // 返回基础形态
+        // 0. 检查腰带是否为空
+        if (isBeltEmpty(beltItems)) {
+            return null; // 腰带为空时不匹配任何形态
         }
 
-        beltItems.forEach((id, stack) ->
-                RideBattleLib.LOGGER.info("- {}: {} x{}", id, stack.getItem().getDescriptionId(), stack.getCount()));
-        // 优先匹配
+        // 1. 优先匹配固定形态
         for (FormConfig form : forms.values()) {
             if (form.matches(beltItems)) {
-                RideBattleLib.LOGGER.info("匹配到固定形态: {}", form.getFormId());
                 return form.getFormId();
             }
         }
 
-        // 其次匹配
+        // 2. 其次匹配动态形态
         for (FormConfig form : forms.values()) {
             if (!form.dynamicParts.isEmpty() && form.matchesDynamic(beltItems)) {
                 return form.getDynamicFormId(beltItems);
             }
         }
 
-        // 回退到基础形态
-        RideBattleLib.LOGGER.info("未匹配到形态，使用基础形态: {}", baseFormId);
-        return baseFormId;
+        // 3. 回退到基础形态（但需要检查基础形态是否允许空腰带）
+        if (baseFormId != null) {
+            FormConfig baseForm = forms.get(baseFormId);
+            if (baseForm != null && baseForm.allowsEmptyBelt()) {
+                return baseFormId;
+            }
+        }
+
+        return null; // 没有匹配的形态
     }
 
     public RiderConfig setUniversalGear(EquipmentSlot slot, Item item) {
         universalGear.put(slot, item);
         return this;
+    }
+
+    public ResourceLocation getBaseFormId() {
+        return baseFormId;
     }
 }

@@ -1,7 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.belt;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -48,27 +47,25 @@ public class BeltHandler {
             BeltSystem.INSTANCE.syncBeltData(player);
             event.setCanceled(true);
 
-            if (config.getTriggerType() == TriggerType.AUTO &&
-                    HenshinSystem.INSTANCE.isTransformed(player)) {
+            if (config.getTriggerType() == TriggerType.AUTO) {
+                if (HenshinSystem.INSTANCE.isTransformed(player)) {
+                    // 获取当前腰带状态
+                    Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
 
-                ResourceLocation currentForm = HenshinSystem.INSTANCE.getTransformedData(player).formId();
-                FormConfig form = RiderRegistry.getForm(currentForm);
+                    // 尝试匹配新形态
+                    ResourceLocation newFormId = config.matchForm(currentBelt);
 
-                // 检查是否动态形态
-                if (form != null && !form.dynamicParts.isEmpty()) {
-                    // 直接触发更新
-                    HenshinSystem.INSTANCE.updateDynamicForm(player);
+                    // 处理可能为空的情况
+                    HenshinSystem.INSTANCE.switchForm(player, newFormId);
                 }
             }
         }
     }
 
     public static void handleAutoFormSwitch(Player player, ResourceLocation newFormId) {
-        RideBattleLib.LOGGER.info("处理AUTO类型形态切换: {}", newFormId);
-        HenshinSystem.INSTANCE.performFormSwitch(player, newFormId);
+        HenshinSystem.INSTANCE.switchForm(player, newFormId);
     }
 
-    // 新增：AUTO 类型物品提取处理
     public static void onAutoItemExtracted(Player player, ResourceLocation slotId) {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config != null && config.getTriggerType() == TriggerType.AUTO &&
@@ -76,7 +73,9 @@ public class BeltHandler {
 
             Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
             ResourceLocation newFormId = config.matchForm(beltItems);
-            handleAutoFormSwitch(player, newFormId);
+
+            // 处理可能为空的情况
+            HenshinSystem.INSTANCE.switchForm(player, newFormId);
         }
     }
 }

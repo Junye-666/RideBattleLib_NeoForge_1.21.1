@@ -55,13 +55,12 @@ public class HenshinHandler {
         }
     }
 
-    public static void handleFormSwitch(Player player, ResourceLocation newFormId) {
-        // 这个方法现在只作为通用模板，实际不会被直接调用
-        RideBattleLib.LOGGER.warn("通用handleFormSwitch被调用，应使用类型专用方法");
+    public static void handleItemFormSwitch(Player player, ResourceLocation newFormId) {
+        HenshinSystem.INSTANCE.switchForm(player, newFormId);
     }
 
     public static void handleKeyFormSwitch(Player player, ResourceLocation newFormId) {
         RideBattleLib.LOGGER.info("处理KEY类型形态切换: {}", newFormId);
-        HenshinSystem.INSTANCE.performFormSwitch(player, newFormId);
+        HenshinCore.INSTANCE.performFormSwitch(player, newFormId);
     }
 }

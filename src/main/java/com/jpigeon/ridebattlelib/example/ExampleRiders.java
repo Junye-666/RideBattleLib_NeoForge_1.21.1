@@ -117,6 +117,7 @@ public class ExampleRiders {
                 .addForm(alphaBaseForm)
                 .addForm(alphaPoweredForm)
                 .setBaseForm(alphaBaseForm.getFormId());// 设置基础形态
+        alphaBaseForm.setAllowsEmptyBelt(false);
 
 // 注册骑士
         RiderRegistry.registerRider(riderAlpha);

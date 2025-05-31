@@ -13,13 +13,9 @@ public class RiderRegistry {
     private static final Map<ResourceLocation, RiderConfig> RIDERS = new HashMap<>();
     private static final Map<ResourceLocation, FormConfig> FORMS = new HashMap<>();
 
-    // 注册骑士配置
     public static void registerRider(RiderConfig config) {
         RIDERS.put(config.getRiderId(), config);
-        // 自动注册所有形态
-        for (FormConfig form : config.forms.values()) {
-            FORMS.put(form.getFormId(), form);
-        }
+        config.forms.values().forEach(form -> FORMS.put(form.getFormId(), form));
     }
 
     // 注册形态配置

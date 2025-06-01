@@ -4,7 +4,9 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IPenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -95,6 +97,22 @@ public class PenaltySystem implements IPenaltySystem {
                     0.1,
                     (player.getRandom().nextDouble() - 0.5) * 0.5);
         }
+
+        int cooldown = getCooldownDuration();
+        player.addEffect(new MobEffectInstance(
+                MobEffects.MOVEMENT_SLOWDOWN,
+                cooldown * 20,  // 秒转tick
+                0,
+                false,
+                true
+        ));
+
+        // 添加提示信息
+        player.displayClientMessage(
+                Component.literal("我的身体已经菠萝菠萝哒! 冷却: " + cooldown + "秒")
+                        .withStyle(ChatFormatting.RED),
+                true
+        );
 
         RideBattleLib.LOGGER.info("玩家 {} 触发吃瘪系统!", player.getName().getString());
     }

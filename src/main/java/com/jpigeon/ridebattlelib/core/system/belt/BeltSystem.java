@@ -60,10 +60,19 @@ public class BeltSystem implements IBeltSystem {
             ItemStack existing = playerBelt.get(slotId);
             if (!existing.isEmpty()) {
                 if (slot.isAllowReplace()) {
-                    // 返还旧物品
-                    returnItemToPlayer(player, existing);
+                    // 返还旧物品（只返还一个）
+                    returnItemToPlayer(player, existing.copyWithCount(1)); // 关键修改：只返还一个
+
+                    // 插入新物品（只插入一个）
+                    ItemStack toInsert = stack.copyWithCount(1); // 关键修改：只插入一个
+                    playerBelt.put(slotId, toInsert);
+                    setBeltItems(player, playerBelt);
+                    syncBeltData(player);
+
+                    // 减少玩家手中物品数量（只减少一个）
+                    stack.shrink(1);
+                    return true;
                 } else {
-                    // 禁止替换
                     return false;
                 }
             }
@@ -152,19 +161,36 @@ public class BeltSystem implements IBeltSystem {
     @Override
     public Map<ResourceLocation, ItemStack> getBeltItems(Player player) {
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
-        return new HashMap<>(data.beltItems());
+
+        // 根据当前激活的骑士获取腰带数据
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return new HashMap<>();
+
+        return new HashMap<>(data.getBeltItems(config.getRiderId()));
     }
 
+    @Override
     public void setBeltItems(Player player, Map<ResourceLocation, ItemStack> items) {
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
-        player.setData(ModAttachments.PLAYER_DATA,
-                new PlayerPersistentData(items, oldData.transformedData()));
+
+        // 根据当前激活的骑士设置腰带数据
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
+
+        PlayerPersistentData newData = new PlayerPersistentData(
+                new HashMap<>(oldData.riderBeltItems),
+                oldData.transformedData()
+        );
+        newData.setBeltItems(config.getRiderId(), items);
+
+        player.setData(ModAttachments.PLAYER_DATA, newData);
     }
 
     //====================网络通信方法====================
 
     public void syncBeltData(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
+            // 获取当前骑士的腰带数据
             Map<ResourceLocation, ItemStack> currentItems = getBeltItems(player);
             UUID playerId = player.getUUID();
 
@@ -234,30 +260,41 @@ public class BeltSystem implements IBeltSystem {
         Player player = findPlayer(packet.playerId());
         if (player == null) return;
 
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
-        Map<ResourceLocation, ItemStack> beltItems = new HashMap<>(data.beltItems());
+        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
+        ResourceLocation riderId = config.getRiderId();
 
+        // 创建新数据（深拷贝）
+        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newRiderBeltItems =
+                new HashMap<>();
+        oldData.riderBeltItems.forEach((id, items) ->
+                newRiderBeltItems.put(id, new HashMap<>(items))
+        );
+
+        // 获取当前骑士的腰带数据
+        Map<ResourceLocation, ItemStack> currentItems =
+                new HashMap<>(newRiderBeltItems.getOrDefault(riderId, new HashMap<>()));
+
+        // 应用变更
         if (packet.fullSync()) {
-            // 完整同步：直接替换
-            beltItems = packet.changes();
+            currentItems = new HashMap<>(packet.changes());
         } else {
-            // 差异同步：应用变化
-            for (Map.Entry<ResourceLocation, ItemStack> entry : packet.changes().entrySet()) {
-                ResourceLocation slotId = entry.getKey();
-                ItemStack stack = entry.getValue();
-
+            Map<ResourceLocation, ItemStack> finalCurrentItems = currentItems;
+            packet.changes().forEach((slotId, stack) -> {
                 if (stack.isEmpty()) {
-                    beltItems.remove(slotId);
+                    finalCurrentItems.remove(slotId);
                 } else {
-                    beltItems.put(slotId, stack);
+                    finalCurrentItems.put(slotId, stack);
                 }
-            }
+            });
         }
 
-        // 更新玩家数据
-        player.setData(ModAttachments.PLAYER_DATA, new PlayerPersistentData(
-                beltItems, data.transformedData()
-        ));
+        // 更新数据
+        newRiderBeltItems.put(riderId, currentItems);
+        player.setData(ModAttachments.PLAYER_DATA,
+                new PlayerPersistentData(newRiderBeltItems, oldData.transformedData())
+        );
     }
 
     private Player findPlayer(UUID playerId) {

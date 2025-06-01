@@ -11,16 +11,13 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 @EventBusSubscriber(modid = RideBattleLib.MODID)
 public class PenaltyHandler {
     @SubscribeEvent
-    public static void onPlayerHurt(LivingDamageEvent.Pre event) {
+    public static void onPlayerHurt(LivingDamageEvent.Post event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
 
         // 检查是否需要触发吃瘪
         if (PenaltySystem.shouldTriggerPenalty(player)) {
             PenaltySystem.PENALTY_SYSTEM.forceUnhenshin(player);
-
-            // 取消伤害避免死亡
-            event.setNewDamage(0);
 
             // 设置生命值为安全值
             player.setHealth(6.0f);

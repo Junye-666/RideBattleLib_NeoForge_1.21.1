@@ -7,6 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
+import java.util.HashMap;
 import java.util.Objects;
 
 
@@ -37,9 +38,9 @@ public class AttachmentHandler {
         Player newPlayer = event.getEntity();
         PlayerPersistentData originalData = original.getData(ModAttachments.PLAYER_DATA);
 
-        // 只复制腰带物品，不清除变身数据（但重生时不自动恢复）
+        // 只复制 riderBeltItems 和变身数据（但重生时不自动恢复）
         newPlayer.setData(ModAttachments.PLAYER_DATA, new PlayerPersistentData(
-                originalData.beltItems(),
+                new HashMap<>(originalData.riderBeltItems), // 复制 riderBeltItems
                 originalData.transformedData() // 保留变身数据但不自动恢复
         ));
 

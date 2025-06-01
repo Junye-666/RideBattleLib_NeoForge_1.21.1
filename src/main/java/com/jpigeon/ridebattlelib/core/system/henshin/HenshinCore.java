@@ -25,6 +25,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -249,6 +250,33 @@ public final class HenshinCore {
                 }
             }
         }
+
+        // === 修复：只在驱动器槽位丢失时才补充驱动器 ===
+        EquipmentSlot driverSlot = data.config().getDriverSlot();
+        ItemStack currentDriver = player.getItemBySlot(driverSlot);
+
+        // 检查当前驱动器槽位是否是正确的驱动器
+        boolean hasDriverInSlot = !currentDriver.isEmpty() &&
+                currentDriver.is(data.config().getDriverItem());
+
+        // 如果驱动器槽位没有正确驱动器，才检查背包
+        if (!hasDriverInSlot) {
+            boolean hasDriverInInventory = false;
+            for (ItemStack stack : player.getInventory().items) {
+                if (!stack.isEmpty() && stack.is(data.config().getDriverItem())) {
+                    hasDriverInInventory = true;
+                    break;
+                }
+            }
+
+            // 如果整个背包都没有驱动器，才返还一个
+            if (!hasDriverInInventory) {
+                ItemStack driver = new ItemStack(data.config().getDriverItem());
+                if (!player.addItem(driver)) {
+                    player.drop(driver, false);
+                }
+            }
+        }
         syncEquipment(player);
     }
 
@@ -322,19 +350,34 @@ public final class HenshinCore {
                                Map<ResourceLocation, ItemStack> beltSnapshot) {
 
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
-        player.setData(ModAttachments.PLAYER_DATA,
-                new PlayerPersistentData(oldData.beltItems(),
-                        new TransformedAttachmentData(
-                                config.getRiderId(),
-                                formId,
-                                originalGear,
-                                beltSnapshot)));
+
+        // 创建新的变身数据
+        TransformedAttachmentData transformedData = new TransformedAttachmentData(
+                config.getRiderId(),
+                formId,
+                originalGear,
+                beltSnapshot
+        );
+
+        // 创建新的持久化数据（使用新的 riderBeltItems 结构）
+        PlayerPersistentData newData = new PlayerPersistentData(
+                new HashMap<>(oldData.riderBeltItems), // 复制原有的 riderBeltItems
+                transformedData
+        );
+
+        player.setData(ModAttachments.PLAYER_DATA, newData);
     }
 
     public void removeTransformed(Player player) {
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
-        player.setData(ModAttachments.PLAYER_DATA,
-                new PlayerPersistentData(oldData.beltItems(), null));
+
+        // 创建新的持久化数据（保留 riderBeltItems，清除变身数据）
+        PlayerPersistentData newData = new PlayerPersistentData(
+                new HashMap<>(oldData.riderBeltItems), // 复制原有的 riderBeltItems
+                null // 清除变身数据
+        );
+
+        player.setData(ModAttachments.PLAYER_DATA, newData);
     }
 
     public void performFormSwitch(Player player, ResourceLocation newFormId) {
@@ -395,6 +438,30 @@ public final class HenshinCore {
                 NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, oldFormId, newFormId));
             } else {
                 NeoForge.EVENT_BUS.post(new FormDynamicUpdateEvent(player, newFormId));
+            }
+        }
+    }
+
+    public static void updateCooldownEffects(Player player) {
+        if (isOnCooldown(player)) {
+            int remaining = INSTANCE.getRemainingCooldown(player);
+
+            // 添加发光效果
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.GLOWING,
+                    40,  // 持续2秒
+                    0,
+                    false,
+                    false
+            ));
+
+            // 每5秒显示一次提示
+            if (player.tickCount % 100 == 0) {
+                player.displayClientMessage(
+                        Component.literal("变身冷却中! 剩余: " + remaining + "秒")
+                                .withStyle(ChatFormatting.YELLOW),
+                        true
+                );
             }
         }
     }

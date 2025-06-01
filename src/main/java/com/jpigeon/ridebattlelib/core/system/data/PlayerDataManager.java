@@ -2,7 +2,6 @@ package com.jpigeon.ridebattlelib.core.system.data;
 
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.Map;
@@ -17,9 +16,5 @@ public class PlayerDataManager {
                 player.getUUID(),
                 k -> player.getData(ModAttachments.PLAYER_DATA)
         );
-    }
-
-    public static void syncToClient(ServerPlayer player) {
-        // 优化后的数据同步逻辑
     }
 }

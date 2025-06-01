@@ -12,7 +12,6 @@ import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -55,12 +54,4 @@ public class HenshinHandler {
         }
     }
 
-    public static void handleItemFormSwitch(Player player, ResourceLocation newFormId) {
-        HenshinSystem.INSTANCE.switchForm(player, newFormId);
-    }
-
-    public static void handleKeyFormSwitch(Player player, ResourceLocation newFormId) {
-        RideBattleLib.LOGGER.info("处理KEY类型形态切换: {}", newFormId);
-        HenshinCore.INSTANCE.performFormSwitch(player, newFormId);
-    }
 }

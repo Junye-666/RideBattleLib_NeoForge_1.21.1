@@ -62,10 +62,6 @@ public class BeltHandler {
         }
     }
 
-    public static void handleAutoFormSwitch(Player player, ResourceLocation newFormId) {
-        HenshinSystem.INSTANCE.switchForm(player, newFormId);
-    }
-
     public static void onAutoItemExtracted(Player player, ResourceLocation slotId) {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config != null && config.getTriggerType() == TriggerType.AUTO &&

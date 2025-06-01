@@ -42,7 +42,6 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     public boolean henshin(Player player, ResourceLocation riderId) {
         if (player.level().isClientSide()) return false;
         if (HenshinCore.isOnCooldown(player)) {
-            int cooldown = Config.HENSHIN_COOLDOWN.get();
             player.displayClientMessage(
                     Component.literal("变身冷却中! 剩余时间: " +
                                     HenshinCore.INSTANCE.getRemainingCooldown(player) + "秒")
@@ -87,8 +86,6 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
         // 使用核心逻辑执行变身
         HenshinCore.executeTransform(player, config, formId, beltItems);
-
-        HenshinCore.startCooldown(player);
         return true;
     }
 

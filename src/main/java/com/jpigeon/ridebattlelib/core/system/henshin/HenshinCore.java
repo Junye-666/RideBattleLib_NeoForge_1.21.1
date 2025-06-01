@@ -40,8 +40,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class HenshinCore {
-    public static final Map<UUID, Long> COOLDOWN_MAP = new ConcurrentHashMap<>();
     public static final HenshinCore INSTANCE = new HenshinCore();
+    public static final Map<UUID, Long> COOLDOWN_MAP = new ConcurrentHashMap<>();
 
     public static void executeTransform(Player player, RiderConfig config,
                                         ResourceLocation formId,
@@ -318,7 +318,7 @@ public final class HenshinCore {
     }
 
     public void removeAttributes(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems) {
-        // 先强制清除所有效果（三重保障）
+        // 先强制清除所有效果
         HenshinCore.INSTANCE.clearAllModEffects(player);
 
         FormConfig form = RiderRegistry.getForm(formId);
@@ -341,7 +341,9 @@ public final class HenshinCore {
 
         // 记录并报告任何残留效果
         for (Holder<MobEffect> activeEffect : player.getActiveEffectsMap().keySet()) {
-            RideBattleLib.LOGGER.warn("残留效果: {}", BuiltInRegistries.MOB_EFFECT.getKey((MobEffect) activeEffect));
+            activeEffect.unwrapKey().ifPresent(key -> {
+                RideBattleLib.LOGGER.warn("残留效果: {}", key.location());
+            });
         }
     }
 

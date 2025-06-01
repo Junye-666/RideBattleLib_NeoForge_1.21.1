@@ -192,14 +192,11 @@ public class BeltSystem implements IBeltSystem {
         if (player instanceof ServerPlayer serverPlayer) {
             // 获取当前骑士的腰带数据
             Map<ResourceLocation, ItemStack> currentItems = getBeltItems(player);
-            UUID playerId = player.getUUID();
-
-            // 首次同步或需要完整同步
-            if (!lastSyncedStates.containsKey(playerId)) {
-                sendFullSync(serverPlayer, currentItems, playerId);
-            } else {
-                sendDiffSync(serverPlayer, currentItems, playerId);
-            }
+            PacketHandler.sendToClient(serverPlayer, new BeltDataDiffPacket(
+                    player.getUUID(),
+                    new HashMap<>(currentItems),
+                    true
+            ));
         }
     }
 

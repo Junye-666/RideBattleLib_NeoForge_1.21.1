@@ -75,4 +75,3 @@ public record BeltDataDiffPacket(
     @Override
     public @NotNull Type<?> type() { return TYPE; }
 }
-

@@ -295,9 +295,7 @@ public final class HenshinCore {
 
         // 记录并报告任何残留效果
         for (Holder<MobEffect> activeEffect : player.getActiveEffectsMap().keySet()) {
-            activeEffect.unwrapKey().ifPresent(key -> {
-                RideBattleLib.LOGGER.warn("残留效果: {}", key.location());
-            });
+            activeEffect.unwrapKey().ifPresent(key -> RideBattleLib.LOGGER.warn("残留效果: {}", key.location()));
         }
     }
 

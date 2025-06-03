@@ -2,7 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.network.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
-import com.jpigeon.ridebattlelib.core.system.henshin.HenshinCore;
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -18,7 +18,7 @@ public class PacketHandler {
                 .versioned("0.9.1")
                 .playToServer(HenshinPacket.TYPE, HenshinPacket.STREAM_CODEC,
                         (payload, context) -> {
-                            if (!HenshinCore.isOnCooldown(context.player())) {
+                            if (!HenshinHelper.isOnCooldown(context.player())) {
                                 HenshinSystem.INSTANCE.henshin(context.player(), payload.riderId());
                             }
                         })

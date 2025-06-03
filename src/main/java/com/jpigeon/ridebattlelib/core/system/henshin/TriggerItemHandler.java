@@ -50,6 +50,6 @@ public class TriggerItemHandler {
 
     public static void handleItemFormSwitch(Player player, ResourceLocation newFormId) {
         RideBattleLib.LOGGER.info("处理ITEM类型形态切换: {}", newFormId);
-        HenshinCore.INSTANCE.performFormSwitch(player, newFormId);
+        HenshinHelper.INSTANCE.performFormSwitch(player, newFormId);
     }
 }

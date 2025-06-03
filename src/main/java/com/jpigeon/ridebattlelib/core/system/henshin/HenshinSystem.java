@@ -39,52 +39,15 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
     @Override
     public boolean henshin(Player player, ResourceLocation riderId) {
-        if (player.level().isClientSide()) return false;
-        if (HenshinCore.isOnCooldown(player)) {
-            player.displayClientMessage(
-                    Component.literal("变身冷却中! 剩余时间: " +
-                                    HenshinCore.INSTANCE.getRemainingCooldown(player) + "秒")
-                            .withStyle(ChatFormatting.YELLOW),
-                    true
-            );
-            return false;
-        }
-
-        if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
-            player.displayClientMessage(
-                    Component.literal("身体残☆破☆不☆堪，无法变身！").withStyle(ChatFormatting.RED),
-                    true
-            );
-            return false;
-        }
-
+        if (!checkPreconditions(player)) return false;
         RiderConfig config = RiderRegistry.getRider(riderId);
         if (config == null) return false;
-
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         ResourceLocation formId = config.matchForm(beltItems);
-
-        // 处理空腰带情况
-        if (formId == null) {
-            if (config.getBaseFormId() != null) {
-                FormConfig baseForm = RiderRegistry.getForm(config.getBaseFormId());
-                if (baseForm != null && baseForm.allowsEmptyBelt()) {
-                    formId = config.getBaseFormId();
-                }
-            }
-
-            // 如果基础形态也不允许空腰带，则取消变身
-            if (formId == null) {
-                player.displayClientMessage(
-                        Component.literal("无法变身：腰带中没有物品"),
-                        true
-                );
-                return false;
-            }
-        }
+        if (formId == null) return false;
 
         // 使用核心逻辑执行变身
-        HenshinCore.executeTransform(player, config, formId, beltItems);
+        HenshinHelper.INSTANCE.executeTransform(player, config, formId);
         return true;
     }
 
@@ -95,20 +58,20 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
 
             // 1. 清除效果（复用HenshinCore逻辑）
-            HenshinCore.INSTANCE.clearAllModEffects(player);
+            HenshinHelper.INSTANCE.clearAllModEffects(player);
 
             // 2. 移除属性（保持原有逻辑）
-            HenshinCore.INSTANCE.removeAttributes(player, data.formId(), data.beltSnapshot());
+            HenshinHelper.INSTANCE.removeAttributes(player, data.formId(), data.beltSnapshot());
 
             // 3. 恢复装备（保持原有逻辑）
-            HenshinCore.INSTANCE.restoreOriginalGear(player, data);
+            HenshinHelper.INSTANCE.restoreOriginalGear(player, data);
 
             // 4. 同步状态（保持原有逻辑）
-            HenshinCore.INSTANCE.syncEquipment(player);
+            HenshinHelper.INSTANCE.syncEquipment(player);
 
             // 5. 数据清理（新增HenshinCore集成）
-            HenshinCore.startCooldown(player); // 添加变身冷却
-            HenshinCore.INSTANCE.removeTransformed(player);
+            HenshinHelper.startCooldown(player); // 添加变身冷却
+            HenshinHelper.INSTANCE.removeTransformed(player);
             BeltSystem.INSTANCE.returnItems(player);
 
             if (isPenalty) {
@@ -127,40 +90,10 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     public void switchForm(Player player, ResourceLocation newFormId) {
         // 如果新形态ID为null，表示无法匹配形态
         if (newFormId == null) {
-            // 根据设计需求选择：
-            // 1. 保持当前形态不变
-            // 2. 解除变身
-            unHenshin(player); // 这里选择解除变身
+            unHenshin(player); // 解除变身
             return;
         }
-        HenshinCore.executeFormSwitch(player, newFormId);
-    }
-
-    //====================变身辅助方法====================
-
-    public void restoreTransformedState(Player player, TransformedAttachmentData attachmentData) {
-        RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());
-        FormConfig form = RiderRegistry.getForm(attachmentData.formId());
-
-        if (config != null && form != null) {
-            // 恢复原始装备
-            HenshinCore.INSTANCE.restoreOriginalGear(player, new TransformedData(
-                    config,
-                    attachmentData.formId(),
-                    attachmentData.originalGear(),
-                    attachmentData.beltSnapshot()
-            ));
-
-            // 重新装备盔甲
-            HenshinCore.INSTANCE.equipArmor(player, form, attachmentData.beltSnapshot());
-
-            // 重新应用属性
-            HenshinCore.INSTANCE.applyAttributes(player, form, attachmentData.beltSnapshot());
-
-            // 更新变身状态
-            HenshinCore.INSTANCE.setTransformed(player, config, attachmentData.formId(),
-                    attachmentData.originalGear(), attachmentData.beltSnapshot());
-        }
+        HenshinHelper.INSTANCE.executeFormSwitch(player, newFormId);
     }
 
     //====================检查方法====================
@@ -174,6 +107,25 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     public void playHenshinSequence(Player player, ResourceLocation formId, AnimationPhase phase) {
         // 触发动画事件供其他模组扩展
         NeoForge.EVENT_BUS.post(new AnimationEvent(player, formId, phase));
+    }
+
+    private boolean checkPreconditions(Player player) {
+        if (player.level().isClientSide()) return false;
+        if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
+            player.displayClientMessage(
+                    Component.literal("身体残☆破☆不☆堪，无法变身！").withStyle(ChatFormatting.RED),
+                    true
+            );
+            return false;
+        }
+        if (HenshinHelper.isOnCooldown(player)) {
+            player.displayClientMessage(Component.literal("变身冷却中! 剩余时间: " +
+                                    HenshinHelper.INSTANCE.getRemainingCooldown(player) + "秒")
+                            .withStyle(ChatFormatting.YELLOW),
+                    true);
+            return false;
+        }
+        return !PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
     }
 
     //====================Getter方法====================

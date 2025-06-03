@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.attachment;
 
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -26,7 +27,7 @@ public class AttachmentHandler {
         if (data.transformedData() != null &&
                 !player.getTags().contains("penalty_cooldown") &&
                 !player.getTags().contains("just_respawned")) {
-            HenshinSystem.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.transformedData()));
+            HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.transformedData()));
         }
     }
 

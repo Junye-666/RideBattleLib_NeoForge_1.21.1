@@ -8,6 +8,7 @@ import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class BeltSystem implements IBeltSystem {
     public static final BeltSystem INSTANCE = new BeltSystem();
-    private final Map<UUID, Map<ResourceLocation, ItemStack>> lastSyncedStates = new ConcurrentHashMap<>();
 
     //====================核心方法====================
 
@@ -190,66 +190,13 @@ public class BeltSystem implements IBeltSystem {
 
     public void syncBeltData(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            // 获取当前骑士的腰带数据
             Map<ResourceLocation, ItemStack> currentItems = getBeltItems(player);
-            PacketHandler.sendToClient(serverPlayer, new BeltDataDiffPacket(
+            PacketHandler.sendToClient(serverPlayer, new BeltDataSyncPacket(
                     player.getUUID(),
-                    new HashMap<>(currentItems),
-                    true
-            ));
+                    new HashMap<>(currentItems)
+            )
+            );
         }
-    }
-
-    private void sendFullSync(ServerPlayer player,
-                              Map<ResourceLocation, ItemStack> currentItems,
-                              UUID playerId) {
-        // 发送完整同步包
-        PacketHandler.sendToClient(player, new BeltDataDiffPacket(
-                playerId, new HashMap<>(currentItems), true
-        ));
-        lastSyncedStates.put(playerId, new HashMap<>(currentItems));
-    }
-
-    private void sendDiffSync(ServerPlayer player,
-                              Map<ResourceLocation, ItemStack> currentItems,
-                              UUID playerId) {
-        Map<ResourceLocation, ItemStack> lastState = lastSyncedStates.get(playerId);
-        Map<ResourceLocation, ItemStack> changes = new HashMap<>();
-
-        // 1. 检测变更：新增/修改的槽位
-        for (Map.Entry<ResourceLocation, ItemStack> entry : currentItems.entrySet()) {
-            ResourceLocation slotId = entry.getKey();
-            ItemStack currentStack = entry.getValue();
-            ItemStack lastStack = lastState.get(slotId);
-
-            // 新槽位或物品变化
-            if (lastStack == null || !stacksEqual(currentStack, lastStack)) {
-                changes.put(slotId, currentStack.copy());
-            }
-        }
-
-        // 2. 检测删除的槽位
-        for (ResourceLocation slotId : lastState.keySet()) {
-            if (!currentItems.containsKey(slotId)) {
-                changes.put(slotId, ItemStack.EMPTY);
-            }
-        }
-
-        // 3. 发送差异包（如果有变化）
-        if (!changes.isEmpty()) {
-            PacketHandler.sendToClient(player, new BeltDataDiffPacket(
-                    playerId, changes, false
-            ));
-            lastSyncedStates.put(playerId, new HashMap<>(currentItems));
-        }
-    }
-
-    // 优化物品堆栈比较（忽略数量变化）
-    private boolean stacksEqual(ItemStack a, ItemStack b) {
-        if (a.isEmpty() && b.isEmpty()) return true;
-        if (a.isEmpty() || b.isEmpty()) return false;
-
-        return ItemStack.isSameItemSameComponents(a, b);
     }
 
     // 客户端应用差异包
@@ -297,11 +244,5 @@ public class BeltSystem implements IBeltSystem {
     private Player findPlayer(UUID playerId) {
         if (Minecraft.getInstance().level == null) return null;
         return Minecraft.getInstance().level.getPlayerByUUID(playerId);
-    }
-
-    // 清理玩家状态缓存
-    @SubscribeEvent
-    public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        lastSyncedStates.remove(event.getEntity().getUUID());
     }
 }

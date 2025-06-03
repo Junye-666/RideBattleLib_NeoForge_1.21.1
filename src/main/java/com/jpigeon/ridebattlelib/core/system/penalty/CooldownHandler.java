@@ -1,7 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.penalty;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.henshin.HenshinCore;
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinHelper;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -14,6 +14,6 @@ public class CooldownHandler {
         if (event.getEntity().level().isClientSide()) return; // 确保只在服务端执行
 
         Player player = event.getEntity();
-        HenshinCore.updateCooldownEffects(player);
+        HenshinHelper.updateCooldownEffects(player);
     }
 }

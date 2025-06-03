@@ -2,15 +2,14 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.IHenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
-import com.jpigeon.ridebattlelib.core.system.attribute.AttributeCache;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
-import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -37,60 +36,33 @@ import net.neoforged.neoforge.common.NeoForge;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class HenshinCore {
-    public static final HenshinCore INSTANCE = new HenshinCore();
+public final class HenshinHelper implements IHenshinHelper {
+    public static final HenshinHelper INSTANCE = new HenshinHelper();
     public static final Map<UUID, Long> COOLDOWN_MAP = new ConcurrentHashMap<>();
 
-    public static void executeTransform(Player player, RiderConfig config,
-                                        ResourceLocation formId,
-                                        Map<ResourceLocation, ItemStack> beltItems) {
-        // 1. 检查变身冷却
-        if (isOnCooldown(player)) {
-            int remaining = (int) Math.ceil(
-                    (INSTANCE.getHenshinCooldown() * 1000 -
-                            (System.currentTimeMillis() - COOLDOWN_MAP.get(player.getUUID()))) / 1000.0
-            );
+    @Override
+    public void executeTransform(Player player, RiderConfig config, ResourceLocation formId) {
+        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+        Map<EquipmentSlot, ItemStack> originalGear = saveOriginalGear(player, config);
 
-            player.displayClientMessage(
-                    Component.literal("变身冷却中! 剩余时间: " + remaining + "秒")
-                            .withStyle(ChatFormatting.YELLOW),
-                    true
-            );
-            return;
-        }
-
-        // 检查吃瘪冷却
-        if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
-
-            return;
-        }
-
-        //保存原始装备
-        Map<EquipmentSlot, ItemStack> originalGear = INSTANCE.saveOriginalGear(player, config);
-
-        // 2. 装备盔甲
         FormConfig form = RiderRegistry.getForm(formId);
         if (form == null) return;
-        INSTANCE.equipArmor(player, form, beltItems);
 
-        // 3. 应用属性
-        INSTANCE.applyAttributes(player, form, beltItems);
+        equipArmor(player, form, beltItems);
+        applyAttributes(player, form, beltItems);
+        setTransformed(player, config, formId, originalGear, beltItems);
 
-        // 4. 设置变身状态
-        INSTANCE.setTransformed(player, config, formId,
-                originalGear, new HashMap<>(beltItems));
-
-        // 5. 触发事件
-        startCooldown(player);
         NeoForge.EVENT_BUS.post(new HenshinEvent.Post(player, config.getRiderId(), formId));
     }
 
-    public static void executeFormSwitch(Player player, ResourceLocation newFormId) {
+    @Override
+    public void executeFormSwitch(Player player, ResourceLocation newFormId) {
         HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
         if (data == null) return;
 
         // 1. 清除旧效果
         INSTANCE.clearAllModEffects(player);
+        INSTANCE.removeAttributes(player, data.formId(), data.beltSnapshot());
 
         // 2. 应用新形态
         FormConfig newForm = RiderRegistry.getForm(newFormId);
@@ -112,12 +84,29 @@ public final class HenshinCore {
         NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, data.formId(), newFormId));
     }
 
-    public static void applyCachedAttributes(Player player, FormConfig form) {
-        AttributeCache cache = AttributeCache.get(player);
-        if (cache.requiresUpdate(form)) {
-            INSTANCE.applyAttributes(player, form,
-                    BeltSystem.INSTANCE.getBeltItems(player));
-            cache.update(form);
+    @Override
+    public void restoreTransformedState(Player player, TransformedAttachmentData attachmentData) {
+        RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());
+        FormConfig form = RiderRegistry.getForm(attachmentData.formId());
+
+        if (config != null && form != null) {
+            // 恢复原始装备
+            HenshinHelper.INSTANCE.restoreOriginalGear(player, new HenshinSystem.TransformedData(
+                    config,
+                    attachmentData.formId(),
+                    attachmentData.originalGear(),
+                    attachmentData.beltSnapshot()
+            ));
+
+            // 重新装备盔甲
+            HenshinHelper.INSTANCE.equipArmor(player, form, attachmentData.beltSnapshot());
+
+            // 重新应用属性
+            HenshinHelper.INSTANCE.applyAttributes(player, form, attachmentData.beltSnapshot());
+
+            // 更新变身状态
+            HenshinHelper.INSTANCE.setTransformed(player, config, attachmentData.formId(),
+                    attachmentData.originalGear(), attachmentData.beltSnapshot());
         }
     }
 
@@ -137,7 +126,7 @@ public final class HenshinCore {
     }
 
     public int getRemainingCooldown(Player player) {
-        Long lastHenshin = HenshinCore.COOLDOWN_MAP.get(player.getUUID());
+        Long lastHenshin = HenshinHelper.COOLDOWN_MAP.get(player.getUUID());
         if (lastHenshin == null) return 0;
 
         int cooldown = Config.HENSHIN_COOLDOWN.get() * 1000;
@@ -148,10 +137,6 @@ public final class HenshinCore {
 
     public void equipArmor(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
         // 先设置通用装备（固定槽位）
-        RiderConfig config = HenshinSystem.INSTANCE.getConfig(player);
-        if (config == null) return;
-
-        // 设置固定形态盔甲
         if (form.getHelmet() != Items.AIR) {
             player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(form.getHelmet()));
         }
@@ -165,6 +150,7 @@ public final class HenshinCore {
             player.setItemSlot(EquipmentSlot.FEET, new ItemStack(form.getBoots()));
         }
 
+        // 确保盔甲立即生效
         syncEquipment(player);
     }
 
@@ -273,7 +259,7 @@ public final class HenshinCore {
 
     public void removeAttributes(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems) {
         // 先强制清除所有效果
-        HenshinCore.INSTANCE.clearAllModEffects(player);
+        HenshinHelper.INSTANCE.clearAllModEffects(player);
 
         FormConfig form = RiderRegistry.getForm(formId);
         if (form == null) return;
@@ -336,7 +322,7 @@ public final class HenshinCore {
 
     public void performFormSwitch(Player player, ResourceLocation newFormId) {
         // 在切换形态前强制清除所有效果
-        HenshinCore.INSTANCE.clearAllModEffects(player);
+        HenshinHelper.INSTANCE.clearAllModEffects(player);
 
         HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
         if (data == null) {

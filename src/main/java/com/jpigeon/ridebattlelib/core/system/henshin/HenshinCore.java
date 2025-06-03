@@ -70,9 +70,8 @@ public final class HenshinCore {
 
         // 2. 装备盔甲
         FormConfig form = RiderRegistry.getForm(formId);
-        if (form != null) {
-            INSTANCE.equipArmor(player, form, beltItems);
-        }
+        if (form == null) return;
+        INSTANCE.equipArmor(player, form, beltItems);
 
         // 3. 应用属性
         INSTANCE.applyAttributes(player, form, beltItems);

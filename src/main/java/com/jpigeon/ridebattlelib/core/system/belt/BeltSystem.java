@@ -49,7 +49,7 @@ public class BeltSystem implements IBeltSystem {
         }
 
         SlotDefinition slot = config.getSlotDefinition(slotId);
-        if (slot == null || !slot.getAllowedItems().contains(stack.getItem())) {
+        if (slot == null || !slot.allowedItems().contains(stack.getItem())) {
             return false;
         }
 
@@ -59,7 +59,7 @@ public class BeltSystem implements IBeltSystem {
         if (playerBelt.containsKey(slotId)) {
             ItemStack existing = playerBelt.get(slotId);
             if (!existing.isEmpty()) {
-                if (slot.isAllowReplace()) {
+                if (slot.allowReplace()) {
                     // 返还旧物品（只返还一个）
                     returnItemToPlayer(player, existing.copyWithCount(1)); // 关键修改：只返还一个
 
@@ -147,10 +147,10 @@ public class BeltSystem implements IBeltSystem {
 
             // 详细日志输出
             RideBattleLib.LOGGER.info("验证槽位: {} | 物品: {} | 允许物品: {}",
-                    slotId, item.getItem(), slot.getAllowedItems()
+                    slotId, item.getItem(), slot.allowedItems()
             );
 
-            if (item.isEmpty() || !slot.getAllowedItems().contains(item.getItem())) {
+            if (item.isEmpty() || !slot.allowedItems().contains(item.getItem())) {
                 return false;
             }
         }

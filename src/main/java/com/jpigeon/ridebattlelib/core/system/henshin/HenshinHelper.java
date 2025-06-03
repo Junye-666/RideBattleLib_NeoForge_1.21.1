@@ -17,6 +17,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -49,7 +50,7 @@ public final class HenshinHelper implements IHenshinHelper {
         if (form == null) return;
 
         equipArmor(player, form, beltItems);
-        applyAttributes(player, form, beltItems);
+        applyAttributesAndEffects(player, form, beltItems);
         setTransformed(player, config, formId, originalGear, beltItems);
 
         NeoForge.EVENT_BUS.post(new HenshinEvent.Post(player, config.getRiderId(), formId));
@@ -60,9 +61,10 @@ public final class HenshinHelper implements IHenshinHelper {
         HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
         if (data == null) return;
 
-        // 1. 清除旧效果
-        INSTANCE.clearAllModEffects(player);
-        INSTANCE.removeAttributes(player, data.formId(), data.beltSnapshot());
+        ResourceLocation oldFormId = data.formId();
+
+        // 1. 移除旧形态的属性和效果
+        removeAttributesAndEffects(player, oldFormId, data.beltSnapshot());
 
         // 2. 应用新形态
         FormConfig newForm = RiderRegistry.getForm(newFormId);
@@ -72,8 +74,8 @@ public final class HenshinHelper implements IHenshinHelper {
             // 3. 装备新盔甲
             INSTANCE.equipArmor(player, newForm, currentBelt);
 
-            // 4. 应用新属性
-            INSTANCE.applyAttributes(player, newForm, currentBelt);
+            // 4. 应用新属性和效果
+            INSTANCE.applyAttributesAndEffects(player, newForm, currentBelt);
 
             // 5. 更新数据
             INSTANCE.setTransformed(player, data.config(), newFormId,
@@ -102,7 +104,7 @@ public final class HenshinHelper implements IHenshinHelper {
             HenshinHelper.INSTANCE.equipArmor(player, form, attachmentData.beltSnapshot());
 
             // 重新应用属性
-            HenshinHelper.INSTANCE.applyAttributes(player, form, attachmentData.beltSnapshot());
+            HenshinHelper.INSTANCE.applyAttributesAndEffects(player, form, attachmentData.beltSnapshot());
 
             // 更新变身状态
             HenshinHelper.INSTANCE.setTransformed(player, config, attachmentData.formId(),
@@ -163,6 +165,36 @@ public final class HenshinHelper implements IHenshinHelper {
         }
 
         RideBattleLib.LOGGER.warn("强制清除玩家所有模组效果: {}", player.getName());
+    }
+
+    public void removeAttributesAndEffects(Player player, ResourceLocation formId,
+                                           Map<ResourceLocation, ItemStack> beltItems) {
+        removeAttributes(player, formId, beltItems);
+        removeEffects(player, formId);
+    }
+
+    // 添加效果移除方法
+    public void removeEffects(Player player, ResourceLocation formId) {
+        FormConfig form = RiderRegistry.getForm(formId);
+        if (form != null) {
+            for (MobEffectInstance effect : form.getEffects()) {
+                player.removeEffect(effect.getEffect());
+            }
+        }
+    }
+
+    // 添加新方法：应用属性和效果
+    public void applyAttributesAndEffects(Player player, FormConfig form,
+                                          Map<ResourceLocation, ItemStack> beltItems) {
+        applyAttributes(player, form, beltItems);
+        applyEffects(player, form);
+    }
+
+    // 添加效果应用方法
+    public void applyEffects(Player player, FormConfig form) {
+        for (MobEffectInstance effect : form.getEffects()) {
+            player.addEffect(new MobEffectInstance(effect));
+        }
     }
 
     public Map<EquipmentSlot, ItemStack> saveOriginalGear(Player player, RiderConfig config) {
@@ -230,8 +262,17 @@ public final class HenshinHelper implements IHenshinHelper {
     public void syncEquipment(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
             List<Pair<EquipmentSlot, ItemStack>> slots = Arrays.stream(EquipmentSlot.values())
-                    .map(slot -> Pair.of(slot, player.getItemBySlot(slot)))
+                    .map(slot -> {
+                        ItemStack stack = player.getItemBySlot(slot);
+                        // 确保盔甲耐久度正确显示
+                        if (stack.isDamageableItem()) {
+                            stack.setDamageValue(0);
+                        }
+                        return Pair.of(slot, stack);
+                    })
                     .toList();
+
+            // 强制同步所有装备槽位
             serverPlayer.connection.send(new ClientboundSetEquipmentPacket(player.getId(), slots));
         }
     }
@@ -239,21 +280,28 @@ public final class HenshinHelper implements IHenshinHelper {
     public void applyAttributes(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
+        // 先移除可能存在的旧属性
         for (AttributeModifier modifier : form.getAttributes()) {
-            // 通过注册表获取Holder
             attributeRegistry.getHolder(
                     ResourceKey.create(Registries.ATTRIBUTE, modifier.id())
             ).ifPresent(holder -> {
                 AttributeInstance instance = player.getAttribute(holder);
                 if (instance != null) {
-                    instance.addTransientModifier(modifier);
+                    instance.removeModifier(modifier.id()); // 先移除
                 }
             });
         }
 
-        for (MobEffectInstance effect : form.getEffects()) {
-            player.addEffect(new MobEffectInstance(effect));
-            RideBattleLib.LOGGER.debug("应用效果: {} 给玩家 {}", effect, player.getName());
+        // 再应用新属性
+        for (AttributeModifier modifier : form.getAttributes()) {
+            attributeRegistry.getHolder(
+                    ResourceKey.create(Registries.ATTRIBUTE, modifier.id())
+            ).ifPresent(holder -> {
+                AttributeInstance instance = player.getAttribute(holder);
+                if (instance != null) {
+                    instance.addTransientModifier(modifier); // 后添加
+                }
+            });
         }
     }
 
@@ -356,7 +404,7 @@ public final class HenshinHelper implements IHenshinHelper {
             // 应用新效果
             if (newForm != null) {
                 equipArmor(player, newForm, currentBelt);
-                applyAttributes(player, newForm, currentBelt);
+                applyAttributesAndEffects(player, newForm, currentBelt);
             }
 
             // 更新变身数据（同步当前腰带快照）

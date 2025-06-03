@@ -8,7 +8,6 @@ import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
-import com.jpigeon.ridebattlelib.core.system.event.FormDynamicUpdateEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import net.minecraft.ChatFormatting;
@@ -138,23 +137,6 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     }
 
     //====================变身辅助方法====================
-
-    @Override
-    public void updateDynamicForm(Player player) {
-        TransformedData data = getTransformedData(player);
-        if (data == null) return;
-
-        ResourceLocation formId = data.formId();
-        FormConfig form = RiderRegistry.getForm(formId);
-        Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
-
-        if (form != null && !form.dynamicParts.isEmpty()) {
-            HenshinCore.INSTANCE.equipArmor(player, form, currentBelt);
-            HenshinCore.INSTANCE.applyAttributes(player, form, currentBelt);
-            HenshinCore.INSTANCE.setTransformed(player, data.config(), formId, data.originalGear(), currentBelt);
-            NeoForge.EVENT_BUS.post(new FormDynamicUpdateEvent(player, formId));
-        }
-    }
 
     public void restoreTransformedState(Player player, TransformedAttachmentData attachmentData) {
         RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());

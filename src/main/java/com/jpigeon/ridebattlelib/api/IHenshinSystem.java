@@ -11,7 +11,6 @@ public interface IHenshinSystem {
     void unHenshin(Player player);
     void switchForm(Player player, ResourceLocation newFormId);
     boolean isTransformed(Player player);
-    void updateDynamicForm(Player player);
     @Nullable HenshinSystem.TransformedData getTransformedData(Player player);
 
     default void onHenshinStart(Player player) {}

@@ -7,7 +7,6 @@ import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.attribute.AttributeCache;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
-import com.jpigeon.ridebattlelib.core.system.event.FormDynamicUpdateEvent;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
@@ -31,7 +30,6 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.NeoForge;
@@ -152,15 +150,7 @@ public final class HenshinCore {
     public void equipArmor(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
         // 先设置通用装备（固定槽位）
         RiderConfig config = HenshinSystem.INSTANCE.getConfig(player);
-        if (config != null) {
-            for (Map.Entry<EquipmentSlot, Item> entry : config.getUniversalGear().entrySet()) {
-                EquipmentSlot slot = entry.getKey();
-                Item item = entry.getValue();
-                if (item != Items.AIR) {
-                    player.setItemSlot(slot, new ItemStack(item));
-                }
-            }
-        }
+        if (config == null) return;
 
         // 设置固定形态盔甲
         if (form.getHelmet() != Items.AIR) {
@@ -176,25 +166,6 @@ public final class HenshinCore {
             player.setItemSlot(EquipmentSlot.FEET, new ItemStack(form.getBoots()));
         }
 
-        // 设置动态部件盔甲（覆盖固定盔甲）
-        for (ResourceLocation slotId : form.dynamicParts.keySet()) {
-            // 安全获取物品堆栈，避免null
-            ItemStack stack = beltItems.getOrDefault(slotId, ItemStack.EMPTY);
-            if (stack.isEmpty()) {
-                RideBattleLib.LOGGER.warn("动态部件槽位 {} 为空", slotId);
-                continue;
-            }
-
-            FormConfig.DynamicPart part = form.dynamicParts.get(slotId);
-            if (part == null) continue; // 额外的空检查
-
-            Item armor = part.itemToArmor.get(stack.getItem());
-
-            if (armor != null && armor != Items.AIR) {
-                player.setItemSlot(part.slot, new ItemStack(armor));
-            }
-        }
-
         syncEquipment(player);
     }
 
@@ -203,15 +174,6 @@ public final class HenshinCore {
         for (FormConfig form : RiderRegistry.getAllForms()) {
             for (MobEffectInstance effect : form.getEffects()) {
                 player.removeEffect(effect.getEffect());
-            }
-        }
-
-        // 清除所有可能的动态效果
-        for (FormConfig form : RiderRegistry.getAllForms()) {
-            for (FormConfig.DynamicPart part : form.dynamicParts.values()) {
-                for (MobEffectInstance effect : part.itemToEffect.values()) {
-                    player.removeEffect(effect.getEffect());
-                }
             }
         }
 
@@ -308,13 +270,6 @@ public final class HenshinCore {
             player.addEffect(new MobEffectInstance(effect));
             RideBattleLib.LOGGER.debug("应用效果: {} 给玩家 {}", effect, player.getName());
         }
-
-        if (form.matchesDynamic(beltItems)) {
-            for (MobEffectInstance effect : form.getDynamicEffects(beltItems)) {
-                player.addEffect(new MobEffectInstance(effect));
-            }
-        }
-
     }
 
     public void removeAttributes(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems) {
@@ -410,16 +365,6 @@ public final class HenshinCore {
 
         // 检查是否需要更新
         boolean needsUpdate = !newFormId.equals(oldFormId);
-        if (!needsUpdate && oldForm != null && newForm != null) {
-            for (ResourceLocation slotId : newForm.dynamicParts.keySet()) {
-                ItemStack newStack = currentBelt.get(slotId);
-                ItemStack oldStack = data.beltSnapshot().get(slotId);
-                if (!ItemStack.matches(newStack, oldStack)) {
-                    needsUpdate = true;
-                    break;
-                }
-            }
-        }
 
         if (needsUpdate) {
             // 使用当前腰带数据移除旧效果（关键修改）
@@ -438,8 +383,6 @@ public final class HenshinCore {
             // 触发事件
             if (!newFormId.equals(oldFormId)) {
                 NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, oldFormId, newFormId));
-            } else {
-                NeoForge.EVENT_BUS.post(new FormDynamicUpdateEvent(player, newFormId));
             }
         }
     }

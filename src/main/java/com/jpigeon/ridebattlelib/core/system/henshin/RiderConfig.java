@@ -32,9 +32,6 @@ public class RiderConfig {
     private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
-    private final Map<EquipmentSlot, Item> universalGear = new EnumMap<>(EquipmentSlot.class);
-
-
 
     //====================初始化方法====================
 
@@ -102,11 +99,6 @@ public class RiderConfig {
         return forms.get(formId);
     }
 
-    // 通用装备
-    public Map<EquipmentSlot, Item> getUniversalGear() {
-        return Collections.unmodifiableMap(universalGear);
-    }
-
     private boolean isBeltEmpty(Map<ResourceLocation, ItemStack> beltItems) {
         if (beltItems.isEmpty()) return true;
 
@@ -163,48 +155,33 @@ public class RiderConfig {
     }
 
     // 设置基础形态
-    public RiderConfig setBaseForm(ResourceLocation formId) {
+    public void setBaseForm(ResourceLocation formId) {
         if (forms.containsKey(formId)) {
             baseFormId = formId;
         }
-        return this;
     }
 
     // 形态匹配
     public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
-        // 0. 检查腰带是否为空
         if (isBeltEmpty(beltItems)) {
-            return null; // 腰带为空时不匹配任何形态
+            return null;
         }
 
-        // 1. 优先匹配固定形态
+        // 只匹配固定形态
         for (FormConfig form : forms.values()) {
             if (form.matches(beltItems)) {
                 return form.getFormId();
             }
         }
 
-        // 2. 其次匹配动态形态
-        for (FormConfig form : forms.values()) {
-            if (!form.dynamicParts.isEmpty() && form.matchesDynamic(beltItems)) {
-                return form.getDynamicFormId(beltItems);
-            }
-        }
-
-        // 3. 回退到基础形态（但需要检查基础形态是否允许空腰带）
+        // 回退到基础形态
         if (baseFormId != null) {
             FormConfig baseForm = forms.get(baseFormId);
             if (baseForm != null && baseForm.allowsEmptyBelt()) {
                 return baseFormId;
             }
         }
-
-        return null; // 没有匹配的形态
-    }
-
-    public RiderConfig setUniversalGear(EquipmentSlot slot, Item item) {
-        universalGear.put(slot, item);
-        return this;
+        return null;
     }
 
     public ResourceLocation getBaseFormId() {

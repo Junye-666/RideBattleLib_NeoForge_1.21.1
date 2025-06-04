@@ -8,10 +8,13 @@ import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
+import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -21,6 +24,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 故事从此开始!
@@ -28,25 +32,30 @@ import java.util.*;
  */
 public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     public static final HenshinSystem INSTANCE = new HenshinSystem();
+    public static final Map<UUID, Boolean> CLIENT_TRANSFORMED_CACHE = new ConcurrentHashMap<>();
 
     public record TransformedData(
             RiderConfig config,
             ResourceLocation formId,
             Map<EquipmentSlot, ItemStack> originalGear,
             Map<ResourceLocation, ItemStack> beltSnapshot
-    ) {}
+    ) {
+    }
 
     @Override
     public boolean henshin(Player player, ResourceLocation riderId) {
-        if (!checkPreconditions(player)) return false;
         RiderConfig config = RiderRegistry.getRider(riderId);
-        if (config == null) return false;
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         ResourceLocation formId = config.matchForm(beltItems);
-        if (formId == null) return false;
+        if (!checkPreconditions(player) && formId == null) return false;
 
         // 使用核心逻辑执行变身
         HenshinHelper.INSTANCE.executeTransform(player, config, formId);
+
+        if (player instanceof ServerPlayer serverPlayer) {
+            syncTransformedState(serverPlayer);
+        }
+
         return true;
     }
 
@@ -79,7 +88,9 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
                         SoundEvents.ANVIL_LAND, SoundSource.PLAYERS,
                         0.8F, 0.5F);
             }
-
+            if (player instanceof ServerPlayer serverPlayer) {
+                syncTransformedState(serverPlayer);
+            }
             // 6. 事件触发（建议移至HenshinCore）
             onHenshinEnd(player);
         }
@@ -93,12 +104,19 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             return;
         }
         HenshinHelper.INSTANCE.executeFormSwitch(player, newFormId);
+        if (player instanceof ServerPlayer serverPlayer) {
+            syncTransformedState(serverPlayer);
+        }
     }
 
     //====================检查方法====================
 
     @Override
     public boolean isTransformed(Player player) {
+        // 客户端检查缓存，服务端检查真实数据
+        if (player.level().isClientSide) {
+            return CLIENT_TRANSFORMED_CACHE.getOrDefault(player.getUUID(), false);
+        }
         return player.getData(ModAttachments.PLAYER_DATA).transformedData() != null;
     }
 
@@ -150,5 +168,10 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
                 attachmentData.originalGear(),
                 attachmentData.beltSnapshot()
         );
+    }
+
+    public static void syncTransformedState(ServerPlayer player) {
+        boolean isTransformed = INSTANCE.isTransformed(player);
+        PacketHandler.sendToClient(player, new TransformedStatePacket(player.getUUID(), isTransformed));
     }
 }

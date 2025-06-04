@@ -28,17 +28,18 @@ public class HenshinHandler {
         if (KeyBindings.HENSHIN_KEY.consumeClick()) {
             RiderConfig activeConfig = RiderConfig.findActiveDriverConfig(player);
             if (activeConfig != null) {
-                if (HenshinSystem.INSTANCE.isTransformed(player)) {
-                    if (activeConfig.getTriggerType() == TriggerType.KEY) {
-                        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-                        ResourceLocation newFormId = activeConfig.matchForm(beltItems);
-
-                        // 添加调试日志
-                        RideBattleLib.LOGGER.info("发送形态切换包: {}", newFormId);
-                        PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
-                    }
-                } else if (activeConfig.getTriggerType() == TriggerType.KEY) {
+                // 添加详细的调试日志
+                boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
+                RideBattleLib.LOGGER.info("按键触发 - 玩家状态: 变身={}, 驱动器={}", isTransformed, activeConfig.getRiderId());
+                if (isTransformed) {
+                    Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+                    ResourceLocation newFormId = activeConfig.matchForm(beltItems);
+                    // 添加调试日志
+                    RideBattleLib.LOGGER.info("发送形态切换包: {}", newFormId);
+                    PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
+                } else {
                     PacketHandler.sendToServer(new HenshinPacket(activeConfig.getRiderId()));
+                    RideBattleLib.LOGGER.info("发送变身包: {}", activeConfig.getRiderId());
                 }
             }
         }
@@ -53,5 +54,4 @@ public class HenshinHandler {
             PacketHandler.sendToServer(new ReturnItemsPacket());
         }
     }
-
 }

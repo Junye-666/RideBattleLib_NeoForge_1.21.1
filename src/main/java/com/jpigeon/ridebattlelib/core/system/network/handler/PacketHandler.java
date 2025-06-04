@@ -37,6 +37,10 @@ public class PacketHandler {
                 .playToClient(BeltDataDiffPacket.TYPE, BeltDataDiffPacket.STREAM_CODEC,
                         (payload, context) -> BeltSystem.INSTANCE.applyDiffPacket(payload)
                 )
+                .playToClient(TransformedStatePacket.TYPE, TransformedStatePacket.STREAM_CODEC,
+                        (payload, context) -> {
+                            HenshinSystem.CLIENT_TRANSFORMED_CACHE.put(payload.playerId(), payload.isTransformed());
+                        })
         ;
     }
 

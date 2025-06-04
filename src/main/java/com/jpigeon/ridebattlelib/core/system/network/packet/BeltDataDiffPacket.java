@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-// ==================== 差分数据包实现 ====================
 public record BeltDataDiffPacket(
         UUID playerId,
         Map<ResourceLocation, ItemStack> changes,

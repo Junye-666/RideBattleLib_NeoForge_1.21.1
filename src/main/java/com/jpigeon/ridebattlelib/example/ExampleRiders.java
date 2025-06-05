@@ -66,7 +66,8 @@ public class ExampleRiders {
                 .addRequiredItem(// 要求核心槽位有铁锭
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot"),
                         Items.IRON_INGOT
-                );
+                )
+                .addGrantedItem(Items.IRON_SWORD.getDefaultInstance());
 
         // 创建强化形态配置
         FormConfig alphaPoweredForm = new FormConfig(
@@ -106,7 +107,8 @@ public class ExampleRiders {
                 .addRequiredItem(// 要求能量槽位有物品
                         ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "energy_slot"),
                         Items.REDSTONE
-                );
+                )
+                .addGrantedItem(Items.NETHERITE_SWORD.getDefaultInstance());
 
         // 将形态添加到骑士配置
         riderAlpha

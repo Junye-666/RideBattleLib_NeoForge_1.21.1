@@ -92,6 +92,8 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
                 syncTransformedState(serverPlayer);
             }
             // 6. 事件触发（建议移至HenshinCore）
+            // 移除给予的物品
+            HenshinHelper.INSTANCE.removeGrantedItems(player, data.formId());
             onHenshinEnd(player);
         }
     }

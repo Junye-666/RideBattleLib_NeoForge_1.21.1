@@ -26,6 +26,7 @@ public class FormConfig {
     private final List<ResourceLocation> attributeIds = new ArrayList<>();
     private final List<ResourceLocation> effectIds = new ArrayList<>();
     private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
+    private final List<ItemStack> grantedItems = new ArrayList<>();
     private boolean allowsEmptyBelt = false;
 
     public FormConfig(ResourceLocation formId) {
@@ -52,15 +53,14 @@ public class FormConfig {
                 (formId + attributeId.toString()).getBytes(StandardCharsets.UTF_8)
         );
         attributes.add(new AttributeModifier(attributeId, amount, operation));
-        attributeIds.add(attributeId); // 保留ID存储
+        attributeIds.add(attributeId);
         return this;
     }
 
-    // 修复 addEffect 方法
     public FormConfig addEffect(Holder<MobEffect> effect, int duration,
                                 int amplifier, boolean hideParticles) {
         ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
-        effectIds.add(effectId); // 保留ID存储
+        effectIds.add(effectId);
         effects.add(new MobEffectInstance(effect, duration, amplifier, false, hideParticles));
         return this;
     }
@@ -68,6 +68,13 @@ public class FormConfig {
     // 添加必需物品
     public FormConfig addRequiredItem(ResourceLocation slotId, Item item) {
         requiredItems.put(slotId, item);
+        return this;
+    }
+
+    public FormConfig addGrantedItem(ItemStack stack) {
+        if (!stack.isEmpty()) {
+            grantedItems.add(stack.copy());
+        }
         return this;
     }
 
@@ -112,19 +119,6 @@ public class FormConfig {
         return Collections.unmodifiableList(effects);
     }
 
-    public static class DynamicPart {
-        public final EquipmentSlot slot;
-        public final Map<Item, Item> itemToArmor;
-        public final Map<Item, MobEffectInstance> itemToEffect;
-
-        DynamicPart(EquipmentSlot slot, Map<Item, Item> itemToArmor,
-                    Map<Item, MobEffectInstance> itemToEffect) {
-            this.slot = slot;
-            this.itemToArmor = itemToArmor;
-            this.itemToEffect = itemToEffect;
-        }
-    }
-
     public List<ResourceLocation> getAttributeIds() {
         return Collections.unmodifiableList(attributeIds);
     }
@@ -135,5 +129,9 @@ public class FormConfig {
 
     public boolean allowsEmptyBelt() {
         return allowsEmptyBelt;
+    }
+
+    public List<ItemStack> getGrantedItems() {
+        return Collections.unmodifiableList(grantedItems);
     }
 }

@@ -47,6 +47,7 @@ public final class HenshinHelper implements IHenshinHelper {
 
         FormConfig form = RiderRegistry.getForm(formId);
         if (form == null) return;
+        grantFormItems(player, formId);
 
         equipArmor(player, form, beltItems);
         applyAttributesAndEffects(player, form, beltItems);
@@ -64,6 +65,7 @@ public final class HenshinHelper implements IHenshinHelper {
 
         // 1. 移除旧形态的属性和效果
         removeAttributesAndEffects(player, oldFormId, data.beltSnapshot());
+        removeGrantedItems(player, oldFormId);
 
         // 2. 应用新形态
         FormConfig newForm = RiderRegistry.getForm(newFormId);
@@ -75,7 +77,7 @@ public final class HenshinHelper implements IHenshinHelper {
 
             // 4. 应用新属性和效果
             INSTANCE.applyAttributesAndEffects(player, newForm, currentBelt);
-
+            INSTANCE.grantFormItems(player, newFormId);
             // 5. 更新数据
             INSTANCE.setTransformed(player, data.config(), newFormId,
                     data.originalGear(), currentBelt);
@@ -413,6 +415,40 @@ public final class HenshinHelper implements IHenshinHelper {
             // 触发事件
             if (!newFormId.equals(oldFormId)) {
                 NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, oldFormId, newFormId));
+            }
+        }
+    }
+
+    // 给予形态物品
+    private void grantFormItems(Player player, ResourceLocation formId) {
+        FormConfig form = RiderRegistry.getForm(formId);
+        if (form != null) {
+            for (ItemStack stack : form.getGrantedItems()) {
+                if (!player.addItem(stack.copy())) {
+                    player.drop(stack.copy(), false);
+                }
+            }
+        }
+    }
+
+    // 移除给予的物品
+    public void removeGrantedItems(Player player, ResourceLocation formId) {
+        FormConfig form = RiderRegistry.getForm(formId);
+        if (form != null) {
+            for (ItemStack grantedItem : form.getGrantedItems()) {
+                int countToRemove = grantedItem.getCount();
+
+                // 只移除玩家背包中的物品
+                for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                    ItemStack stack = player.getInventory().getItem(i);
+                    if (ItemStack.isSameItem(stack, grantedItem)) {
+                        int removeAmount = Math.min(countToRemove, stack.getCount());
+                        stack.shrink(removeAmount);
+                        countToRemove -= removeAmount;
+
+                        if (countToRemove <= 0) break;
+                    }
+                }
             }
         }
     }

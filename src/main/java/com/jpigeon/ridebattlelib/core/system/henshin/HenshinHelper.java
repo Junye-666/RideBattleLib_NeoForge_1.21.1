@@ -3,12 +3,13 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinHelper;
+import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
-import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
@@ -47,13 +48,45 @@ public final class HenshinHelper implements IHenshinHelper {
 
         FormConfig form = RiderRegistry.getForm(formId);
         if (form == null) return;
-        grantFormItems(player, formId);
 
+        // 添加：触发 INIT 阶段动画事件并检查是否被取消
+        AnimationEvent initEvent = new AnimationEvent(player, config.getRiderId(), AnimationPhase.INIT);
+        NeoForge.EVENT_BUS.post(initEvent);
+        if (initEvent.isCanceled()) {
+            RideBattleLib.LOGGER.info("[调试] 变身被中断（事件取消）");
+            return; // 如果事件被取消，则停止后续逻辑
+        }
+        
+        // 设置为已暂停状态
+        pauseTransformation(player, config.getRiderId());
+        player.displayClientMessage(Component.literal("[测试] 变身已暂停，请穿过光幕继续").withStyle(ChatFormatting.YELLOW), true);
+
+        // ✅ 确保 grantFormItems 在 continueTransformation 中被调用，而不是在这里
+    }
+
+    private void continueTransformation(Player player, ResourceLocation riderId) {
+        RiderConfig config = RiderRegistry.getRider(riderId);
+        if (config == null) return;
+
+        // ✅ 强制重新匹配形态，而不是使用baseForm
+        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+        ResourceLocation matchedFormId = config.matchForm(beltItems);
+        FormConfig form = RiderRegistry.getForm(matchedFormId);
+        if (form == null) return;
+
+        Map<EquipmentSlot, ItemStack> originalGear = saveOriginalGear(player, config);
+
+        // ✅ 在这里调用 grantFormItems 以确保只在继续变身时授予物品
+        grantFormItems(player, matchedFormId);
+
+        // 穿戴盔甲
         equipArmor(player, form, beltItems);
+        // 应用属性和效果
         applyAttributesAndEffects(player, form, beltItems);
-        setTransformed(player, config, formId, originalGear, beltItems);
+        // 设置为已变身状态
+        setTransformed(player, config, form.getFormId(), originalGear, beltItems);
 
-        NeoForge.EVENT_BUS.post(new HenshinEvent.Post(player, config.getRiderId(), formId));
+        player.displayClientMessage(Component.literal("[调试] 形态匹配成功: " + form.getFormId()).withStyle(ChatFormatting.GREEN), true);
     }
 
     @Override
@@ -122,6 +155,11 @@ public final class HenshinHelper implements IHenshinHelper {
         int cooldown = INSTANCE.getHenshinCooldown() * 1000; // 转换为毫秒
         return lastHenshin != null &&
                 (System.currentTimeMillis() - lastHenshin) < cooldown;
+    }
+
+    public static boolean isPaused(Player player, ResourceLocation riderId) {
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        return data.isPaused();
     }
 
     public static void startCooldown(Player player) {
@@ -474,6 +512,26 @@ public final class HenshinHelper implements IHenshinHelper {
                         true
                 );
             }
+        }
+    }
+
+    private boolean isAnimationCompleted(Player player, ResourceLocation riderId) {
+        // 实现检查动画是否完成的逻辑（默认返回 true）
+        return true;
+    }
+
+    public static void pauseTransformation(Player player, ResourceLocation riderId) {
+        // 存储当前状态到附件中
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        data.setPaused(true); // 假设新增字段
+    }
+
+    public static void resumeTransformation(Player player, ResourceLocation riderId) {
+        // 恢复状态并继续执行
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (data.isPaused()) {
+            data.setPaused(false);
+            INSTANCE.continueTransformation(player, riderId);
         }
     }
 }

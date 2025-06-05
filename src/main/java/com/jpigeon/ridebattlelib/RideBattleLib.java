@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib;
 import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
+import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.CooldownHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
@@ -27,8 +28,7 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
 
 @Mod(RideBattleLib.MODID)
-public class RideBattleLib
-{
+public class RideBattleLib {
     public static final String MODID = "ridebattlelib";
 
     public static final Logger LOGGER = LogUtils.getLogger();
@@ -45,6 +45,14 @@ public class RideBattleLib
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
         NeoForge.EVENT_BUS.register(CooldownHandler.class);
 
+        // 注册自定义动画事件处理器
+        NeoForge.EVENT_BUS.register(new Object() {
+            @SubscribeEvent
+            public void onAnimationEvent(AnimationEvent event) {
+                // 空实现，仅为确保事件被正确分发
+            }
+        });
+
         ModAttachments.ATTACHMENTS.register(modEventBus);
         ExampleRiders.init();
         modEventBus.addListener(this::addCreative);
@@ -56,7 +64,7 @@ public class RideBattleLib
 
 
         event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {
-            if (config.getDriverItem() == null){
+            if (config.getDriverItem() == null) {
                 LOGGER.error("骑士 {} 未设置驱动器物品!", config.getRiderId());
             }
         }));

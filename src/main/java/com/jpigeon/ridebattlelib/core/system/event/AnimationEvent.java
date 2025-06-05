@@ -7,12 +7,13 @@ import net.neoforged.bus.api.Event;
 
 public class AnimationEvent extends Event {
     private final Player player;
-    private final ResourceLocation formId;
+    private final ResourceLocation riderId;
     private final AnimationPhase phase;
+    private boolean canceled = false;
 
-    public AnimationEvent(Player player, ResourceLocation formId, AnimationPhase phase) {
+    public AnimationEvent(Player player, ResourceLocation riderId, AnimationPhase phase) {
         this.player = player;
-        this.formId = formId;
+        this.riderId = riderId;
         this.phase = phase;
     }
 
@@ -20,11 +21,26 @@ public class AnimationEvent extends Event {
         return player;
     }
 
-    public ResourceLocation getFormId() {
-        return formId;
+    public ResourceLocation getRiderId() {
+        return riderId;
     }
 
     public AnimationPhase getPhase() {
         return phase;
+    }
+
+    public boolean isCancelable() {
+        return true;
+    }
+
+    public boolean isCanceled() {
+        return canceled;
+    }
+
+    public void setCanceled(boolean canceled) {
+        if (!isCancelable()) {
+            throw new UnsupportedOperationException("Attempted to cancel a non-cancelable event");
+        }
+        this.canceled = canceled;
     }
 }

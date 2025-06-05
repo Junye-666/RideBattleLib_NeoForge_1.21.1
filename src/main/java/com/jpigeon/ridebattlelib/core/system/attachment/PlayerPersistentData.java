@@ -19,6 +19,7 @@ import java.util.Optional;
 public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
     public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems;
     private @Nullable TransformedAttachmentData transformedData;
+    private boolean paused; // 新增暂停状态字段
 
     public PlayerPersistentData(
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems,
@@ -38,6 +39,15 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
 
     public @Nullable TransformedAttachmentData transformedData() {
         return transformedData;
+    }
+
+    // 新增的暂停状态相关方法
+    public boolean isPaused() {
+        return paused;
+    }
+
+    public void setPaused(boolean paused) {
+        this.paused = paused;
     }
 
     // Setter 方法

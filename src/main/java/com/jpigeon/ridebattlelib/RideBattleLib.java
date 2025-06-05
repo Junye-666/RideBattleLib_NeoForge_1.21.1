@@ -7,7 +7,6 @@ import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.CooldownHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
-import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import org.slf4j.Logger;
 
@@ -54,7 +53,7 @@ public class RideBattleLib {
         });
 
         ModAttachments.ATTACHMENTS.register(modEventBus);
-        ExampleRiders.init();
+        // ExampleRiders.init();
         modEventBus.addListener(this::addCreative);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

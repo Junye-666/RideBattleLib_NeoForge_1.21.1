@@ -3,6 +3,8 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.KeyBindings;
 
+import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.ReturnItemsPacket;
@@ -12,6 +14,7 @@ import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -47,6 +50,13 @@ public class HenshinHandler {
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
             RideBattleLib.LOGGER.debug("发送解除变身数据包");
             PacketHandler.sendToServer(new UnhenshinPacket());
+            PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+            if (data.isPaused()){
+                RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+                if (config == null) return;
+                HenshinHelper.resumeTransformation(player, config.getRiderId());
+                PacketHandler.sendToServer(new UnhenshinPacket());
+            }
         }
 
         if (KeyBindings.RETURN_ITEMS_KEY.consumeClick()) {

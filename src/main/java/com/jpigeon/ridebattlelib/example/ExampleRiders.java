@@ -147,15 +147,5 @@ public class ExampleRiders {
                 }
             }
         });
-
-        NeoForge.EVENT_BUS.addListener((AnimationEvent event) -> {
-            if (event.getPhase() == AnimationPhase.INIT &&
-                    event.getRiderId().equals(TEST_RIDER_ALPHA)) {
-                // 在初始化阶段暂停变身
-                event.setCanceled(true);
-                HenshinHelper.pauseTransformation(event.getPlayer(), TEST_RIDER_ALPHA);
-                event.getPlayer().displayClientMessage(Component.literal("[测试] 变身已暂停，请使用钻石右键空气继续").withStyle(ChatFormatting.YELLOW), true);
-            }
-        });
     }
 }

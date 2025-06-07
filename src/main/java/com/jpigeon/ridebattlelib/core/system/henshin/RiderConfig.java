@@ -32,6 +32,7 @@ public class RiderConfig {
     private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
+    private boolean pauseOnHenshin = false;
 
     //====================初始化方法====================
 
@@ -111,6 +112,10 @@ public class RiderConfig {
         return true;
     }
 
+    public boolean shouldPause (){
+        return pauseOnHenshin;
+    }
+
     //====================Setter方法====================
 
     //指定驱动器物品
@@ -186,5 +191,10 @@ public class RiderConfig {
 
     public ResourceLocation getBaseFormId() {
         return baseFormId;
+    }
+
+    public RiderConfig setPauseOnHenshin(boolean pauseOnHenshin) {
+        this.pauseOnHenshin = pauseOnHenshin;
+        return this;
     }
 }

@@ -5,7 +5,9 @@ import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
-import com.jpigeon.ridebattlelib.core.system.penalty.CooldownHandler;
+import com.jpigeon.ridebattlelib.core.system.henshin.armor.ArmorManager;
+import com.jpigeon.ridebattlelib.core.system.henshin.effect.EffectManager;
+import com.jpigeon.ridebattlelib.core.system.henshin.item.ItemManager;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.example.ExampleRiders;
@@ -43,13 +45,14 @@ public class RideBattleLib {
         NeoForge.EVENT_BUS.register(TriggerItemHandler.class);
         NeoForge.EVENT_BUS.register(AttachmentHandler.class);
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
-        NeoForge.EVENT_BUS.register(CooldownHandler.class);
+        NeoForge.EVENT_BUS.register(ArmorManager.class);
+        NeoForge.EVENT_BUS.register(EffectManager.class);
+        NeoForge.EVENT_BUS.register(ItemManager.class);
 
         // 注册自定义动画事件处理器
         NeoForge.EVENT_BUS.register(new Object() {
             @SubscribeEvent
             public void onAnimationEvent(AnimationEvent event) {
-                // 空实现，仅为确保事件被正确分发
             }
         });
 

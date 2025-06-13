@@ -15,7 +15,10 @@ public record SwitchFormPacket(ResourceLocation formId) implements CustomPacketP
     public static final Type<SwitchFormPacket> TYPE = new Type<>(ID);
 
     public static final StreamCodec<FriendlyByteBuf, SwitchFormPacket> STREAM_CODEC = StreamCodec.composite(
-            ResourceLocation.STREAM_CODEC,
+            ResourceLocation.STREAM_CODEC.map(
+                    rl -> rl == null ? ResourceLocation.withDefaultNamespace("null") : rl,
+                    rl -> rl.toString().equals("null") ? null : rl
+            ),
             SwitchFormPacket::formId,
             SwitchFormPacket::new
     );

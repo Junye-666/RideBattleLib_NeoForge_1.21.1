@@ -36,7 +36,7 @@ public class PenaltySystem implements IPenaltySystem {
     }
 
     public int getCooldownDuration() {
-        return Config.COOLDOWN_DURATION.get();
+        return Config.PENALTY_DURATION.get();
     }
 
     public float getExplosionPower() {

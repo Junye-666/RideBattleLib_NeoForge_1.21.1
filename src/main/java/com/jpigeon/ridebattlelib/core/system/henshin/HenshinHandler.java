@@ -11,10 +11,11 @@ import com.jpigeon.ridebattlelib.core.system.network.packet.ReturnItemsPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.UnhenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -37,9 +38,15 @@ public class HenshinHandler {
                 if (isTransformed) {
                     Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
                     ResourceLocation newFormId = activeConfig.matchForm(beltItems);
-                    // 添加调试日志
-                    RideBattleLib.LOGGER.info("发送形态切换包: {}", newFormId);
-                    PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
+                    // 添加null检查
+                    if (newFormId != null) {
+                        // 添加调试日志
+                        RideBattleLib.LOGGER.info("发送形态切换包: {}", newFormId);
+                        PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
+                    } else {
+                        RideBattleLib.LOGGER.warn("形态匹配失败，无法切换形态");
+                        player.displayClientMessage(Component.literal("形态配置不完整，无法切换").withStyle(ChatFormatting.YELLOW), true);
+                    }
                 } else {
                     PacketHandler.sendToServer(new HenshinPacket(activeConfig.getRiderId()));
                     RideBattleLib.LOGGER.info("发送变身包: {}", activeConfig.getRiderId());

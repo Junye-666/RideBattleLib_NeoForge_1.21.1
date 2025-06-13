@@ -169,6 +169,10 @@ public class RiderConfig {
     // 形态匹配
     public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
         if (isBeltEmpty(beltItems)) {
+            // 如果允许空腰带，返回基础形态
+            if (baseFormId != null && forms.containsKey(baseFormId) && forms.get(baseFormId).allowsEmptyBelt()) {
+                return baseFormId;
+            }
             return null;
         }
 

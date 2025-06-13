@@ -12,7 +12,7 @@ public class Config
 {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     public static final ModConfigSpec.IntValue PENALTY_THRESHOLD;
-    public static final ModConfigSpec.IntValue COOLDOWN_DURATION;
+    public static final ModConfigSpec.IntValue PENALTY_DURATION;
     public static final ModConfigSpec.IntValue EXPLOSION_POWER;
     public static final ModConfigSpec.IntValue HENSHIN_COOLDOWN;
 
@@ -22,8 +22,8 @@ public class Config
                 .comment("触发吃瘪生命阈值")
                 .defineInRange("penaltyThreshold", 3, 1, 10);
 
-        // 冷却时间（秒，默认30秒）
-        COOLDOWN_DURATION = BUILDER
+        // 吃瘪冷却时间（秒，默认30秒）
+        PENALTY_DURATION = BUILDER
                 .comment("冷却(秒)")
                 .defineInRange("cooldownDuration", 60, 5, 300);
 
@@ -45,7 +45,7 @@ public class Config
     {
         RideBattleLib.LOGGER.info("Loaded config: penaltyThreshold={}, cooldown={}s, explosionPower={}",
                 PENALTY_THRESHOLD.get(),
-                COOLDOWN_DURATION.get(),
+                PENALTY_DURATION.get(),
                 EXPLOSION_POWER.get());
     }
 }

@@ -1,8 +1,6 @@
 package com.jpigeon.ridebattlelib.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
-import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import net.minecraft.ChatFormatting;
@@ -44,7 +42,9 @@ public class ExampleRiders {
 
         // 创建基础形态配置
         FormConfig alphaBaseForm = new FormConfig(
-                ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "alpha_base_form"))
+                ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "alpha_base_form"),
+                true // 允许空腰带
+        )
                 .setArmor(// 设置盔甲
                         Items.IRON_HELMET,
                         Items.IRON_CHESTPLATE,
@@ -75,7 +75,9 @@ public class ExampleRiders {
 
         // 创建强化形态配置
         FormConfig alphaPoweredForm = new FormConfig(
-                ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "alpha_powered_form"))
+                ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "alpha_powered_form"),
+                false // 不允许空腰带
+        )
                 .setArmor(// 金色盔甲
                         Items.GOLDEN_HELMET,
                         Items.GOLDEN_CHESTPLATE,
@@ -119,7 +121,7 @@ public class ExampleRiders {
                 .addForm(alphaBaseForm)
                 .addForm(alphaPoweredForm)
                 .setBaseForm(alphaBaseForm.getFormId());// 设置基础形态
-        alphaBaseForm.setAllowsEmptyBelt(false);
+        alphaBaseForm.setAllowsEmptyBelt(true); // 确保基础形态允许空腰带
 
         // 注册骑士
         RiderRegistry.registerRider(riderAlpha);

@@ -8,6 +8,9 @@ import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
+import com.jpigeon.ridebattlelib.core.system.henshin.armor.ArmorManager;
+import com.jpigeon.ridebattlelib.core.system.henshin.effect.EffectManager;
+import com.jpigeon.ridebattlelib.core.system.henshin.item.ItemManager;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
@@ -66,19 +69,18 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
 
             // 1. 清除效果（复用HenshinCore逻辑）
-            HenshinHelper.INSTANCE.clearAllModEffects(player);
+            EffectManager.INSTANCE.clearAllModEffects(player);
 
             // 2. 移除属性（保持原有逻辑）
-            HenshinHelper.INSTANCE.removeAttributes(player, data.formId(), data.beltSnapshot());
+            EffectManager.INSTANCE.removeAttributes(player, data.formId(), data.beltSnapshot());
 
             // 3. 恢复装备（保持原有逻辑）
-            HenshinHelper.INSTANCE.restoreOriginalGear(player, data);
+            ArmorManager.INSTANCE.restoreOriginalGear(player, data);
 
             // 4. 同步状态（保持原有逻辑）
-            HenshinHelper.INSTANCE.syncEquipment(player);
+            ArmorManager.INSTANCE.syncEquipment(player);
 
             // 5. 数据清理（新增HenshinCore集成）
-            HenshinHelper.startCooldown(player); // 添加变身冷却
             HenshinHelper.INSTANCE.removeTransformed(player);
             BeltSystem.INSTANCE.returnItems(player);
 
@@ -93,7 +95,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             }
             // 6. 事件触发（建议移至HenshinCore）
             // 移除给予的物品
-            HenshinHelper.INSTANCE.removeGrantedItems(player, data.formId());
+            ItemManager.INSTANCE.removeGrantedItems(player, data.formId());
             onHenshinEnd(player);
         }
     }
@@ -135,13 +137,6 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
                     Component.literal("身体残☆破☆不☆堪，无法变身！").withStyle(ChatFormatting.RED),
                     true
             );
-            return false;
-        }
-        if (HenshinHelper.isOnCooldown(player)) {
-            player.displayClientMessage(Component.literal("变身冷却中! 剩余时间: " +
-                                    HenshinHelper.INSTANCE.getRemainingCooldown(player) + "秒")
-                            .withStyle(ChatFormatting.YELLOW),
-                    true);
             return false;
         }
         return !PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);

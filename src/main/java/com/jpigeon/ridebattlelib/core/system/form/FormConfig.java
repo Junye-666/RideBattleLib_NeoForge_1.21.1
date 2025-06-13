@@ -5,7 +5,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -58,11 +57,17 @@ public class FormConfig {
     }
 
     public FormConfig addEffect(Holder<MobEffect> effect, int duration,
-                                int amplifier, boolean hideParticles) {
+                        int amplifier, boolean hideParticles) {
         ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
         effectIds.add(effectId);
         effects.add(new MobEffectInstance(effect, duration, amplifier, false, hideParticles));
         return this;
+    }
+
+    // 添加一个新的构造函数，允许设置allowsEmptyBelt
+    public FormConfig(ResourceLocation formId, boolean allowsEmptyBelt) {
+        this.formId = formId;
+        this.allowsEmptyBelt = allowsEmptyBelt;
     }
 
     // 添加必需物品

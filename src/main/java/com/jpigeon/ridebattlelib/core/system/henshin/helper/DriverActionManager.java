@@ -12,7 +12,7 @@ import net.neoforged.neoforge.common.NeoForge;
 
 public class DriverActionManager {
     public static final DriverActionManager INSTANCE = new DriverActionManager();
-    public void preHenshin(Player player, ResourceLocation formId) {
+    public void prepareHenshin(Player player, ResourceLocation formId) {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
         HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId);

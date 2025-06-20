@@ -54,7 +54,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         if (formConfig == null) return;
         boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
         if (formConfig.shouldPause()) {
-            DriverActionManager.INSTANCE.preHenshin(player, formId);
+            DriverActionManager.INSTANCE.prepareHenshin(player, formId);
         } else if (isTransformed) {
             ResourceLocation newFormId = config.matchForm(beltItems);
             DriverActionManager.INSTANCE.proceedFormSwitch(player, newFormId);

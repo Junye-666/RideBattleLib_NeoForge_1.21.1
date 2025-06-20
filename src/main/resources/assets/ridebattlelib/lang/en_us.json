@@ -1,8 +1,6 @@
 {
   "category.ridebattlelib": "Kamen Rider Lib",
-  "key.ridebattlelib.unhenshin": "Untransform",
-  "key.ridebattlelib.henshin": "Henshin",
-  "ridebattlelib.validateItems.fail": "Item slots do not match!",
+  "key.ridebattlelib.unhenshin": "UnHenshin",
+  "key.ridebattlelib.driver_activate": "Activate Driver",
   "key.ridebattlelib.return_items": "Return Driver Items"
-
 }

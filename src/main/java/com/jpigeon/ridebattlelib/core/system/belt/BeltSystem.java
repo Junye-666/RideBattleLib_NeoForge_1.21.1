@@ -19,7 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-
+/*
+  * 腰带系统
+  * 管理腰带内部物品的存储和操作
+ */
 public class BeltSystem implements IBeltSystem {
     public static final BeltSystem INSTANCE = new BeltSystem();
 

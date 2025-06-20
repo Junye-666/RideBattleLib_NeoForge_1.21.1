@@ -11,8 +11,8 @@ public class KeyBindings {
             GLFW.GLFW_KEY_V,
             "category.ridebattlelib"
     );
-    public static final KeyMapping HENSHIN_KEY = new KeyMapping(
-            "key.ridebattlelib.henshin",
+    public static final KeyMapping DRIVER_KEY = new KeyMapping(
+            "key.ridebattlelib.driver_activate",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_G,
             "category.ridebattlelib"

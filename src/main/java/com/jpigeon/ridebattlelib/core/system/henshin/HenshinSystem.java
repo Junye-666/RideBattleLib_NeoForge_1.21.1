@@ -8,6 +8,8 @@ import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
+import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
@@ -43,6 +45,25 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     }
 
     @Override
+    public void driverAction(Player player) {
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
+        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+        ResourceLocation formId = config.matchForm(beltItems);
+        FormConfig formConfig = RiderRegistry.getForm(formId);
+        if (formConfig == null) return;
+        boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
+        if (formConfig.shouldPause()) {
+            DriverActionManager.INSTANCE.preHenshin(player, formId);
+        } else if (isTransformed) {
+            ResourceLocation newFormId = config.matchForm(beltItems);
+            DriverActionManager.INSTANCE.proceedFormSwitch(player, newFormId);
+        } else {
+            DriverActionManager.INSTANCE.proceedHenshin(player, config);
+        }
+    }
+
+    @Override
     public boolean henshin(Player player, ResourceLocation riderId) {
         RiderConfig config = RiderRegistry.getRider(riderId);
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
@@ -50,7 +71,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         if (!checkPreconditions(player) && formId == null) return false;
 
         // 使用核心逻辑执行变身
-        HenshinHelper.INSTANCE.executeTransform(player, config, formId);
+        HenshinHelper.INSTANCE.performHenshin(player, config, formId);
 
         if (player instanceof ServerPlayer serverPlayer) {
             syncTransformedState(serverPlayer);
@@ -65,20 +86,16 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         if (data != null) {
             boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
 
-            // 1. 清除效果（复用HenshinCore逻辑）
-            HenshinHelper.INSTANCE.clearAllModEffects(player);
+            // 清除效果
+            EffectAndAttributeManager.INSTANCE.removeAttributesAndEffects(player, data.formId(), data.beltSnapshot());
 
-            // 2. 移除属性（保持原有逻辑）
-            HenshinHelper.INSTANCE.removeAttributes(player, data.formId(), data.beltSnapshot());
+            // 恢复装备
+            ArmorManager.INSTANCE.restoreOriginalGear(player, data);
 
-            // 3. 恢复装备（保持原有逻辑）
-            HenshinHelper.INSTANCE.restoreOriginalGear(player, data);
+            // 同步状态
+            ArmorManager.INSTANCE.syncEquipment(player);
 
-            // 4. 同步状态（保持原有逻辑）
-            HenshinHelper.INSTANCE.syncEquipment(player);
-
-            // 5. 数据清理（新增HenshinCore集成）
-            HenshinHelper.startCooldown(player); // 添加变身冷却
+            // 数据清理
             HenshinHelper.INSTANCE.removeTransformed(player);
             BeltSystem.INSTANCE.returnItems(player);
 
@@ -93,7 +110,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             }
             // 6. 事件触发（建议移至HenshinCore）
             // 移除给予的物品
-            HenshinHelper.INSTANCE.removeGrantedItems(player, data.formId());
+            ItemManager.INSTANCE.removeGrantedItems(player, data.formId());
             onHenshinEnd(player);
         }
     }
@@ -105,7 +122,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             unHenshin(player); // 解除变身
             return;
         }
-        HenshinHelper.INSTANCE.executeFormSwitch(player, newFormId);
+        HenshinHelper.INSTANCE.performFormSwitch(player, newFormId);
         if (player instanceof ServerPlayer serverPlayer) {
             syncTransformedState(serverPlayer);
         }
@@ -137,24 +154,10 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             );
             return false;
         }
-        if (HenshinHelper.isOnCooldown(player)) {
-            player.displayClientMessage(Component.literal("变身冷却中! 剩余时间: " +
-                                    HenshinHelper.INSTANCE.getRemainingCooldown(player) + "秒")
-                            .withStyle(ChatFormatting.YELLOW),
-                    true);
-            return false;
-        }
         return !PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
     }
 
     //====================Getter方法====================
-
-    @Nullable
-    public RiderConfig getConfig(Player player) {
-        TransformedData data = getTransformedData(player);
-        return data != null ? data.config() : null;
-    }
-
     @Override
     @Nullable
     public TransformedData getTransformedData(Player player) {

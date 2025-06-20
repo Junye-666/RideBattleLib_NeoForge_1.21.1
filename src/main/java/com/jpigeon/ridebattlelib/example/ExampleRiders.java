@@ -5,6 +5,7 @@ import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -132,30 +133,6 @@ public class ExampleRiders {
 
     // 测试用的暂停/继续处理器
     private static void registerPauseResumeHandler() {
-        NeoForge.EVENT_BUS.addListener((PlayerInteractEvent.RightClickItem event) -> {
-            if (event.getEntity().level().isClientSide()) return;
 
-            Player player = event.getEntity();
-            ItemStack heldItem = event.getItemStack();
-
-            // 使用钻石右键空气时恢复变身
-            if (heldItem.is(Items.DIAMOND)) {
-                if (HenshinHelper.isPaused(player, TEST_RIDER_ALPHA)) {
-                    HenshinHelper.resumeTransformation(player, TEST_RIDER_ALPHA);
-                    player.displayClientMessage(Component.literal("[测试] 继续变身").withStyle(ChatFormatting.GREEN), true);
-                    event.setCanceled(true);
-                }
-            }
-        });
-
-        NeoForge.EVENT_BUS.addListener((AnimationEvent event) -> {
-            if (event.getPhase() == AnimationPhase.INIT &&
-                    event.getRiderId().equals(TEST_RIDER_ALPHA)) {
-                // 在初始化阶段暂停变身
-                event.setCanceled(true);
-                HenshinHelper.pauseTransformation(event.getPlayer(), TEST_RIDER_ALPHA);
-                event.getPlayer().displayClientMessage(Component.literal("[测试] 变身已暂停，请使用钻石右键空气继续").withStyle(ChatFormatting.YELLOW), true);
-            }
-        });
     }
 }

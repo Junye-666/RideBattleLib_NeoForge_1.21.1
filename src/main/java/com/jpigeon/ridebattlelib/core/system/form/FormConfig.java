@@ -28,6 +28,7 @@ public class FormConfig {
     private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
     private final List<ItemStack> grantedItems = new ArrayList<>();
     private boolean allowsEmptyBelt = false;
+    private boolean shouldPause = false;
 
     public FormConfig(ResourceLocation formId) {
         this.formId = formId;
@@ -75,6 +76,11 @@ public class FormConfig {
         if (!stack.isEmpty()) {
             grantedItems.add(stack.copy());
         }
+        return this;
+    }
+
+    public FormConfig setShouldPause(boolean pause) {
+        this.shouldPause = pause;
         return this;
     }
 
@@ -133,5 +139,9 @@ public class FormConfig {
 
     public List<ItemStack> getGrantedItems() {
         return Collections.unmodifiableList(grantedItems);
+    }
+
+    public boolean shouldPause() {
+        return shouldPause;
     }
 }

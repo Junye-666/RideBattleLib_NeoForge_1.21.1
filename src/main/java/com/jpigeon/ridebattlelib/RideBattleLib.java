@@ -5,9 +5,9 @@ import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
-import com.jpigeon.ridebattlelib.core.system.penalty.CooldownHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -42,7 +42,6 @@ public class RideBattleLib {
         NeoForge.EVENT_BUS.register(TriggerItemHandler.class);
         NeoForge.EVENT_BUS.register(AttachmentHandler.class);
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
-        NeoForge.EVENT_BUS.register(CooldownHandler.class);
 
         // 注册自定义动画事件处理器
         NeoForge.EVENT_BUS.register(new Object() {
@@ -53,7 +52,7 @@ public class RideBattleLib {
         });
 
         ModAttachments.ATTACHMENTS.register(modEventBus);
-        // ExampleRiders.init();
+        ExampleRiders.init();
         modEventBus.addListener(this::addCreative);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

@@ -29,6 +29,7 @@ public class HenshinHandler {
             RiderConfig config = RiderConfig.findActiveDriverConfig(player);
             if (config == null) return;
             RideBattleLib.LOGGER.info("按键触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+            HenshinSystem.INSTANCE.driverAction(player);
         }
 
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {

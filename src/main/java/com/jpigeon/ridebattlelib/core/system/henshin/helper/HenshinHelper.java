@@ -69,19 +69,17 @@ public final class HenshinHelper implements IHenshinHelper {
         ResourceLocation oldFormId = data.formId();
         FormConfig oldForm = RiderRegistry.getForm(oldFormId);
         // 使用旧形态的腰带快照移除效果
-        if (oldForm != null) {
-            EFFECT_ATTRIBUTE.removeAttributesAndEffects(player, oldFormId, data.beltSnapshot());
-        }
-        ITEM.removeGrantedItems(player, oldFormId);
-
-        // 应用新形态
+        if (oldForm == null) return;
         FormConfig newForm = RiderRegistry.getForm(newFormId);
         Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
         boolean needsUpdate = !newFormId.equals(oldFormId);
         if (newForm != null && needsUpdate) {
             // 装备新盔甲
             ARMOR.equipArmor(player, newForm, currentBelt);
-            // 应用新属性和效果
+            // 移除旧属性, 效果和物品
+            EFFECT_ATTRIBUTE.removeAttributesAndEffects(player, oldFormId, data.beltSnapshot());
+            ITEM.removeGrantedItems(player, oldFormId);
+            // 应用新属性, 效果和物品
             EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, newForm, currentBelt);
             ITEM.grantFormItems(player, newFormId);
             // 更新数据

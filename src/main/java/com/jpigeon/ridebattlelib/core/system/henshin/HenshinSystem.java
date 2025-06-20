@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.Config;
+import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IAnimationSystem;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
@@ -46,16 +47,16 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
     @Override
     public void driverAction(Player player) {
+        RideBattleLib.LOGGER.debug("进入driverAction");
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         ResourceLocation formId = config.matchForm(beltItems);
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) return;
-        boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
         if (formConfig.shouldPause()) {
             DriverActionManager.INSTANCE.prepareHenshin(player, formId);
-        } else if (isTransformed) {
+        } else if (HenshinSystem.INSTANCE.isTransformed(player)) {
             ResourceLocation newFormId = config.matchForm(beltItems);
             DriverActionManager.INSTANCE.proceedFormSwitch(player, newFormId);
         } else {

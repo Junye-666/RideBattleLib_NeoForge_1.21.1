@@ -231,6 +231,3 @@ public class PlayerPersistentData implements INBTSerializable<CompoundTag> {
                 '}';
     }
 }
-
-
-

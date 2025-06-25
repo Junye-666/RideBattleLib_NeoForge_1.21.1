@@ -1,22 +1,14 @@
 package com.jpigeon.ridebattlelib.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
-import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.common.NeoForge;
+
 
 import java.util.List;
 

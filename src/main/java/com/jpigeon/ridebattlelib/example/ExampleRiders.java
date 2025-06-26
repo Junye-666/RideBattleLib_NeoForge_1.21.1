@@ -23,7 +23,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
-
 public class ExampleRiders {
     // 定义测试骑士的ID
     private static final ResourceLocation TEST_RIDER_ALPHA =

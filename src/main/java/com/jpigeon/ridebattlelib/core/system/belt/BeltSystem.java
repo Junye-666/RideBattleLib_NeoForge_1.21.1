@@ -191,7 +191,8 @@ public class BeltSystem implements IBeltSystem {
                 new HashMap<>(oldData.riderBeltItems),
                 oldData.transformedData(),
                 oldData.getHenshinState(),
-                oldData.getPendingFormId()
+                oldData.getPendingFormId(),
+                oldData.getPenaltyCooldownEnd()
         );
 
         newData.setBeltItems(config.getRiderId(), items);
@@ -254,7 +255,8 @@ public class BeltSystem implements IBeltSystem {
                         newRiderBeltItems,
                         oldData.transformedData(),
                         oldData.getHenshinState(),
-                        oldData.getPendingFormId())
+                        oldData.getPendingFormId(),
+                        oldData.getPenaltyCooldownEnd())
         );
     }
 

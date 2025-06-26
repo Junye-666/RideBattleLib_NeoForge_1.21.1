@@ -20,18 +20,21 @@ public class PlayerPersistentData {
     private @Nullable TransformedAttachmentData transformedData;
     private HenshinState henshinState;
     private @Nullable ResourceLocation pendingFormId; // 新增：缓冲阶段的目标形态
+    private long penaltyCooldownEnd;
 
     public PlayerPersistentData(
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems,
             @Nullable TransformedAttachmentData transformedData,
-            HenshinState henshinState, // 新增参数
-            @Nullable ResourceLocation pendingFormId // 新增参数
+            HenshinState henshinState,
+            @Nullable ResourceLocation pendingFormId,
+            long penaltyCooldownEnd
     ) {
         this.riderBeltItems = riderBeltItems != null ?
                 new HashMap<>(riderBeltItems) : new HashMap<>();
         this.transformedData = transformedData;
         this.henshinState = henshinState;
         this.pendingFormId = pendingFormId;
+        this.penaltyCooldownEnd = penaltyCooldownEnd;
     }
 
     // Getter 方法
@@ -52,6 +55,14 @@ public class PlayerPersistentData {
         return pendingFormId;
     }
 
+    public long getPenaltyCooldownEnd() {
+        return penaltyCooldownEnd;
+    }
+
+    public boolean isInPenaltyCooldown() {
+        return System.currentTimeMillis() < penaltyCooldownEnd;
+    }
+
     public void setHenshinState(HenshinState state) {
         this.henshinState = state;
     }
@@ -70,8 +81,8 @@ public class PlayerPersistentData {
         }
     }
 
-    public void setTransformedData(@Nullable TransformedAttachmentData data) {
-        this.transformedData = data;
+    public void setPenaltyCooldownEnd(long endTime) {
+        this.penaltyCooldownEnd = endTime;
     }
 
     public static final Codec<PlayerPersistentData> CODEC = RecordCodecBuilder.create(instance ->
@@ -98,7 +109,8 @@ public class PlayerPersistentData {
                             beltItems != null ? beltItems : new HashMap<>(),
                             transformedDataOpt.orElse(null),
                             henshinState,
-                            pendingFormIdOpt.orElse(null)
+                            pendingFormIdOpt.orElse(null),
+                            System.currentTimeMillis()
                     )
             )
     );
@@ -130,4 +142,6 @@ public class PlayerPersistentData {
         }
         return snapshot;
     }
+
+
 }

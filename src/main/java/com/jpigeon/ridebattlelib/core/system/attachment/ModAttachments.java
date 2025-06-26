@@ -19,7 +19,8 @@ public class ModAttachments {
                             new HashMap<>(),
                                     null,
                                     HenshinState.IDLE,
-                                    null))
+                                    null,
+                                    0))
                             .serialize(PlayerPersistentData.CODEC)
                             .build());
 }

@@ -25,7 +25,11 @@ public class AttachmentHandler {
             HenshinHelper.INSTANCE.restoreTransformedState(player, data.transformedData());
             HenshinSystem.INSTANCE.transitionToState(player, HenshinState.TRANSFORMED, null);
         }
-        
+
+        if (data.isInPenaltyCooldown()) {
+            player.addTag("penalty_cooldown");
+        }
+
         if (player instanceof ServerPlayer serverPlayer) {
             // 确保腰带数据和变身状态都同步
             BeltSystem.INSTANCE.syncBeltData(serverPlayer);
@@ -46,8 +50,9 @@ public class AttachmentHandler {
         newPlayer.setData(ModAttachments.PLAYER_DATA, new PlayerPersistentData(
                 new HashMap<>(originalData.riderBeltItems),
                 originalData.transformedData(),
-                originalData.getHenshinState(), // 添加状态
-                originalData.getPendingFormId() // 添加待定形态
+                originalData.getHenshinState(),
+                originalData.getPendingFormId(),
+                0
         ));
 
         PlayerPersistentData newData = newPlayer.getData(ModAttachments.PLAYER_DATA);

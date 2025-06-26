@@ -136,7 +136,8 @@ public final class HenshinHelper implements IHenshinHelper {
                 new HashMap<>(oldData.riderBeltItems),
                 transformedData,
                 oldData.getHenshinState(),
-                oldData.getPendingFormId()
+                oldData.getPendingFormId(),
+                oldData.getPenaltyCooldownEnd()
         );
 
         player.setData(ModAttachments.PLAYER_DATA, newData);
@@ -151,7 +152,8 @@ public final class HenshinHelper implements IHenshinHelper {
                 new HashMap<>(oldData.riderBeltItems),
                 null,
                 oldData.getHenshinState(),
-                oldData.getPendingFormId()
+                oldData.getPendingFormId(),
+                oldData.getPenaltyCooldownEnd()
         );
 
         player.setData(ModAttachments.PLAYER_DATA, newData);

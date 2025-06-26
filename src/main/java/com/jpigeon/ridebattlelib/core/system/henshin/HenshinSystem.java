@@ -146,8 +146,13 @@ public class HenshinSystem implements IHenshinSystem {
 
     private boolean canHenshin(Player player) {
         if (player.level().isClientSide()) return true;
+
+        // 新增冷却检查
+        if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
+            return false;
+        }
+
         return !isTransformed(player) ||
-                !PenaltySystem.PENALTY_SYSTEM.isInCooldown(player) ||
                 (player.getHealth() > Config.PENALTY_THRESHOLD.get());
     }
 

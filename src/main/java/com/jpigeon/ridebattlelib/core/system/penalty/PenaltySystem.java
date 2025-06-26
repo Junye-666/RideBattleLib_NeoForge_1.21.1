@@ -3,6 +3,8 @@ package com.jpigeon.ridebattlelib.core.system.penalty;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IPenaltySystem;
+import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -21,7 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PenaltySystem implements IPenaltySystem {
     public static final PenaltySystem PENALTY_SYSTEM = new PenaltySystem();
-    private static final Map<UUID, Long> cooldownMap = new ConcurrentHashMap<>();
 
     public static PenaltySystem getInstance() {
         return PenaltySystemHolder.INSTANCE;
@@ -119,20 +120,15 @@ public class PenaltySystem implements IPenaltySystem {
 
     @Override
     public void startCooldown(Player player, int seconds) {
-        cooldownMap.put(player.getUUID(), System.currentTimeMillis() + seconds * 1000L);
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        data.setPenaltyCooldownEnd(System.currentTimeMillis() + seconds * 1000L);
         player.addTag("penalty_cooldown");
     }
 
+
     @Override
     public boolean isInCooldown(Player player) {
-        Long cooldownEnd = cooldownMap.get(player.getUUID());
-        boolean inCooldown = cooldownEnd != null && System.currentTimeMillis() < cooldownEnd;
-
-        // 自动清除过期冷却
-        if (!inCooldown && player.getTags().contains("penalty_cooldown")) {
-            player.removeTag("penalty_cooldown");
-        }
-
-        return inCooldown;
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        return data.isInPenaltyCooldown();
     }
 }

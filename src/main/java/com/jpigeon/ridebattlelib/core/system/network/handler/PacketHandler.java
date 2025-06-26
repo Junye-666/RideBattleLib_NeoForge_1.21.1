@@ -52,6 +52,10 @@ public class PacketHandler {
     }
 
     public static void sendToClient(ServerPlayer player, CustomPacketPayload packet) {
+        if (packet instanceof HenshinStateSyncPacket statePacket) {
+            RideBattleLib.LOGGER.info("发送状态包: player={}, state={}, pendingForm={}",
+                    player.getName().getString(), statePacket.state(), statePacket.pendingFormId());
+        }
         player.connection.send(packet);
     }
 }

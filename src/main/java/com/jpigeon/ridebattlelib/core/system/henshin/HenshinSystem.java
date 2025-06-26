@@ -2,34 +2,25 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.api.IAnimationSystem;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
-import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
-import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinStateSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -39,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 故事从此开始!
  * 假面骑士的变身系统
  */
-public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
+public class HenshinSystem implements IHenshinSystem {
     public static final HenshinSystem INSTANCE = new HenshinSystem();
     public static final Map<UUID, Boolean> CLIENT_TRANSFORMED_CACHE = new ConcurrentHashMap<>();
 
@@ -53,20 +44,27 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
 
     @Override
     public void driverAction(Player player) {
-        RideBattleLib.LOGGER.debug("进入driverAction");
+        if (!canHenshin(player)) return;
+
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
+
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         ResourceLocation formId = config.matchForm(beltItems);
         FormConfig formConfig = RiderRegistry.getForm(formId);
+
         if (formConfig == null) return;
+
+        // 统一处理变身逻辑
         if (formConfig.shouldPause()) {
+            // 需要暂停的变身流程
             DriverActionManager.INSTANCE.prepareHenshin(player, formId);
-        } else if (HenshinSystem.INSTANCE.isTransformed(player)) {
-            ResourceLocation newFormId = config.matchForm(beltItems);
-            DriverActionManager.INSTANCE.proceedFormSwitch(player, newFormId);
+        } else if (isTransformed(player)) {
+            // 直接切换形态
+            switchForm(player, formId);
         } else {
-            DriverActionManager.INSTANCE.proceedHenshin(player, config);
+            // 直接变身
+            henshin(player, config.getRiderId());
         }
     }
 
@@ -75,7 +73,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         RiderConfig config = RiderRegistry.getRider(riderId);
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         ResourceLocation formId = config.matchForm(beltItems);
-        if (!checkPreconditions(player) && formId == null) return false;
+        if (canHenshin(player) && formId == null) return false;
 
         // 使用核心逻辑执行变身
         HenshinHelper.INSTANCE.performHenshin(player, config, formId);
@@ -107,7 +105,7 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             BeltSystem.INSTANCE.returnItems(player);
 
             if (isPenalty) {
-                // 播放特殊解除音效
+            // 播放特殊解除音效
                 player.level().playSound(null, player.blockPosition(),
                         SoundEvents.ANVIL_LAND, SoundSource.PLAYERS,
                         0.8F, 0.5F);
@@ -146,28 +144,31 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
         return player.getData(ModAttachments.PLAYER_DATA).transformedData() != null;
     }
 
-    @Override
-    public void playHenshinSequence(Player player, ResourceLocation riderId, ResourceLocation formId, AnimationPhase phase) {
-        // 触发动画事件供其他模组扩展
-        NeoForge.EVENT_BUS.post(new AnimationEvent(player, riderId, formId, phase));
+    private boolean canHenshin(Player player) {
+        if (player.level().isClientSide()) return true;
+        return !isTransformed(player) ||
+                !PenaltySystem.PENALTY_SYSTEM.isInCooldown(player) ||
+                (player.getHealth() > Config.PENALTY_THRESHOLD.get());
     }
 
-    private boolean checkPreconditions(Player player) {
-        if (player.level().isClientSide()) return false;
-        if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
-            player.displayClientMessage(
-                    Component.literal("身体残☆破☆不☆堪，无法变身！").withStyle(ChatFormatting.RED),
-                    true
-            );
-            return false;
+    public void transitionToState(Player player, HenshinState state, @Nullable ResourceLocation formId) {
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        data.setHenshinState(state);
+        data.setPendingFormId(formId);
+
+        if (player instanceof ServerPlayer serverPlayer) {
+            syncHenshinState(serverPlayer);
         }
-        return !PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
     }
 
     //====================网络通信====================
 
     public static void syncHenshinState(ServerPlayer player) {
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+
+        RideBattleLib.LOGGER.info("同步变身状态: player={}, state={}, pendingForm={}",
+                player.getName().getString(), data.getHenshinState(), data.getPendingFormId());
+
         PacketHandler.sendToClient(player, new HenshinStateSyncPacket(
                 player.getUUID(),
                 data.getHenshinState(),
@@ -181,6 +182,9 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
             data.setHenshinState(packet.state());
             data.setPendingFormId(packet.pendingFormId());
+
+            RideBattleLib.LOGGER.info("客户端收到状态同步: player={}, state={}, pendingForm={}",
+                    player.getName().getString(), packet.state(), packet.pendingFormId());
         }
     }
 

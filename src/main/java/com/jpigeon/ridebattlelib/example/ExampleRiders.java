@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib.example;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
-import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
@@ -16,16 +15,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
 
-
 import java.util.List;
-import java.util.Objects;
+
 
 public class ExampleRiders {
     // 定义测试骑士的ID
@@ -147,73 +144,6 @@ public class ExampleRiders {
     // 测试用的暂停/继续处理器
     private static void registerPauseResumeHandler() {
         NeoForge.EVENT_BUS.register(new Object() {
-            @SubscribeEvent
-            public void onAnimationEvent(AnimationEvent event) {
-                // 只处理测试骑士的事件
-                if (!event.getRiderId().equals(TEST_RIDER_ALPHA)) return;
-
-                Player player = event.getPlayer();
-
-                switch (event.getPhase()) {
-                    case INIT:
-                        // 基础变身动画
-                        handleBaseTransformation(event);
-                        break;
-
-                    case CONTINUE:
-                        // 形态切换动画
-                        handleFormSwitch(event);
-                        break;
-
-                    case FINALIZE:
-                        // 变身完成
-                        RideBattleLib.LOGGER.info("{} 的变身动画完成", player.getName().getString());
-                        break;
-                }
-            }
-
-            private void handleBaseTransformation(AnimationEvent event) {
-                Player player = event.getPlayer();
-                RideBattleLib.LOGGER.info("{} 开始基础变身动画", player.getName().getString());
-                    // 3秒后完成变身（模拟动画播放）
-                    Objects.requireNonNull(player.level().getServer()).execute(() -> {
-                        try {
-                            Thread.sleep(3000);
-                        } catch (InterruptedException ignored) {
-                        }
-
-                        if (player.isAlive()) {
-                            RideBattleLib.LOGGER.info("基础变身动画完成，执行变身");
-                            event.completeTransformation();
-                        }
-                    });
-            }
-
-            private void handleFormSwitch(AnimationEvent event) {
-                Player player = event.getPlayer();
-                ResourceLocation newFormId = event.getFormId();
-
-                String formName = "基础形态";
-                if (TEST_FORM_POWERED.equals(newFormId)) {
-                    formName = "强化形态";
-                }
-
-                RideBattleLib.LOGGER.info("{} 开始切换至 {} 的动画", player.getName().getString(), formName);
-
-                // 2秒后完成形态切换（模拟动画播放）
-                Objects.requireNonNull(player.level().getServer()).execute(() -> {
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException ignored) {
-                    }
-
-                    if (player.isAlive()) {
-                        RideBattleLib.LOGGER.info("形态切换动画完成，执行切换");
-                        event.completeTransformation();
-                    }
-                });
-            }
-
             // 监听按键事件测试强制完成
             @SubscribeEvent
             public void onKeyInput(InputEvent.Key event) {

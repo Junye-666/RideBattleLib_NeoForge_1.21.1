@@ -65,6 +65,9 @@ public final class HenshinHelper implements IHenshinHelper {
             return;
         }
         ResourceLocation oldFormId = data.formId();
+        if (!newFormId.equals(oldFormId)) {
+            NeoForge.EVENT_BUS.post(new FormSwitchEvent.Pre(player, oldFormId, newFormId));
+        }
         FormConfig oldForm = RiderRegistry.getForm(oldFormId);
         // 使用旧形态的腰带快照移除效果
         if (oldForm == null) return;

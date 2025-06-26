@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib;
 import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
-import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerItemHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
@@ -43,16 +42,8 @@ public class RideBattleLib {
         NeoForge.EVENT_BUS.register(TriggerItemHandler.class);
         NeoForge.EVENT_BUS.register(AttachmentHandler.class);
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
-
-        // 注册自定义动画事件处理器
-        NeoForge.EVENT_BUS.register(new Object() {
-            @SubscribeEvent
-            public void onAnimationEvent(AnimationEvent event) {
-                // 空实现，仅为确保事件被正确分发
-            }
-        });
-
         ModAttachments.ATTACHMENTS.register(modEventBus);
+
         ExampleRiders.init();
         modEventBus.addListener(this::addCreative);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);

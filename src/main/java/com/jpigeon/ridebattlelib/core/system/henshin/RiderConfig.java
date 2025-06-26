@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -95,7 +96,7 @@ public class RiderConfig {
     }
 
     // 添加形态获取方法
-    public FormConfig getForm(ResourceLocation formId) {
+    public FormConfig getForms(ResourceLocation formId) {
         return forms.get(formId);
     }
 

@@ -22,7 +22,7 @@ public record BeltDataSyncPacket(UUID playerId, Map<ResourceLocation, ItemStack>
 
     public static final StreamCodec<RegistryFriendlyByteBuf, BeltDataSyncPacket> STREAM_CODEC =
             StreamCodec.composite(
-                    uuidCodec(), // 自定义UUID编解码器
+                    uuidCodec(),
                     BeltDataSyncPacket::playerId,
                     mapCodec(),
                     BeltDataSyncPacket::items,
@@ -60,17 +60,6 @@ public record BeltDataSyncPacket(UUID playerId, Map<ResourceLocation, ItemStack>
                 (buf, uuid) -> buf.writeUUID(uuid),
                 buf -> buf.readUUID()
         );
-    }
-
-    public void handle(IPayloadContext context) {
-        context.enqueueWork(() -> {
-            Player player = context.player();
-            if (player == null) return;
-
-            // 使用正确的方法设置腰带数据
-            BeltSystem.INSTANCE.setBeltItems(player, items);
-            RideBattleLib.LOGGER.debug("同步腰带数据: {}", items);
-        });
     }
 
     public static final Type<BeltDataSyncPacket> TYPE = new Type<>(ID);

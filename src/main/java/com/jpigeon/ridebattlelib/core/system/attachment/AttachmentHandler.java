@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.attachment;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,11 +17,6 @@ public class AttachmentHandler {
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
 
-        if (player instanceof ServerPlayer serverPlayer) {
-            // 确保腰带数据和变身状态都同步
-            BeltSystem.INSTANCE.syncBeltData(serverPlayer);
-            HenshinSystem.syncTransformedState(serverPlayer);
-        }
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
         // 只有在玩家不是死亡重生且没有吃瘪冷却时才恢复变身状态
         if (data.transformedData() != null &&
@@ -28,7 +24,12 @@ public class AttachmentHandler {
                 !player.getTags().contains("just_respawned")) {
             HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.transformedData()));
         }
-
+        if (player instanceof ServerPlayer serverPlayer) {
+            // 确保腰带数据和变身状态都同步
+            BeltSystem.INSTANCE.syncBeltData(serverPlayer);
+            HenshinSystem.syncTransformedState(serverPlayer);
+            HenshinSystem.syncHenshinState(serverPlayer);
+        }
     }
 
     @SubscribeEvent
@@ -41,9 +42,15 @@ public class AttachmentHandler {
 
         // 只复制 riderBeltItems 和变身数据（但重生时不自动恢复）
         newPlayer.setData(ModAttachments.PLAYER_DATA, new PlayerPersistentData(
-                new HashMap<>(originalData.riderBeltItems), // 复制 riderBeltItems
-                originalData.transformedData() // 保留变身数据但不自动恢复
+                new HashMap<>(originalData.riderBeltItems),
+                originalData.transformedData(),
+                originalData.getHenshinState(), // 添加状态
+                originalData.getPendingFormId() // 添加待定形态
         ));
+
+        PlayerPersistentData newData = newPlayer.getData(ModAttachments.PLAYER_DATA);
+        newData.setHenshinState(HenshinState.IDLE);
+        newData.setPendingFormId(null);
 
         // 添加重生标记
         newPlayer.addTag("just_respawned");

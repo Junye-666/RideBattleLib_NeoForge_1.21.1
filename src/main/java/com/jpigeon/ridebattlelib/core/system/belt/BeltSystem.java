@@ -135,6 +135,15 @@ public class BeltSystem implements IBeltSystem {
         }
     }
 
+    @Override
+    public boolean isValidForSlot(Player player, ResourceLocation slotId, ItemStack stack) {
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return false;
+
+        SlotDefinition slot = config.getSlotDefinition(slotId);
+        return slot != null && slot.allowedItems().contains(stack.getItem());
+    }
+
     //====================检测方法====================
 
     @Override
@@ -180,8 +189,11 @@ public class BeltSystem implements IBeltSystem {
 
         PlayerPersistentData newData = new PlayerPersistentData(
                 new HashMap<>(oldData.riderBeltItems),
-                oldData.transformedData()
+                oldData.transformedData(),
+                oldData.getHenshinState(),
+                oldData.getPendingFormId()
         );
+
         newData.setBeltItems(config.getRiderId(), items);
 
         player.setData(ModAttachments.PLAYER_DATA, newData);
@@ -238,7 +250,11 @@ public class BeltSystem implements IBeltSystem {
         // 更新数据
         newRiderBeltItems.put(riderId, currentItems);
         player.setData(ModAttachments.PLAYER_DATA,
-                new PlayerPersistentData(newRiderBeltItems, oldData.transformedData())
+                new PlayerPersistentData(
+                        newRiderBeltItems,
+                        oldData.transformedData(),
+                        oldData.getHenshinState(),
+                        oldData.getPendingFormId())
         );
     }
 

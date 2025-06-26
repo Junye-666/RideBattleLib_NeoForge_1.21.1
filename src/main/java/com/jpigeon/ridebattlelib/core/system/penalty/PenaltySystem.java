@@ -77,8 +77,8 @@ public class PenaltySystem implements IPenaltySystem {
         }
 
         // 4. 击飞玩家
-        Vec3 knockback = player.getLookAngle().reverse().scale(1.5).add(0, 1.0, 0);
-        player.setDeltaMovement(knockback);
+        Vec3 knockBack = player.getLookAngle().reverse().scale(1.5).add(0, 1.0, 0);
+        player.setDeltaMovement(knockBack);
         player.hurtMarked = true;
 
         // 5. 添加保护效果

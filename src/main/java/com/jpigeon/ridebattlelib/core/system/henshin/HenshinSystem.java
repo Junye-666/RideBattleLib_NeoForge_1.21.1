@@ -6,23 +6,29 @@ import com.jpigeon.ridebattlelib.api.IAnimationSystem;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.animation.AnimationPhase;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.AnimationEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinStateSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
@@ -141,9 +147,9 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
     }
 
     @Override
-    public void playHenshinSequence(Player player, ResourceLocation formId, AnimationPhase phase) {
+    public void playHenshinSequence(Player player, ResourceLocation riderId, ResourceLocation formId, AnimationPhase phase) {
         // 触发动画事件供其他模组扩展
-        NeoForge.EVENT_BUS.post(new AnimationEvent(player, formId, phase));
+        NeoForge.EVENT_BUS.post(new AnimationEvent(player, riderId, formId, phase));
     }
 
     private boolean checkPreconditions(Player player) {
@@ -156,6 +162,33 @@ public class HenshinSystem implements IHenshinSystem, IAnimationSystem {
             return false;
         }
         return !PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
+    }
+
+    //====================网络通信====================
+
+    public static void syncHenshinState(ServerPlayer player) {
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        PacketHandler.sendToClient(player, new HenshinStateSyncPacket(
+                player.getUUID(),
+                data.getHenshinState(),
+                data.getPendingFormId()
+        ));
+    }
+
+    public static void handleStateSync(HenshinStateSyncPacket packet) {
+        Player player = findPlayer(packet.playerId());
+        if (player != null) {
+            PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+            data.setHenshinState(packet.state());
+            data.setPendingFormId(packet.pendingFormId());
+        }
+    }
+
+    private static Player findPlayer(UUID playerId) {
+        if (Minecraft.getInstance().level != null) {
+            return Minecraft.getInstance().level.getPlayerByUUID(playerId);
+        }
+        return null;
     }
 
     //====================Getter方法====================

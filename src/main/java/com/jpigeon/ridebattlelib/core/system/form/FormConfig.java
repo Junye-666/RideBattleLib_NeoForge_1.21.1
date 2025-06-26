@@ -5,7 +5,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -79,9 +78,8 @@ public class FormConfig {
         return this;
     }
 
-    public FormConfig setShouldPause(boolean pause) {
+    public void setShouldPause(boolean pause) {
         this.shouldPause = pause;
-        return this;
     }
 
     // 匹配验证

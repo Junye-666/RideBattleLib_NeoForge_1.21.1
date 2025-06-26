@@ -21,7 +21,6 @@ import java.util.*;
 
 /*
  * 变身辅助方法
- * TODO: 解耦现有的各种超大方法
  */
 public final class HenshinHelper implements IHenshinHelper {
     public static final HenshinHelper INSTANCE = new HenshinHelper();
@@ -31,7 +30,6 @@ public final class HenshinHelper implements IHenshinHelper {
 
     /*
      *核心方法
-     * TODO: DriverActivation
      * performHenshin 执行变身过程
      * performFormSwitch 执行形态切换过程
      * restoreTransformedState (重连时)恢复变身后的状态
@@ -132,8 +130,10 @@ public final class HenshinHelper implements IHenshinHelper {
 
         // 创建新的持久化数据（使用新的 riderBeltItems 结构）
         PlayerPersistentData newData = new PlayerPersistentData(
-                new HashMap<>(oldData.riderBeltItems), // 复制原有的 riderBeltItems
-                transformedData
+                new HashMap<>(oldData.riderBeltItems),
+                transformedData,
+                oldData.getHenshinState(),
+                oldData.getPendingFormId()
         );
 
         player.setData(ModAttachments.PLAYER_DATA, newData);
@@ -145,8 +145,10 @@ public final class HenshinHelper implements IHenshinHelper {
 
         // 创建新的持久化数据（保留 riderBeltItems，清除变身数据）
         PlayerPersistentData newData = new PlayerPersistentData(
-                new HashMap<>(oldData.riderBeltItems), // 复制原有的 riderBeltItems
-                null // 清除变身数据
+                new HashMap<>(oldData.riderBeltItems),
+                null,
+                oldData.getHenshinState(),
+                oldData.getPendingFormId()
         );
 
         player.setData(ModAttachments.PLAYER_DATA, newData);

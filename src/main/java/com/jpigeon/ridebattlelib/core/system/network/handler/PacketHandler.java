@@ -16,9 +16,7 @@ public class PacketHandler {
         event.registrar(RideBattleLib.MODID)
                 .versioned("0.9.1")
                 .playToServer(HenshinPacket.TYPE, HenshinPacket.STREAM_CODEC,
-                        (payload, context) -> {
-                                HenshinSystem.INSTANCE.henshin(context.player(), payload.riderId());
-                        })
+                        (payload, context) -> HenshinSystem.INSTANCE.henshin(context.player(), payload.riderId()))
                 .playToServer(UnhenshinPacket.TYPE, UnhenshinPacket.STREAM_CODEC,
                         (payload, context) ->
                                 HenshinSystem.INSTANCE.unHenshin(context.player()))
@@ -35,9 +33,15 @@ public class PacketHandler {
                         (payload, context) -> BeltSystem.INSTANCE.applyDiffPacket(payload)
                 )
                 .playToClient(TransformedStatePacket.TYPE, TransformedStatePacket.STREAM_CODEC,
-                        (payload, context) -> {
-                            HenshinSystem.CLIENT_TRANSFORMED_CACHE.put(payload.playerId(), payload.isTransformed());
+                        (payload, context) -> HenshinSystem.CLIENT_TRANSFORMED_CACHE.put(payload.playerId(), payload.isTransformed()))
+                .playToClient(HenshinStateSyncPacket.TYPE, HenshinStateSyncPacket.STREAM_CODEC,
+                        (payload, context) ->
+                        {
+                            if (context.player() instanceof ServerPlayer serverPlayer) {
+                                HenshinSystem.syncTransformedState(serverPlayer);
+                            }
                         })
+
         ;
     }
 

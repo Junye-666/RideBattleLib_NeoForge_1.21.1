@@ -14,5 +14,6 @@ public interface IBeltSystem {
     void returnItems(Player player);
 
     void setBeltItems(Player player, Map<ResourceLocation, ItemStack> items);
-}
 
+    boolean isValidForSlot(Player player, ResourceLocation slotId, ItemStack stack);
+}

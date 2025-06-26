@@ -7,13 +7,13 @@ import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.event.UnhenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinStateSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -21,6 +21,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -55,7 +56,7 @@ public class HenshinSystem implements IHenshinSystem {
 
         if (formConfig == null) return;
 
-        // 统一处理变身逻辑
+        // 处理变身逻辑
         if (formConfig.shouldPause()) {
             // 需要暂停的变身流程
             DriverActionManager.INSTANCE.prepareHenshin(player, formId);
@@ -75,7 +76,7 @@ public class HenshinSystem implements IHenshinSystem {
         ResourceLocation formId = config.matchForm(beltItems);
         if (canHenshin(player) && formId == null) return false;
 
-        // 使用核心逻辑执行变身
+        // 执行变身
         HenshinHelper.INSTANCE.performHenshin(player, config, formId);
 
         if (player instanceof ServerPlayer serverPlayer) {
@@ -89,6 +90,9 @@ public class HenshinSystem implements IHenshinSystem {
     public void unHenshin(Player player) {
         TransformedData data = getTransformedData(player);
         if (data != null) {
+            UnhenshinEvent.Pre preUnHenshin = new UnhenshinEvent.Pre(player);
+            NeoForge.EVENT_BUS.post(preUnHenshin);
+            if (preUnHenshin.isCanceled()) return;
             boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
 
             // 清除效果
@@ -113,10 +117,13 @@ public class HenshinSystem implements IHenshinSystem {
             if (player instanceof ServerPlayer serverPlayer) {
                 syncTransformedState(serverPlayer);
             }
-            // 6. 事件触发（建议移至HenshinCore）
+
             // 移除给予的物品
             ItemManager.INSTANCE.removeGrantedItems(player, data.formId());
-            onHenshinEnd(player);
+
+            //事件触发
+            UnhenshinEvent.Post postUnHenshin = new UnhenshinEvent.Post(player);
+            NeoForge.EVENT_BUS.post(postUnHenshin);
         }
     }
 
@@ -124,7 +131,7 @@ public class HenshinSystem implements IHenshinSystem {
     public void switchForm(Player player, ResourceLocation newFormId) {
         // 如果新形态ID为null，表示无法匹配形态
         if (newFormId == null) {
-            unHenshin(player); // 解除变身
+            unHenshin(player);
             return;
         }
         HenshinHelper.INSTANCE.performFormSwitch(player, newFormId);
@@ -147,7 +154,6 @@ public class HenshinSystem implements IHenshinSystem {
     private boolean canHenshin(Player player) {
         if (player.level().isClientSide()) return true;
 
-        // 新增冷却检查
         if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
             return false;
         }
@@ -179,25 +185,6 @@ public class HenshinSystem implements IHenshinSystem {
                 data.getHenshinState(),
                 data.getPendingFormId()
         ));
-    }
-
-    public static void handleStateSync(HenshinStateSyncPacket packet) {
-        Player player = findPlayer(packet.playerId());
-        if (player != null) {
-            PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
-            data.setHenshinState(packet.state());
-            data.setPendingFormId(packet.pendingFormId());
-
-            RideBattleLib.LOGGER.info("客户端收到状态同步: player={}, state={}, pendingForm={}",
-                    player.getName().getString(), packet.state(), packet.pendingFormId());
-        }
-    }
-
-    private static Player findPlayer(UUID playerId) {
-        if (Minecraft.getInstance().level != null) {
-            return Minecraft.getInstance().level.getPlayerByUUID(playerId);
-        }
-        return null;
     }
 
     //====================Getter方法====================

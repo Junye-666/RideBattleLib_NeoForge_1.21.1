@@ -7,6 +7,7 @@ import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
+import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
@@ -21,23 +22,20 @@ import java.util.*;
 
 /*
  * 变身辅助方法
+ * performHenshin 执行变身过程
+ * performFormSwitch 执行形态切换过程
+ * restoreTransformedState (重连时)恢复变身后的状态
+ * setTransformed 设置变身状态
  */
+
 public final class HenshinHelper implements IHenshinHelper {
     public static final HenshinHelper INSTANCE = new HenshinHelper();
     public static final ArmorManager ARMOR = new ArmorManager();
     public static final EffectAndAttributeManager EFFECT_ATTRIBUTE = new EffectAndAttributeManager();
     public static final ItemManager ITEM = new ItemManager();
 
-    /*
-     *核心方法
-     * performHenshin 执行变身过程
-     * performFormSwitch 执行形态切换过程
-     * restoreTransformedState (重连时)恢复变身后的状态
-     * setTransformed 设置变身状态
-     */
     @Override
     public void performHenshin(Player player, RiderConfig config, ResourceLocation formId) {
-        // 配置不能为空
         if (config == null) return;
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         // 保存原始装备
@@ -55,6 +53,8 @@ public final class HenshinHelper implements IHenshinHelper {
         EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, form, beltItems);
         // 设置为已变身状态
         setTransformed(player, config, form.getFormId(), originalGear, beltItems);
+        HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId);
+        NeoForge.EVENT_BUS.post(postHenshin);
     }
 
     @Override
@@ -66,7 +66,8 @@ public final class HenshinHelper implements IHenshinHelper {
         }
         ResourceLocation oldFormId = data.formId();
         if (!newFormId.equals(oldFormId)) {
-            NeoForge.EVENT_BUS.post(new FormSwitchEvent.Pre(player, oldFormId, newFormId));
+            FormSwitchEvent.Pre preFormSwitch = new FormSwitchEvent.Pre(player, oldFormId, newFormId);
+            NeoForge.EVENT_BUS.post(preFormSwitch);
         }
         FormConfig oldForm = RiderRegistry.getForm(oldFormId);
         // 使用旧形态的腰带快照移除效果
@@ -90,7 +91,8 @@ public final class HenshinHelper implements IHenshinHelper {
 
         // 触发形态切换事件
         if (!newFormId.equals(oldFormId)) {
-            NeoForge.EVENT_BUS.post(new FormSwitchEvent.Post(player, oldFormId, newFormId));
+            FormSwitchEvent.Post postFormSwitch = new FormSwitchEvent.Post(player, oldFormId, newFormId);
+            NeoForge.EVENT_BUS.post(postFormSwitch);
         }
     }
 
@@ -123,7 +125,6 @@ public final class HenshinHelper implements IHenshinHelper {
     @Override
     public void setTransformed(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> beltSnapshot) {
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
-        // 创建新的变身数据
         TransformedAttachmentData transformedData = new TransformedAttachmentData(
                 config.getRiderId(),
                 formId,
@@ -131,7 +132,6 @@ public final class HenshinHelper implements IHenshinHelper {
                 beltSnapshot
         );
 
-        // 创建新的持久化数据（使用新的 riderBeltItems 结构）
         PlayerPersistentData newData = new PlayerPersistentData(
                 new HashMap<>(oldData.riderBeltItems),
                 transformedData,
@@ -147,7 +147,6 @@ public final class HenshinHelper implements IHenshinHelper {
     public void removeTransformed(Player player) {
         PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
 
-        // 创建新的持久化数据（保留 riderBeltItems，清除变身数据）
         PlayerPersistentData newData = new PlayerPersistentData(
                 new HashMap<>(oldData.riderBeltItems),
                 null,

@@ -22,13 +22,15 @@ import java.util.UUID;
 /*
   * 腰带系统
   * 管理腰带内部物品的存储和操作
+  * insertItem 存入物品
+  * extractItem 提取物品
+  * returnItems 退回所有物品
  */
 public class BeltSystem implements IBeltSystem {
     public static final BeltSystem INSTANCE = new BeltSystem();
 
     //====================核心方法====================
 
-    // 存入物品
     @Override
     public boolean insertItem(Player player, ResourceLocation slotId, ItemStack stack) {
         if (stack.isEmpty() || stack.getCount() <= 0) {
@@ -87,7 +89,6 @@ public class BeltSystem implements IBeltSystem {
         return true;
     }
 
-    // 提取物品
     @Override
     public ItemStack extractItem(Player player, ResourceLocation slotId) {
         Map<ResourceLocation, ItemStack> playerBelt = getBeltItems(player);
@@ -105,11 +106,7 @@ public class BeltSystem implements IBeltSystem {
                     case AUTO:
                         BeltHandler.onAutoItemExtracted(player, slotId);
                         break;
-                    case ITEM:
-                        // ITEM 类型通常不需要响应提取事件
-                        break;
-                    case KEY:
-                        // KEY 类型通常不需要响应提取事件
+                    case ITEM, KEY:
                         break;
                 }
             }
@@ -133,15 +130,6 @@ public class BeltSystem implements IBeltSystem {
         if (!player.addItem(stack.copy())) {
             player.drop(stack.copy(), false);
         }
-    }
-
-    @Override
-    public boolean isValidForSlot(Player player, ResourceLocation slotId, ItemStack stack) {
-        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-        if (config == null) return false;
-
-        SlotDefinition slot = config.getSlotDefinition(slotId);
-        return slot != null && slot.allowedItems().contains(stack.getItem());
     }
 
     //====================检测方法====================

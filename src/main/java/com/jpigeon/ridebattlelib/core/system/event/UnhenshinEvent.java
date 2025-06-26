@@ -14,7 +14,6 @@ public class UnhenshinEvent extends Event {
         return player;
     }
 
-    // Pre事件（可取消）
     public static class Pre extends UnhenshinEvent {
         private boolean canceled = false;
 
@@ -38,7 +37,6 @@ public class UnhenshinEvent extends Event {
         }
     }
 
-    // Post事件（不可取消）
     public static class Post extends UnhenshinEvent {
         public Post(Player player) {
             super(player);

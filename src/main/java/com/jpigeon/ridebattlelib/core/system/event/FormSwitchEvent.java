@@ -15,7 +15,6 @@ public class FormSwitchEvent extends Event {
         this.newFormId = newFormId;
     }
 
-    // 可取消的Pre事件
     public static class Pre extends FormSwitchEvent {
         private boolean canceled = false;
 
@@ -39,7 +38,6 @@ public class FormSwitchEvent extends Event {
         }
     }
 
-    // 不可取消的Post事件
     public static class Post extends FormSwitchEvent {
         public Post(Player player, ResourceLocation oldFormId, ResourceLocation newFormId) {
             super(player, oldFormId, newFormId);

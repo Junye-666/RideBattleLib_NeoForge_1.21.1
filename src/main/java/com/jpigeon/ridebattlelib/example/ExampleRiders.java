@@ -3,12 +3,12 @@ package com.jpigeon.ridebattlelib.example;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
@@ -17,9 +17,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -145,16 +143,14 @@ public class ExampleRiders {
         NeoForge.EVENT_BUS.register(new Object() {
             // 监听按键事件测试强制完成
             @SubscribeEvent
-            public void onKeyInput(InputEvent.Key event) {
+            public void onHenshinPre(HenshinEvent.Pre event) {
                 Minecraft minecraft = Minecraft.getInstance();
                 LocalPlayer player = minecraft.player;
                 if (player == null) return;
 
-                // 按R键强制完成变身（测试用）
-                if (InputConstants.isKeyDown(minecraft.getWindow().getWindow(), GLFW.GLFW_KEY_R)) {
+                if (event.getRiderId().equals(TEST_RIDER_ALPHA)) {
                     PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
                     if (data.getHenshinState() == HenshinState.TRANSFORMING) {
-                        RideBattleLib.LOGGER.info("强制完成变身序列");
                         DriverActionManager.INSTANCE.completeTransformation(player);
                     }
                 }

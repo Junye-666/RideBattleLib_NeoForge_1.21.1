@@ -15,7 +15,6 @@ public class HenshinEvent extends Event {
         this.formId = formId;
     }
 
-    // Pre事件（可取消）
     public static class Pre extends HenshinEvent {
         private boolean canceled = false;
 
@@ -39,7 +38,6 @@ public class HenshinEvent extends Event {
         }
     }
 
-    // Post事件（不可取消）
     public static class Post extends HenshinEvent {
         public Post(Player player, ResourceLocation riderId, ResourceLocation formId) {
             super(player, riderId, formId);

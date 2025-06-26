@@ -13,9 +13,4 @@ public interface IHenshinSystem {
     void switchForm(Player player, ResourceLocation newFormId);
     boolean isTransformed(Player player);
     @Nullable HenshinSystem.TransformedData getTransformedData(Player player);
-    default void onHenshinStart(Player player) {}
-    default void onHenshinEnd(Player player) {}
-    default void beforeEquipArmor(Player player, Runnable continuation) {
-        continuation.run();
-    }
 }

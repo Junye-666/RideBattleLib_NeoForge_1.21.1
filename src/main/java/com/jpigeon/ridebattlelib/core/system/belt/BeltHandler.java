@@ -33,15 +33,14 @@ public class BeltHandler {
                 heldItem.shrink(1);
                 inserted = true;
 
-                // 新增：在变身状态下插入物品时自动切换形态
+                // 变身状态下插入物品时自动切换形态
                 if (HenshinSystem.INSTANCE.isTransformed(player) && config.getTriggerType() == TriggerType.AUTO) {
                     Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-                    ResourceLocation newFormId = config.matchForm(beltItems);
                 }
 
-                break; // 插入成功后立即终止循环
+                break;
             }
-            RideBattleLib.LOGGER.debug("存入物品到槽位: {} (必要: {})", slotId, config.getRequiredSlots().contains(slotId));
+            RideBattleLib.LOGGER.debug("玩家 {} 存入物品到槽位: {} (必要: {})", player, slotId, config.getRequiredSlots().contains(slotId));
         }
 
         if (inserted) {
@@ -50,13 +49,8 @@ public class BeltHandler {
 
             if (config.getTriggerType() == TriggerType.AUTO) {
                 if (HenshinSystem.INSTANCE.isTransformed(player)) {
-                    // 获取当前腰带状态
                     Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
-
-                    // 尝试匹配新形态
                     ResourceLocation newFormId = config.matchForm(currentBelt);
-
-                    // 处理可能为空的情况
                     HenshinSystem.INSTANCE.switchForm(player, newFormId);
                 }
             }
@@ -71,7 +65,6 @@ public class BeltHandler {
             Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
             ResourceLocation newFormId = config.matchForm(beltItems);
 
-            // 处理可能为空的情况
             HenshinSystem.INSTANCE.switchForm(player, newFormId);
         }
     }

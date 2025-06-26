@@ -43,9 +43,8 @@ public record BeltDataDiffPacket(
                     for (Map.Entry<ResourceLocation, ItemStack> entry : changes.entrySet()) {
                         ResourceLocation.STREAM_CODEC.encode(buf, entry.getKey());
 
-                        // 使用特殊标记表示空堆栈（删除操作）
                         if (entry.getValue().isEmpty()) {
-                            buf.writeBoolean(false); // 非空标记
+                            buf.writeBoolean(false);
                         } else {
                             buf.writeBoolean(true);
                             ItemStack.STREAM_CODEC.encode(buf, entry.getValue());

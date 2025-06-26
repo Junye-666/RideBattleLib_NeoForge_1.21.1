@@ -14,6 +14,15 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+/*
+  * 骑士形态配置
+  * setArmor 盔甲设置
+  * addAttribute 添加属性修饰符
+  * addEffect 添加效果
+  * addRequiredItem 添加必需物品
+  * addGrantedItem 添加变身后给予玩家的物品
+  * setShouldPause 添加形态变身时是否缓冲(默认false->0帧起手的变身)
+ */
 public class FormConfig {
     private final ResourceLocation formId;
     private Item helmet = Items.AIR;
@@ -33,7 +42,8 @@ public class FormConfig {
         this.formId = formId;
     }
 
-    // 盔甲设置方法
+    //====================Setter方法====================
+
     public FormConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
         this.helmet = helmet;
         this.chestplate = chestplate;
@@ -46,7 +56,6 @@ public class FormConfig {
         this.allowsEmptyBelt = allow;
     }
 
-    // 添加属性修饰符
     public FormConfig addAttribute(ResourceLocation attributeId, double amount,
                                    AttributeModifier.Operation operation) {
         UUID uuid = UUID.nameUUIDFromBytes(
@@ -65,7 +74,6 @@ public class FormConfig {
         return this;
     }
 
-    // 添加必需物品
     public FormConfig addRequiredItem(ResourceLocation slotId, Item item) {
         requiredItems.put(slotId, item);
         return this;
@@ -93,8 +101,7 @@ public class FormConfig {
         return true;
     }
 
-
-    // Getter方法
+    //====================Getter方法====================
     public ResourceLocation getFormId() {
         return formId;
     }

@@ -15,7 +15,7 @@ public enum UUIDStreamCodec implements StreamCodec<RegistryFriendlyByteBuf, UUID
     }
 
     @Override
-    public void encode(RegistryFriendlyByteBuf buf, UUID value) {
+    public void encode(RegistryFriendlyByteBuf buf, @NotNull UUID value) {
         buf.writeUUID(value);
     }
 }

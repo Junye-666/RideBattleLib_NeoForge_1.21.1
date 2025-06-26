@@ -17,10 +17,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
 public class PenaltySystem implements IPenaltySystem {
     public static final PenaltySystem PENALTY_SYSTEM = new PenaltySystem();
 

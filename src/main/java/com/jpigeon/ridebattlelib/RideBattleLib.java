@@ -44,7 +44,7 @@ public class RideBattleLib {
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
         ModAttachments.ATTACHMENTS.register(modEventBus);
 
-        ExampleRiders.init();
+        // ExampleRiders.init();
         modEventBus.addListener(this::addCreative);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

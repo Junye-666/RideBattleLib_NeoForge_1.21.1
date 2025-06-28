@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public class PlayerPersistentData {
     public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems;
-    private @Nullable TransformedAttachmentData transformedData;
+    private final @Nullable TransformedAttachmentData transformedData;
     private HenshinState henshinState;
     private @Nullable ResourceLocation pendingFormId;
     private long penaltyCooldownEnd;
@@ -104,14 +104,17 @@ public class PlayerPersistentData {
 
 
                     ResourceLocation.CODEC.optionalFieldOf("pendingFormId")
-                            .forGetter(data -> Optional.ofNullable(data.pendingFormId))
-            ).apply(instance, (beltItems, transformedDataOpt, henshinState, pendingFormIdOpt) ->
+                            .forGetter(data -> Optional.ofNullable(data.pendingFormId)),
+
+                    Codec.LONG.fieldOf("penaltyCooldownEnd")
+                            .forGetter(data -> data.penaltyCooldownEnd)
+            ).apply(instance, (beltItems, transformedDataOpt, henshinState, pendingFormIdOpt, penaltyCooldownEnd) ->
                     new PlayerPersistentData(
                             beltItems != null ? beltItems : new HashMap<>(),
                             transformedDataOpt.orElse(null),
                             henshinState,
                             pendingFormIdOpt.orElse(null),
-                            System.currentTimeMillis()
+                            penaltyCooldownEnd
                     )
             )
     );

@@ -14,6 +14,8 @@ import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinStateSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -45,12 +47,10 @@ public class HenshinSystem implements IHenshinSystem {
 
     @Override
     public void driverAction(Player player) {
-        if (!canHenshin(player)) return;
-
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
-
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+
         ResourceLocation formId = config.matchForm(beltItems);
         FormConfig formConfig = RiderRegistry.getForm(formId);
 
@@ -74,7 +74,7 @@ public class HenshinSystem implements IHenshinSystem {
         RiderConfig config = RiderRegistry.getRider(riderId);
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         ResourceLocation formId = config.matchForm(beltItems);
-        if (canHenshin(player) && formId == null) return false;
+        if (!canHenshin(player) || formId == null) return false;
 
         // 执行变身
         HenshinHelper.INSTANCE.performHenshin(player, config, formId);
@@ -152,14 +152,13 @@ public class HenshinSystem implements IHenshinSystem {
     }
 
     private boolean canHenshin(Player player) {
-        if (player.level().isClientSide()) return true;
-
         if (PenaltySystem.PENALTY_SYSTEM.isInCooldown(player)) {
+            if (player instanceof ServerPlayer) {
+                player.displayClientMessage(Component.literal("我的身体已经菠萝菠萝哒, 不能再变身了...").withStyle(ChatFormatting.RED), true);
+            }
             return false;
         }
-
-        return !isTransformed(player) ||
-                (player.getHealth() > Config.PENALTY_THRESHOLD.get());
+        return true;
     }
 
     public void transitionToState(Player player, HenshinState state, @Nullable ResourceLocation formId) {

@@ -10,6 +10,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 public class AttachmentHandler {
     @SubscribeEvent
@@ -21,7 +22,7 @@ public class AttachmentHandler {
                 !player.getTags().contains("penalty_cooldown") &&
                 !player.getTags().contains("just_respawned")) {
 
-            HenshinHelper.INSTANCE.restoreTransformedState(player, data.transformedData());
+            HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.transformedData()));
             HenshinSystem.INSTANCE.transitionToState(player, HenshinState.TRANSFORMED, null);
         }
 

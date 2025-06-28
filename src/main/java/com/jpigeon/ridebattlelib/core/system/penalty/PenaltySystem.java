@@ -17,6 +17,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Random;
+
 public class PenaltySystem implements IPenaltySystem {
     public static final PenaltySystem PENALTY_SYSTEM = new PenaltySystem();
 
@@ -104,14 +106,23 @@ public class PenaltySystem implements IPenaltySystem {
                 true
         ));
 
-        // 添加提示信息
-        player.displayClientMessage(
-                Component.literal("我的身体已经菠萝菠萝哒! 冷却: " + cooldown + "秒")
-                        .withStyle(ChatFormatting.RED),
-                true
-        );
+        Random random = new Random();
+        int chance =  random.nextInt(100);
+        if (chance < 10){
+            player.displayClientMessage(
+                    Component.literal("我的身体已经菠萝菠萝哒!")
+                            .withStyle(ChatFormatting.RED),
+                    true
+            );
+        } else if (chance < 30) {
+            player.displayClientMessage(
+                    Component.literal("不能再打下去了!")
+                            .withStyle(ChatFormatting.RED),
+                    true
+            );
+        }
 
-        RideBattleLib.LOGGER.info("玩家 {} 触发吃瘪系统!", player.getName().getString());
+        RideBattleLib.LOGGER.info("玩家 {} 触发吃瘪系统", player.getName().getString());
     }
 
     @Override

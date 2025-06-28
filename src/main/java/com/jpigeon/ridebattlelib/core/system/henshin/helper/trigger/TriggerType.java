@@ -5,4 +5,3 @@ public enum TriggerType {
     ITEM,
     AUTO
 }
-

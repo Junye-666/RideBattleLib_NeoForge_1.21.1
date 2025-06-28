@@ -7,7 +7,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerItemHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;

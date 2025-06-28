@@ -8,7 +8,6 @@ import java.util.*;
 /**
  * 理解为管理所有被注册骑士的列表
  */
-
 public class RiderRegistry {
     private static final Map<ResourceLocation, RiderConfig> RIDERS = new HashMap<>();
     private static final Map<ResourceLocation, FormConfig> FORMS = new HashMap<>();

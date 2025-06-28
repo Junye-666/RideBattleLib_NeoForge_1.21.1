@@ -27,7 +27,6 @@ import java.util.*;
  * restoreTransformedState (重连时)恢复变身后的状态
  * setTransformed 设置变身状态
  */
-
 public final class HenshinHelper implements IHenshinHelper {
     public static final HenshinHelper INSTANCE = new HenshinHelper();
     public static final ArmorManager ARMOR = new ArmorManager();

@@ -10,7 +10,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import java.util.HashMap;
-import java.util.Objects;
 
 public class AttachmentHandler {
     @SubscribeEvent

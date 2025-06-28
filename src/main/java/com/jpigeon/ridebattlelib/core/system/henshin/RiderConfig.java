@@ -26,12 +26,16 @@ import java.util.*;
 public class RiderConfig {
     private final ResourceLocation riderId;
     private Item driverItem = Items.AIR;
+    private Item auxDriverItem = Items.AIR;
     private EquipmentSlot driverSlot = EquipmentSlot.LEGS;
+    private EquipmentSlot auxDriverSlot = EquipmentSlot.OFFHAND;
     private TriggerType triggerType = TriggerType.KEY;
     private Item triggerItem = Items.AIR;
     private ResourceLocation baseFormId;
     private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
+    private final Map<ResourceLocation, SlotDefinition> auxSlotDefinitions = new HashMap<>();
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
+    private final Set<ResourceLocation> auxRequiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
 
     //====================初始化方法====================
@@ -51,6 +55,10 @@ public class RiderConfig {
     //获取驱动器物品
     public Item getDriverItem() {
         return driverItem;
+    }
+
+    public Item getAuxDriverItem() {
+        return auxDriverItem;
     }
 
     //获取驱动器位置
@@ -100,6 +108,10 @@ public class RiderConfig {
         return forms.get(formId);
     }
 
+    public ResourceLocation getBaseFormId() {
+        return baseFormId;
+    }
+
     private boolean isBeltEmpty(Map<ResourceLocation, ItemStack> beltItems) {
         if (beltItems.isEmpty()) return true;
 
@@ -110,6 +122,20 @@ public class RiderConfig {
         }
 
         return true;
+    }
+
+    public boolean hasAuxDriverEquipped(Player player) {
+        ItemStack auxStack = player.getItemBySlot(auxDriverSlot);
+        return !auxStack.isEmpty() && auxStack.is(auxDriverItem);
+    }
+
+    public SlotDefinition getAuxSlotDefinition(ResourceLocation slotId) {
+        return auxSlotDefinitions.get(slotId);
+    }
+
+    // 获取所有辅助驱动器槽位
+    public Map<ResourceLocation, SlotDefinition> getAuxSlotDefinitions() {
+        return Collections.unmodifiableMap(auxSlotDefinitions);
     }
 
     //====================Setter方法====================
@@ -162,6 +188,21 @@ public class RiderConfig {
         }
     }
 
+    public RiderConfig addAuxSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired, boolean allowReplace) {
+        auxSlotDefinitions.put(slotId, new SlotDefinition(allowedItems, null, allowReplace));
+        if (isRequired) {
+            auxRequiredSlots.add(slotId);
+        }
+        return this;
+    }
+
+    // 设置辅助驱动器物品和装备槽位
+    public RiderConfig setAuxDriverItem(Item item, EquipmentSlot slot) {
+        this.auxDriverItem = item;
+        this.auxDriverSlot = slot;
+        return this;
+    }
+
     // 形态匹配
     public ResourceLocation matchForm(Map<ResourceLocation, ItemStack> beltItems) {
         if (isBeltEmpty(beltItems)) {
@@ -170,7 +211,10 @@ public class RiderConfig {
 
         // 只匹配固定形态
         for (FormConfig form : forms.values()) {
-            if (form.matches(beltItems)) {
+            boolean mainMatches = form.matchesMainSlots(beltItems); // 主驱动器匹配
+            boolean auxMatches = form.matchesAuxSlots(beltItems);   // 辅助驱动器匹配
+
+            if (mainMatches && auxMatches) {
                 return form.getFormId();
             }
         }
@@ -185,7 +229,5 @@ public class RiderConfig {
         return null;
     }
 
-    public ResourceLocation getBaseFormId() {
-        return baseFormId;
-    }
+
 }

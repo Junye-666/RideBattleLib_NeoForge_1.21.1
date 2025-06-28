@@ -133,6 +133,7 @@ public final class HenshinHelper implements IHenshinHelper {
 
         PlayerPersistentData newData = new PlayerPersistentData(
                 new HashMap<>(oldData.riderBeltItems),
+                new HashMap<>(oldData.auxBeltItems),
                 transformedData,
                 oldData.getHenshinState(),
                 oldData.getPendingFormId(),
@@ -148,6 +149,7 @@ public final class HenshinHelper implements IHenshinHelper {
 
         PlayerPersistentData newData = new PlayerPersistentData(
                 new HashMap<>(oldData.riderBeltItems),
+                new HashMap<>(oldData.auxBeltItems),
                 null,
                 oldData.getHenshinState(),
                 oldData.getPendingFormId(),

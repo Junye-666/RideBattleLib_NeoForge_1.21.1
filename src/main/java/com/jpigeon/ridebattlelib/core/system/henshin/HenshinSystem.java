@@ -148,7 +148,7 @@ public class HenshinSystem implements IHenshinSystem {
         if (player.level().isClientSide) {
             return CLIENT_TRANSFORMED_CACHE.getOrDefault(player.getUUID(), false);
         }
-        return player.getData(ModAttachments.PLAYER_DATA).transformedData() != null;
+        return player.getData(ModAttachments.PLAYER_DATA).getTransformedData() != null;
     }
 
     private boolean canHenshin(Player player) {
@@ -190,7 +190,7 @@ public class HenshinSystem implements IHenshinSystem {
     @Override
     @Nullable
     public TransformedData getTransformedData(Player player) {
-        TransformedAttachmentData attachmentData = player.getData(ModAttachments.PLAYER_DATA).transformedData();
+        TransformedAttachmentData attachmentData = player.getData(ModAttachments.PLAYER_DATA).getTransformedData();
         if (attachmentData == null) return null;
 
         RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());

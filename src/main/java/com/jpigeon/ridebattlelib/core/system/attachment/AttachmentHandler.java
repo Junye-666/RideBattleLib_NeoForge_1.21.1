@@ -18,11 +18,11 @@ public class AttachmentHandler {
         Player player = event.getEntity();
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
 
-        if (data.transformedData() != null &&
+        if (data.getTransformedData() != null &&
                 !player.getTags().contains("penalty_cooldown") &&
                 !player.getTags().contains("just_respawned")) {
 
-            HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.transformedData()));
+            HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.getTransformedData()));
             HenshinSystem.INSTANCE.transitionToState(player, HenshinState.TRANSFORMED, null);
         }
 
@@ -49,7 +49,8 @@ public class AttachmentHandler {
         // 只复制 riderBeltItems 和变身数据（但重生时不自动恢复）
         newPlayer.setData(ModAttachments.PLAYER_DATA, new PlayerPersistentData(
                 new HashMap<>(originalData.riderBeltItems),
-                originalData.transformedData(),
+                new HashMap<>(originalData.auxBeltItems),
+                originalData.getTransformedData(),
                 originalData.getHenshinState(),
                 originalData.getPendingFormId(),
                 0

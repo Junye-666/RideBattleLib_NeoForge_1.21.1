@@ -32,15 +32,19 @@ public class BeltHandler {
             if (BeltSystem.INSTANCE.insertItem(player, slotId, heldItem.copy())) {
                 heldItem.shrink(1);
                 inserted = true;
-
-                // 变身状态下插入物品时自动切换形态
-                if (HenshinSystem.INSTANCE.isTransformed(player) && config.getTriggerType() == TriggerType.AUTO) {
-                    Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-                }
-
                 break;
             }
             RideBattleLib.LOGGER.debug("玩家 {} 存入物品到槽位: {} (必要: {})", player, slotId, config.getRequiredSlots().contains(slotId));
+        }
+
+        if (!inserted && config.hasAuxDriverEquipped(player)) {
+            for (ResourceLocation slotId : config.getAuxSlotDefinitions().keySet()) {
+                if (BeltSystem.INSTANCE.insertItem(player, slotId, heldItem.copy())) {
+                    heldItem.shrink(1);
+                    inserted = true;
+                    break;
+                }
+            }
         }
 
         if (inserted) {

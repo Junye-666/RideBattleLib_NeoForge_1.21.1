@@ -34,6 +34,7 @@ public class FormConfig {
     private final List<ResourceLocation> attributeIds = new ArrayList<>();
     private final List<ResourceLocation> effectIds = new ArrayList<>();
     private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
+    private final Map<ResourceLocation, Item> auxRequiredItems = new HashMap<>();
     private final List<ItemStack> grantedItems = new ArrayList<>();
     private boolean allowsEmptyBelt = false;
     private boolean shouldPause = false;
@@ -79,6 +80,11 @@ public class FormConfig {
         return this;
     }
 
+    public FormConfig addAuxRequiredItem(ResourceLocation slotId, Item item) {
+        auxRequiredItems.put(slotId, item);
+        return this;
+    }
+
     public FormConfig addGrantedItem(ItemStack stack) {
         if (!stack.isEmpty()) {
             grantedItems.add(stack.copy());
@@ -91,10 +97,20 @@ public class FormConfig {
     }
 
     // 匹配验证
-    public boolean matches(Map<ResourceLocation, ItemStack> beltItems) {
+    public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> beltItems) {
         for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
             ItemStack stack = beltItems.get(entry.getKey());
             if (stack == null || stack.isEmpty() || !stack.is(entry.getValue())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean matchesAuxSlots(Map<ResourceLocation, ItemStack> beltItems) {
+        for (Map.Entry<ResourceLocation, Item> entry : auxRequiredItems.entrySet()) {
+            ItemStack stack = beltItems.get(entry.getKey());
+            if (stack.isEmpty() || !stack.is(entry.getValue())) {
                 return false;
             }
         }

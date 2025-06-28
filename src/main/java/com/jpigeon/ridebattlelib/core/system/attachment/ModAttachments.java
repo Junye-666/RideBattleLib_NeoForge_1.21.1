@@ -17,6 +17,7 @@ public class ModAttachments {
             ATTACHMENTS.register("player_data",
                     () -> AttachmentType.builder(() -> new PlayerPersistentData(
                             new HashMap<>(),
+                                    new HashMap<>(),
                                     null,
                                     HenshinState.IDLE,
                                     null,

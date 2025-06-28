@@ -7,12 +7,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class PlayerPersistentData {
     public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems;
+    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems = new HashMap<>();
     private final @Nullable TransformedAttachmentData transformedData;
     private HenshinState henshinState;
     private @Nullable ResourceLocation pendingFormId;
@@ -20,6 +22,7 @@ public class PlayerPersistentData {
 
     public PlayerPersistentData(
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems,
+            Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems,
             @Nullable TransformedAttachmentData transformedData,
             HenshinState henshinState,
             @Nullable ResourceLocation pendingFormId,
@@ -27,6 +30,8 @@ public class PlayerPersistentData {
     ) {
         this.riderBeltItems = riderBeltItems != null ?
                 new HashMap<>(riderBeltItems) : new HashMap<>();
+        this.auxBeltItems = auxBeltItems != null ?
+                new HashMap<>(auxBeltItems) : new HashMap<>();
         this.transformedData = transformedData;
         this.henshinState = henshinState;
         this.pendingFormId = pendingFormId;
@@ -35,10 +40,17 @@ public class PlayerPersistentData {
 
     //====================Setter方法====================
 
+    public void setAuxBeltItems(ResourceLocation riderId, Map<ResourceLocation, ItemStack> items) {
+        if (items == null) {
+            auxBeltItems.remove(riderId);
+        } else {
+            auxBeltItems.put(riderId, new HashMap<>(items));
+        }
+    }
+
     public void setHenshinState(HenshinState state) {
         this.henshinState = state;
     }
-
 
     public void setPendingFormId(@Nullable ResourceLocation formId) {
         this.pendingFormId = formId;
@@ -63,7 +75,12 @@ public class PlayerPersistentData {
         return riderBeltItems.getOrDefault(riderId, new HashMap<>());
     }
 
-    public @Nullable TransformedAttachmentData transformedData() {
+    public ItemStack getAuxBeltItems(ResourceLocation riderId, ResourceLocation slotId) {
+        return auxBeltItems.getOrDefault(riderId, Collections.emptyMap())
+                .getOrDefault(slotId, ItemStack.EMPTY);
+    }
+
+    public @Nullable TransformedAttachmentData getTransformedData() {
         return transformedData;
     }
 
@@ -95,7 +112,12 @@ public class PlayerPersistentData {
                             ).optionalFieldOf("riderBeltItems", new HashMap<>())
                             .forGetter(data -> data.riderBeltItems),
 
-                    TransformedAttachmentData.CODEC.optionalFieldOf("transformedData")
+                    Codec.unboundedMap(ResourceLocation.CODEC,
+                                    Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.CODEC)
+                            ).optionalFieldOf("auxBeltItems", new HashMap<>())
+                            .forGetter(data -> data.auxBeltItems),
+
+                    TransformedAttachmentData.CODEC.optionalFieldOf("getTransformedData")
                             .forGetter(data -> Optional.ofNullable(data.transformedData)),
 
 
@@ -108,9 +130,10 @@ public class PlayerPersistentData {
 
                     Codec.LONG.fieldOf("penaltyCooldownEnd")
                             .forGetter(data -> data.penaltyCooldownEnd)
-            ).apply(instance, (beltItems, transformedDataOpt, henshinState, pendingFormIdOpt, penaltyCooldownEnd) ->
+            ).apply(instance, (riderBeltItems, auxBeltItems, transformedDataOpt, henshinState, pendingFormIdOpt, penaltyCooldownEnd) ->
                     new PlayerPersistentData(
-                            beltItems != null ? beltItems : new HashMap<>(),
+                            riderBeltItems != null ? riderBeltItems : new HashMap<>(),
+                            auxBeltItems,
                             transformedDataOpt.orElse(null),
                             henshinState,
                             pendingFormIdOpt.orElse(null),

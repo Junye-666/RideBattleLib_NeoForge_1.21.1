@@ -106,5 +106,9 @@ NeoForge.EVENT_BUS.addListener((HenshinEvent event) -> {
 HenshinHelper.completeTransformation(player);
 ```
 
+### 6. 神奇的事件类
+0.9.3新增了一些Events, 增加了更大的扩展可能
+现在可以通过SubscribeEvent实现特别简单的管理
+
 ## 示例代码
 简单的示例可以参考 [ExampleRiders.java](file://D:\Apps\Minecraft\Coding\Mod\RideBattleLib_NeoForge_1.21.1\src\main\java\com\jpigeon\ridebattlelib\example\ExampleRiders.java#L28-L86)

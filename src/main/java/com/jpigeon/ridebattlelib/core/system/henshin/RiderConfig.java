@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
+import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
 import net.minecraft.resources.ResourceLocation;
@@ -9,6 +10,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -210,22 +212,39 @@ public class RiderConfig {
         }
 
         // 只匹配固定形态
+        ResourceLocation matchedForm = null;
         for (FormConfig form : forms.values()) {
             boolean mainMatches = form.matchesMainSlots(beltItems); // 主驱动器匹配
-            boolean auxMatches = form.matchesAuxSlots(beltItems);   // 辅助驱动器匹配
+            boolean auxMatches = form.matchesAuxSlots(beltItems); // 辅助驱动器匹配
 
             if (mainMatches && auxMatches) {
-                return form.getFormId();
+                matchedForm = form.getFormId();
+                break;
             }
         }
 
         // 回退到基础形态
-        if (baseFormId != null) {
+        if (matchedForm == null && baseFormId != null) {
             FormConfig baseForm = forms.get(baseFormId);
             if (baseForm != null && baseForm.allowsEmptyBelt()) {
-                return baseFormId;
+                matchedForm = baseFormId;
             }
         }
-        return null;
+
+        // 触发形态覆盖事件
+        if (matchedForm != null) {
+            FormOverrideEvent overrideEvent = new FormOverrideEvent(null, beltItems, matchedForm);
+            NeoForge.EVENT_BUS.post(overrideEvent);
+
+            if (overrideEvent.isCanceled()) {
+                return null; // 取消变身
+            }
+
+            if (overrideEvent.getOverrideForm() != null) {
+                return overrideEvent.getOverrideForm();
+            }
+        }
+
+        return matchedForm;
     }
 }

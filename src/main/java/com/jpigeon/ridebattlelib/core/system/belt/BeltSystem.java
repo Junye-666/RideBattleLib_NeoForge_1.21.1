@@ -5,6 +5,7 @@ import com.jpigeon.ridebattlelib.api.IBeltSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.event.ItemInsertionEvent;
+import com.jpigeon.ridebattlelib.core.system.event.SlotExtractionEvent;
 import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
@@ -125,6 +126,28 @@ public class BeltSystem implements IBeltSystem {
 
         ItemStack extracted = targetMap.remove(slotId);
         if (extracted != null && !extracted.isEmpty()) {
+
+            SlotExtractionEvent.Pre preExtraction = new SlotExtractionEvent.Pre(player, slotId, extracted, config);
+            NeoForge.EVENT_BUS.post(preExtraction);
+            if (preExtraction.isCanceled()) {
+                // 取消操作，将物品放回腰带
+                targetMap.put(slotId, extracted);
+                return ItemStack.EMPTY;
+            }
+
+            extracted = preExtraction.getExtractedStack();
+
+            if (extracted.isEmpty()) {
+                // 更新数据
+                if (isAuxSlot) {
+                    data.setAuxBeltItems(config.getRiderId(), targetMap);
+                } else {
+                    data.setBeltItems(config.getRiderId(), targetMap);
+                }
+                syncBeltData(player);
+                return ItemStack.EMPTY;
+            }
+
             returnItemToPlayer(player, extracted);
 
             // 直接更新数据
@@ -135,6 +158,9 @@ public class BeltSystem implements IBeltSystem {
             }
 
             syncBeltData(player);
+
+            SlotExtractionEvent.Post postEvent = new SlotExtractionEvent.Post(player, slotId, extracted, config);
+            NeoForge.EVENT_BUS.post(postEvent);
         }
         return extracted != null ? extracted : ItemStack.EMPTY;
     }

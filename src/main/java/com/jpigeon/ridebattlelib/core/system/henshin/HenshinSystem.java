@@ -7,6 +7,7 @@ import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.event.DriverActivationEvent;
 import com.jpigeon.ridebattlelib.core.system.event.UnhenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
@@ -55,6 +56,10 @@ public class HenshinSystem implements IHenshinSystem {
         FormConfig formConfig = RiderRegistry.getForm(formId);
 
         if (formConfig == null) return;
+        ItemStack driverItem = player.getItemBySlot(config.getDriverSlot());
+
+        DriverActivationEvent event = new DriverActivationEvent(player, driverItem);
+        NeoForge.EVENT_BUS.post(event);
 
         // 处理变身逻辑
         if (formConfig.shouldPause()) {

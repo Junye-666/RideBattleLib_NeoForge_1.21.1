@@ -12,6 +12,4 @@ public interface IBeltSystem {
     boolean validateItems(Player player, ResourceLocation riderId);
     Map<ResourceLocation, ItemStack> getBeltItems(Player player);
     void returnItems(Player player);
-
-    void setBeltItems(Player player, Map<ResourceLocation, ItemStack> items);
 }

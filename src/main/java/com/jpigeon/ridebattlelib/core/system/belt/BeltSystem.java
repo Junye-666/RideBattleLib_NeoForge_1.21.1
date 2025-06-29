@@ -4,6 +4,7 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IBeltSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.event.ItemInsertionEvent;
 import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
@@ -14,6 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,78 +53,110 @@ public class BeltSystem implements IBeltSystem {
             return false;
         }
 
-        SlotDefinition slot = config.getSlotDefinition(slotId);
+        ItemInsertionEvent.Pre preInsertion = new ItemInsertionEvent.Pre(player, slotId, stack, config);
+        NeoForge.EVENT_BUS.post(preInsertion);
+
+        if (preInsertion.isCanceled()) return false;
+
+        stack = preInsertion.getStack();
+
+        boolean isAuxSlot = config.getAuxSlotDefinitions().containsKey(slotId);
+        SlotDefinition slot = isAuxSlot ?
+                config.getAuxSlotDefinition(slotId) :
+                config.getSlotDefinition(slotId);
+
         if (slot == null || !slot.allowedItems().contains(stack.getItem())) {
-            slot = config.getAuxSlotDefinition(slotId);
+            return false;
         }
 
-        Map<ResourceLocation, ItemStack> playerBelt = getBeltItems(player);
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        Map<ResourceLocation, ItemStack> mainItems = data.getBeltItems(config.getRiderId());
+        Map<ResourceLocation, ItemStack> auxItems = data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>());
+
+        Map<ResourceLocation, ItemStack> targetMap = isAuxSlot ? auxItems : mainItems;
 
         // 检查槽位是否被占用
-        if (playerBelt.containsKey(slotId)) {
-            ItemStack existing = playerBelt.get(slotId);
+        if (targetMap.containsKey(slotId)) {
+            ItemStack existing = targetMap.get(slotId);
             if (!existing.isEmpty()) {
                 if (slot.allowReplace()) {
-                    // 返还旧物品（只返还一个）
-                    returnItemToPlayer(player, existing.copyWithCount(1)); // 关键修改：只返还一个
+                    // 返还旧物品
+                    returnItemToPlayer(player, existing.copyWithCount(1));
 
-                    // 插入新物品（只插入一个）
-                    ItemStack toInsert = stack.copyWithCount(1); // 关键修改：只插入一个
-                    playerBelt.put(slotId, toInsert);
-                    setBeltItems(player, playerBelt);
+                    // 插入新物品
+                    ItemStack toInsert = stack.copyWithCount(1);
+                    targetMap.put(slotId, toInsert);
+
+                    // 更新数据存储
+                    data.setBeltItems(config.getRiderId(), mainItems);
+                    data.setAuxBeltItems(config.getRiderId(), auxItems);
+
                     syncBeltData(player);
-
-                    // 减少玩家手中物品数量（只减少一个）
                     stack.shrink(1);
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
             }
         }
 
         // 插入新物品
-        playerBelt.put(slotId, stack.copy());
-        setBeltItems(player, playerBelt);
+        targetMap.put(slotId, stack.copyWithCount(1));
+        data.setBeltItems(config.getRiderId(), mainItems);
+        data.setAuxBeltItems(config.getRiderId(), auxItems);
+
         syncBeltData(player);
+
+        ItemInsertionEvent.Post postEvent = new ItemInsertionEvent.Post(player, slotId, stack, config);
+        NeoForge.EVENT_BUS.post(postEvent);
 
         return true;
     }
 
     @Override
     public ItemStack extractItem(Player player, ResourceLocation slotId) {
-        Map<ResourceLocation, ItemStack> playerBelt = getBeltItems(player);
-        if (playerBelt == null) return ItemStack.EMPTY;
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return ItemStack.EMPTY;
 
-        ItemStack extracted = playerBelt.remove(slotId);
-        if (!extracted.isEmpty()) {
+        boolean isAuxSlot = config.getAuxSlotDefinitions().containsKey(slotId);
+        Map<ResourceLocation, ItemStack> targetMap = isAuxSlot ?
+                data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>()) :
+                data.getBeltItems(config.getRiderId());
+
+        ItemStack extracted = targetMap.remove(slotId);
+        if (extracted != null && !extracted.isEmpty()) {
             returnItemToPlayer(player, extracted);
-            syncBeltData(player);
 
-            // 根据触发类型分发事件
-            RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-            if (config != null) {
-                switch (config.getTriggerType()) {
-                    case AUTO:
-                        BeltHandler.onAutoItemExtracted(player, slotId);
-                        break;
-                    case ITEM, KEY:
-                        break;
-                }
+            // 直接更新数据
+            if (isAuxSlot) {
+                data.setAuxBeltItems(config.getRiderId(), targetMap);
+            } else {
+                data.setBeltItems(config.getRiderId(), targetMap);
             }
+
+            syncBeltData(player);
         }
-        return extracted;
+        return extracted != null ? extracted : ItemStack.EMPTY;
     }
+
 
     @Override
     public void returnItems(Player player) {
-        Map<ResourceLocation, ItemStack> items = getBeltItems(player);
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
 
-        items.entrySet().stream()
-                .filter(entry -> !entry.getValue().isEmpty())
-                .forEach(entry -> returnItemToPlayer(player, entry.getValue()));
+        // 返还主驱动器物品
+        Map<ResourceLocation, ItemStack> mainItems = data.getBeltItems(config.getRiderId());
+        mainItems.values().forEach(stack -> returnItemToPlayer(player, stack));
 
-        setBeltItems(player, new HashMap<>());
+        // 返还辅助驱动器物品
+        Map<ResourceLocation, ItemStack> auxItems = data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>());
+        auxItems.values().forEach(stack -> returnItemToPlayer(player, stack));
+
+        // 清空数据
+        data.setBeltItems(config.getRiderId(), new HashMap<>());
+        data.setAuxBeltItems(config.getRiderId(), new HashMap<>());
         syncBeltData(player);
     }
 
@@ -178,39 +212,59 @@ public class BeltSystem implements IBeltSystem {
         return allItems;
     }
 
-    @Override
-    public void setBeltItems(Player player, Map<ResourceLocation, ItemStack> items) {
-        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
-
-        // 根据当前激活的骑士设置腰带数据
-        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-        if (config == null) return;
-
-        PlayerPersistentData newData = new PlayerPersistentData(
-                new HashMap<>(oldData.riderBeltItems),
-                new HashMap<>(oldData.auxBeltItems),
-                oldData.getTransformedData(),
-                oldData.getHenshinState(),
-                oldData.getPendingFormId(),
-                oldData.getPenaltyCooldownEnd()
-        );
-
-        newData.setBeltItems(config.getRiderId(), items);
-
-        player.setData(ModAttachments.PLAYER_DATA, newData);
-    }
-
     //====================网络通信方法====================
 
     public void syncBeltData(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            Map<ResourceLocation, ItemStack> currentItems = getBeltItems(player);
+            PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+            RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+            if (config == null) return;
+
+            // 分别发送主/辅助驱动器数据
+            Map<ResourceLocation, ItemStack> mainItems = data.getBeltItems(config.getRiderId());
+            Map<ResourceLocation, ItemStack> auxItems = data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>());
+
             PacketHandler.sendToClient(serverPlayer, new BeltDataSyncPacket(
                     player.getUUID(),
-                    new HashMap<>(currentItems)
-            )
-            );
+                    new HashMap<>(mainItems),
+                    new HashMap<>(auxItems)
+            ));
         }
+    }
+
+    // 客户端应用同步包
+    public void applySyncPacket(BeltDataSyncPacket packet) {
+        Player player = findPlayer(packet.playerId());
+        if (player == null) return;
+
+        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
+
+        ResourceLocation riderId = config.getRiderId();
+
+        // 创建新数据
+        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newRiderBeltItems =
+                new HashMap<>(oldData.riderBeltItems);
+        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newAuxBeltItems =
+                new HashMap<>(oldData.auxBeltItems);
+
+        // 更新主驱动器数据
+        newRiderBeltItems.put(riderId, new HashMap<>(packet.mainItems()));
+
+        // 更新辅助驱动器数据
+        newAuxBeltItems.put(riderId, new HashMap<>(packet.auxItems()));
+
+        player.setData(ModAttachments.PLAYER_DATA,
+                new PlayerPersistentData(
+                        newRiderBeltItems,
+                        newAuxBeltItems,
+                        oldData.getTransformedData(),
+                        oldData.getHenshinState(),
+                        oldData.getPendingFormId(),
+                        oldData.getPenaltyCooldownEnd()
+                )
+        );
     }
 
     // 客户端应用差异包

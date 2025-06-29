@@ -25,7 +25,7 @@ public class PacketHandler {
                                 HenshinSystem.INSTANCE.switchForm(context.player(), payload.formId()))
                 .playToClient(BeltDataSyncPacket.TYPE, BeltDataSyncPacket.STREAM_CODEC,
                         (payload, context) ->
-                                BeltSystem.INSTANCE.setBeltItems(context.player(), payload.items()))
+                                BeltSystem.INSTANCE.applySyncPacket(payload))
                 .playToServer(ReturnItemsPacket.TYPE, ReturnItemsPacket.STREAM_CODEC,
                         (payload, context) ->
                                 BeltSystem.INSTANCE.returnItems(context.player()))

@@ -159,13 +159,13 @@ public class RiderConfig {
         return this;
     }
 
-    public RiderConfig addSlot(ResourceLocation slotId,
-                               List<Item> allowedItems,
-                               boolean isRequired,
-                               boolean allowReplace) { // 新增参数
+    public RiderConfig addDriverSlot(ResourceLocation slotId,
+                                     List<Item> allowedItems,
+                                     boolean isRequired,
+                                     boolean allowReplace) {
 
         slotDefinitions.put(slotId,
-                new SlotDefinition(allowedItems, null, allowReplace)); // 传递新参数
+                new SlotDefinition(allowedItems, null, allowReplace,  false));
 
         if (isRequired) {
             requiredSlots.add(slotId);
@@ -189,7 +189,7 @@ public class RiderConfig {
     }
 
     public RiderConfig addAuxSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired, boolean allowReplace) {
-        auxSlotDefinitions.put(slotId, new SlotDefinition(allowedItems, null, allowReplace));
+        auxSlotDefinitions.put(slotId, new SlotDefinition(allowedItems, null, allowReplace, true));
         if (isRequired) {
             auxRequiredSlots.add(slotId);
         }
@@ -228,6 +228,4 @@ public class RiderConfig {
         }
         return null;
     }
-
-
 }

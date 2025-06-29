@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.network.packet;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.network.handler.UUIDStreamCodec;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -11,33 +12,34 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-public record BeltDataSyncPacket(UUID playerId, Map<ResourceLocation, ItemStack> items) implements CustomPacketPayload {
+public record BeltDataSyncPacket(UUID playerId,
+                                 Map<ResourceLocation, ItemStack> mainItems,
+                                 Map<ResourceLocation, ItemStack> auxItems
+) implements CustomPacketPayload {
+
     public static final ResourceLocation ID =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "belt_sync");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, BeltDataSyncPacket> STREAM_CODEC =
             StreamCodec.composite(
-                    uuidCodec(),
+                    UUIDStreamCodec.INSTANCE,
                     BeltDataSyncPacket::playerId,
-                    mapCodec(),
-                    BeltDataSyncPacket::items,
+                    createMapCodec(),
+                    BeltDataSyncPacket::mainItems,
+                    createMapCodec(),
+                    BeltDataSyncPacket::auxItems,
                     BeltDataSyncPacket::new
             );
 
-    private static StreamCodec<RegistryFriendlyByteBuf, Map<ResourceLocation, ItemStack>> mapCodec() {
+    private static StreamCodec<RegistryFriendlyByteBuf, Map<ResourceLocation, ItemStack>> createMapCodec() {
         return StreamCodec.of(
                 (buf, map) -> {
-                    // 过滤空堆栈
-                    Map<ResourceLocation, ItemStack> filtered = map.entrySet().stream()
-                            .filter(entry -> !entry.getValue().isEmpty())
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                    buf.writeVarInt(filtered.size());
-                    filtered.forEach((key, value) -> {
-                        ResourceLocation.STREAM_CODEC.encode(buf, key);
-                        ItemStack.STREAM_CODEC.encode(buf, value.copy());
-                    });
+                    buf.writeVarInt(map.size());
+                    for (Map.Entry<ResourceLocation, ItemStack> entry : map.entrySet()) {
+                        ResourceLocation.STREAM_CODEC.encode(buf, entry.getKey());
+                        ItemStack.STREAM_CODEC.encode(buf, entry.getValue());
+                    }
                 },
                 buf -> {
                     Map<ResourceLocation, ItemStack> map = new HashMap<>();
@@ -49,13 +51,6 @@ public record BeltDataSyncPacket(UUID playerId, Map<ResourceLocation, ItemStack>
                     }
                     return map;
                 }
-        );
-    }
-
-    private static StreamCodec<RegistryFriendlyByteBuf, UUID> uuidCodec() {
-        return StreamCodec.of(
-                (buf, uuid) -> buf.writeUUID(uuid),
-                buf -> buf.readUUID()
         );
     }
 

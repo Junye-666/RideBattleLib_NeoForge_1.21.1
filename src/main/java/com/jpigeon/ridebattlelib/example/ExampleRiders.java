@@ -44,7 +44,7 @@ public class ExampleRiders {
                 .setDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁护腿(穿戴在腿部)
                 .setAuxDriverItem(Items.BRICK, EquipmentSlot.OFFHAND) // 辅助驱动器: 砖块(穿戴在副手)
                 .setTriggerType(TriggerType.KEY) // 指定按键触发
-                .addSlot(
+                .addDriverSlot(
                         TEST_CORE_SLOT,
                         List.of(Items.IRON_INGOT, Items.GOLD_INGOT),
                         true,

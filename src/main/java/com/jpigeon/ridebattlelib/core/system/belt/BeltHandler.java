@@ -28,15 +28,16 @@ public class BeltHandler {
         if (config == null) return;
 
         boolean inserted = false;
+        // 先尝试主驱动器槽位
         for (ResourceLocation slotId : config.getSlotDefinitions().keySet()) {
             if (BeltSystem.INSTANCE.insertItem(player, slotId, heldItem.copy())) {
                 heldItem.shrink(1);
                 inserted = true;
                 break;
             }
-            RideBattleLib.LOGGER.debug("玩家 {} 存入物品到槽位: {} (必要: {})", player, slotId, config.getRequiredSlots().contains(slotId));
         }
 
+        // 再尝试辅助驱动器槽位
         if (!inserted && config.hasAuxDriverEquipped(player)) {
             for (ResourceLocation slotId : config.getAuxSlotDefinitions().keySet()) {
                 if (BeltSystem.INSTANCE.insertItem(player, slotId, heldItem.copy())) {

@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.fml.LogicalSide;
 import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.*;
@@ -52,7 +53,7 @@ public final class HenshinHelper implements IHenshinHelper {
         EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, form, beltItems);
         // 设置为已变身状态
         setTransformed(player, config, form.getFormId(), originalGear, beltItems);
-        HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId);
+        HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId, LogicalSide.SERVER);
         NeoForge.EVENT_BUS.post(postHenshin);
     }
 

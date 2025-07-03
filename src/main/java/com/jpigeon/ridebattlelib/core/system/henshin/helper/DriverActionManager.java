@@ -12,6 +12,7 @@ import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.fml.LogicalSide;
 import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.Objects;
@@ -24,9 +25,8 @@ public class DriverActionManager {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
-        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId);
+        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId, LogicalSide.SERVER);
         NeoForge.EVENT_BUS.post(preHenshin);
-
         if (preHenshin.isCanceled()) {
             RideBattleLib.LOGGER.info("取消变身");
             return;

@@ -84,4 +84,17 @@ public class DriverActionManager {
             HenshinSystem.syncTransformedState(serverPlayer);
         }
     }
+
+    public void cancelHenshin(Player player) {
+        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (!HenshinSystem.INSTANCE.isTransformed(player)) {
+            data.setHenshinState(HenshinState.IDLE);
+            data.setPendingFormId(null);
+
+            if (player instanceof ServerPlayer serverPlayer) {
+                HenshinSystem.syncHenshinState(serverPlayer);
+                HenshinSystem.syncTransformedState(serverPlayer);
+            }
+        }
+    }
 }

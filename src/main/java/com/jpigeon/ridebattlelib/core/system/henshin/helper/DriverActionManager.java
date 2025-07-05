@@ -46,7 +46,7 @@ public class DriverActionManager {
             HenshinSystem.syncHenshinState(serverPlayer);
         }
 
-        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId, LogicalSide.SERVER);
+        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId);
         NeoForge.EVENT_BUS.post(preHenshin);
         if (preHenshin.isCanceled()) {
             RideBattleLib.LOGGER.info("取消变身");

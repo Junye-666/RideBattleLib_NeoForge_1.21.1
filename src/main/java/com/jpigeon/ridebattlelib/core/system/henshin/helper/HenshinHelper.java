@@ -55,7 +55,7 @@ public final class HenshinHelper implements IHenshinHelper {
         // 设置为已变身状态
         setTransformed(player, config, form.getFormId(), originalGear, beltItems);
         // 触发后置事件
-        HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId, LogicalSide.SERVER);
+        HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId);
         NeoForge.EVENT_BUS.post(postHenshin);
     }
 

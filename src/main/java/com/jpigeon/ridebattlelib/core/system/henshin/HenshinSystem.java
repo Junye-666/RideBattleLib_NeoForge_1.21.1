@@ -52,7 +52,7 @@ public class HenshinSystem implements IHenshinSystem {
         if (config == null) return;
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
 
-        ResourceLocation formId = config.matchForm(beltItems);
+        ResourceLocation formId = config.matchForm(player, beltItems);
         FormConfig formConfig = RiderRegistry.getForm(formId);
 
         if (formConfig == null) return;
@@ -77,8 +77,17 @@ public class HenshinSystem implements IHenshinSystem {
     @Override
     public boolean henshin(Player player, ResourceLocation riderId) {
         RiderConfig config = RiderRegistry.getRider(riderId);
+        if (config == null) return false;
+
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-        ResourceLocation formId = config.matchForm(beltItems);
+
+        // 如果没有装备辅助驱动器，则移除所有辅助槽位
+        if (!config.hasAuxDriverEquipped(player)) {
+            beltItems = new HashMap<>(beltItems);
+            beltItems.keySet().removeAll(config.getAuxSlotDefinitions().keySet());
+        }
+
+        ResourceLocation formId = config.matchForm(player, beltItems);
         if (!canHenshin(player) || formId == null) return false;
 
         // 执行变身
@@ -139,6 +148,18 @@ public class HenshinSystem implements IHenshinSystem {
             unHenshin(player);
             return;
         }
+
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
+
+        // 确保只在装备了辅助驱动器时才匹配辅助槽位
+        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+        if (!config.hasAuxDriverEquipped(player)) {
+            // 过滤掉辅助槽位
+            beltItems = new HashMap<>(beltItems);
+            beltItems.keySet().removeAll(config.getAuxSlotDefinitions().keySet());
+        }
+
         HenshinHelper.INSTANCE.performFormSwitch(player, newFormId);
         if (player instanceof ServerPlayer serverPlayer) {
             syncTransformedState(serverPlayer);

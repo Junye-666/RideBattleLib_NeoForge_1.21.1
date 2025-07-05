@@ -23,11 +23,11 @@ import java.util.Map;
 import java.util.UUID;
 
 /*
-  * 腰带系统
-  * 管理腰带内部物品的存储和操作
-  * insertItem 存入物品
-  * extractItem 提取物品
-  * returnItems 退回所有物品
+ * 腰带系统
+ * 管理腰带内部物品的存储和操作
+ * insertItem 存入物品
+ * extractItem 提取物品
+ * returnItems 退回所有物品
  */
 public class BeltSystem implements IBeltSystem {
     public static final BeltSystem INSTANCE = new BeltSystem();
@@ -71,8 +71,9 @@ public class BeltSystem implements IBeltSystem {
         }
 
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
-        Map<ResourceLocation, ItemStack> mainItems = data.getBeltItems(config.getRiderId());
-        Map<ResourceLocation, ItemStack> auxItems = data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>());
+        // 确保我们操作的是副本，而不是只读Map
+        Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
+        Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>()));
 
         Map<ResourceLocation, ItemStack> targetMap = isAuxSlot ? auxItems : mainItems;
 
@@ -200,6 +201,15 @@ public class BeltSystem implements IBeltSystem {
         if (config == null) return false;
 
         for (ResourceLocation slotId : config.getRequiredSlots()) {
+            // 如果是辅助槽位且未装备辅助驱动器，则跳过验证
+            if (config.getAuxSlotDefinitions().containsKey(slotId)) {
+                // 辅助槽位仅在装备辅助驱动器时验证
+                if (!config.hasAuxDriverEquipped(player)) {
+                    RideBattleLib.LOGGER.info("跳过辅助槽位{}验证（未装备驱动器）", slotId);
+                    continue;
+                }
+            }
+
             ItemStack item = getBeltItems(player).get(slotId);
             SlotDefinition slot = config.getSlotDefinition(slotId);
 
@@ -226,8 +236,8 @@ public class BeltSystem implements IBeltSystem {
 
         Map<ResourceLocation, ItemStack> allItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
 
-        // 辅助驱动器物品
-        if (config.hasAuxDriverEquipped(player)) {
+        // 只在装备辅助驱动器时添加辅助槽位
+        if (config.hasAuxDriverEquipped(player)) { // 新增条件
             for (ResourceLocation slotId : config.getAuxSlotDefinitions().keySet()) {
                 ItemStack item = data.getAuxBeltItems(config.getRiderId(), slotId);
                 if (!item.isEmpty()) {

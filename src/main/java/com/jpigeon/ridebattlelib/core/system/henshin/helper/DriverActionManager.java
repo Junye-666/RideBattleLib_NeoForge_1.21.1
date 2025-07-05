@@ -9,6 +9,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.SyncHenshinStatePacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -25,21 +26,31 @@ public class DriverActionManager {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
-        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId, LogicalSide.SERVER);
-        NeoForge.EVENT_BUS.post(preHenshin);
-        if (preHenshin.isCanceled()) {
-            RideBattleLib.LOGGER.info("取消变身");
-            return;
-        }
-
         // 设置变身状态
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
         data.setHenshinState(HenshinState.TRANSFORMING);
         data.setPendingFormId(formId);
 
+        RideBattleLib.LOGGER.info("设置待处理形态: player={}, form={}",
+                player.getName().getString(), formId);
+
         // 同步状态
-        if (player instanceof ServerPlayer serverPlayer) {
+        if (player.level().isClientSide) {
+            // 客户端发送同步请求
+            PacketHandler.sendToServer(new SyncHenshinStatePacket(
+                    HenshinState.TRANSFORMING,
+                    formId
+            ));
+        } else if (player instanceof ServerPlayer serverPlayer) {
+            // 服务端直接同步
             HenshinSystem.syncHenshinState(serverPlayer);
+        }
+
+        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId, LogicalSide.SERVER);
+        NeoForge.EVENT_BUS.post(preHenshin);
+        if (preHenshin.isCanceled()) {
+            RideBattleLib.LOGGER.info("取消变身");
+            cancelHenshin(player);
         }
     }
 
@@ -87,7 +98,7 @@ public class DriverActionManager {
 
     public void cancelHenshin(Player player) {
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (!HenshinSystem.INSTANCE.isTransformed(player)) {
+        if (data.getHenshinState() == HenshinState.TRANSFORMING) {
             data.setHenshinState(HenshinState.IDLE);
             data.setPendingFormId(null);
 

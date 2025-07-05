@@ -31,11 +31,12 @@ public class TriggerItemHandler {
             // 触发变身逻辑
             if (config.getTriggerType() == TriggerType.ITEM) {
                 // 触发变身逻辑
-                if (BeltSystem.INSTANCE.validateItems(player, config.getRiderId())) {
+                if (BeltSystem.INSTANCE.validateItems(player, config.getRiderId())
+                        && (!config.hasAuxDriverEquipped(player) || config.getAuxSlotDefinitions().isEmpty())) {
                     if (HenshinSystem.INSTANCE.isTransformed(player)) {
                         // 已变身状态下使用触发物品：切换形态
                         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-                        ResourceLocation newFormId = config.matchForm(beltItems);
+                        ResourceLocation newFormId = config.matchForm(player, beltItems);
                         handleItemFormSwitch(player, newFormId);
                     } else {
                         // 未变身：正常触发变身

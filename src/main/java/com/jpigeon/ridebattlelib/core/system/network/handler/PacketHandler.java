@@ -2,6 +2,8 @@ package com.jpigeon.ridebattlelib.core.system.network.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
+import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -9,12 +11,13 @@ import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public class PacketHandler {
     public static void register(final RegisterPayloadHandlersEvent event) {
         event.registrar(RideBattleLib.MODID)
-                .versioned("0.9.3")
+                .versioned("0.9.4")
                 .playToServer(HenshinPacket.TYPE, HenshinPacket.STREAM_CODEC,
                         (payload, context) -> HenshinSystem.INSTANCE.henshin(context.player(), payload.riderId()))
                 .playToServer(UnhenshinPacket.TYPE, UnhenshinPacket.STREAM_CODEC,
@@ -41,8 +44,30 @@ public class PacketHandler {
                                 HenshinSystem.syncTransformedState(serverPlayer);
                             }
                         })
+                .playToServer(
+                        SyncHenshinStatePacket.TYPE,
+                        SyncHenshinStatePacket.STREAM_CODEC,
+                        (packet, context) -> {
+                            Player player = context.player();
+                            PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
 
-        ;
+                            // 应用新状态
+                            data.setHenshinState(packet.state());
+                            data.setPendingFormId(packet.pendingFormId());
+
+                            RideBattleLib.LOGGER.info("收到状态同步包: player={}, state={}, form={}",
+                                    player.getName().getString(),
+                                    packet.state(),
+                                    packet.pendingFormId());
+
+                            // 同步给所有客户端
+                            if (context.player() instanceof ServerPlayer serverPlayer) {
+                                HenshinSystem.syncHenshinState(serverPlayer);
+                            } else {
+                                RideBattleLib.LOGGER.warn("玩家未连接: {}", player.getName().getString());
+                            }
+                        }
+                );
     }
 
     public static void sendToServer(CustomPacketPayload packet) {

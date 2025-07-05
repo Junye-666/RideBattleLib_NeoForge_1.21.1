@@ -36,23 +36,25 @@ public final class HenshinHelper implements IHenshinHelper {
 
     @Override
     public void performHenshin(Player player, RiderConfig config, ResourceLocation formId) {
-        if (config == null) return;
+        if (config == null || formId == null) return;
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         // 保存原始装备
         Map<EquipmentSlot, ItemStack> originalGear = ARMOR.saveOriginalGear(player, config);
         // 获取指定形态的配置
         FormConfig form = RiderRegistry.getForm(formId);
-        if (form == null) return;
-        // 根据玩家腰带上的物品匹配形态
-        ResourceLocation matchedFormId = config.matchForm(beltItems);
-        //给予物品
-        ITEM.grantFormItems(player, matchedFormId);
+        if (form == null) {
+            RideBattleLib.LOGGER.warn("尝试变身为未知形态: {}", formId);
+            return;
+        }
+        // 给予形态专属物品
+        ITEM.grantFormItems(player, formId);
         // 穿戴盔甲
         ARMOR.equipArmor(player, form, beltItems);
         // 应用属性和效果
         EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, form, beltItems);
         // 设置为已变身状态
         setTransformed(player, config, form.getFormId(), originalGear, beltItems);
+        // 触发后置事件
         HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId, LogicalSide.SERVER);
         NeoForge.EVENT_BUS.post(postHenshin);
     }

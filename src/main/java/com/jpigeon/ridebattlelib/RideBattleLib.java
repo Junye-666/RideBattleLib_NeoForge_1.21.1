@@ -25,7 +25,6 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
-
 @Mod(RideBattleLib.MODID)
 public class RideBattleLib {
     public static final String MODID = "ridebattlelib";
@@ -44,7 +43,7 @@ public class RideBattleLib {
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
         ModAttachments.ATTACHMENTS.register(modEventBus);
 
-        // ExampleRiders.init();
+        ExampleRiders.init();
         modEventBus.addListener(this::addCreative);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

@@ -53,7 +53,7 @@ public class ExampleRiders {
                 .addAuxSlot(
                         TEST_ENERGY_SLOT,
                         List.of(Items.REDSTONE, Items.GLOWSTONE_DUST),
-                        false,
+                        true,
                         false
                 ); // 辅助驱动器中的能量槽位: 接受红石或荧石粉(非必要)
 

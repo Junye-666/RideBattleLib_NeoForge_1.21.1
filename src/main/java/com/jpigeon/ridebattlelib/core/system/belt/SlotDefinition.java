@@ -12,4 +12,4 @@ import java.util.function.Consumer;
  * @param allowReplace     允许被新物品自动替换
  * @param isAuxSlot       是否是辅助槽
  */
-public record SlotDefinition(List<Item> allowedItems, Consumer<Player> onInsertCallback, boolean allowReplace, boolean isAuxSlot) {}
+public record SlotDefinition(List<Item> allowedItems, Consumer<Player> onInsertCallback, boolean allowReplace, boolean isAuxSlot, boolean isRequired) {}

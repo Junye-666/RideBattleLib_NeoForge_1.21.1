@@ -55,22 +55,10 @@ public class BeltHandler {
             if (config.getTriggerType() == TriggerType.AUTO) {
                 if (HenshinSystem.INSTANCE.isTransformed(player)) {
                     Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
-                    ResourceLocation newFormId = config.matchForm(currentBelt);
+                    ResourceLocation newFormId = config.matchForm(player, currentBelt);
                     HenshinSystem.INSTANCE.switchForm(player, newFormId);
                 }
             }
-        }
-    }
-
-    public static void onAutoItemExtracted(Player player, ResourceLocation slotId) {
-        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-        if (config != null && config.getTriggerType() == TriggerType.AUTO &&
-                HenshinSystem.INSTANCE.isTransformed(player)) {
-
-            Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-            ResourceLocation newFormId = config.matchForm(beltItems);
-
-            HenshinSystem.INSTANCE.switchForm(player, newFormId);
         }
     }
 }

@@ -1,5 +1,8 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
+import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -97,24 +100,71 @@ public class FormConfig {
     }
 
     // 匹配验证
-    public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> beltItems) {
+    public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> beltItems, RiderConfig config) {
+        RideBattleLib.LOGGER.debug("开始匹配主槽位...");
         for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
-            ItemStack stack = beltItems.get(entry.getKey());
-            if (stack == null || stack.isEmpty() || !stack.is(entry.getValue())) {
+            ResourceLocation slotId = entry.getKey();
+            Item requiredItem = entry.getValue();
+            ItemStack stack = beltItems.get(slotId);
+
+            SlotDefinition slotDef = config.getSlotDefinition(slotId);
+            if (slotDef == null) {
+                RideBattleLib.LOGGER.warn("未找到槽位定义: {}", slotId);
                 return false;
             }
+
+            // 必需槽位不能为空
+            if (slotDef.isRequired() && (stack == null || stack.isEmpty())) {
+                RideBattleLib.LOGGER.warn("必需槽位 {} 为空", slotId);
+                return false;
+            }
+
+            // 如果形态明确要求某物品，即使槽位非必需，也必须匹配
+            if (requiredItem != null && (stack == null || !stack.is(requiredItem))) {
+                RideBattleLib.LOGGER.warn("槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                return false;
+            }
+
+            RideBattleLib.LOGGER.debug("槽位 {} 匹配成功", slotId);
         }
+        RideBattleLib.LOGGER.debug("主槽位全部匹配");
         return true;
     }
 
-    public boolean matchesAuxSlots(Map<ResourceLocation, ItemStack> beltItems) {
+    public boolean matchesAuxSlots(Map<ResourceLocation, ItemStack> beltItems, RiderConfig config) {
+        RideBattleLib.LOGGER.debug("开始匹配辅助槽位...");
         for (Map.Entry<ResourceLocation, Item> entry : auxRequiredItems.entrySet()) {
-            ItemStack stack = beltItems.get(entry.getKey());
-            if (stack.isEmpty() || !stack.is(entry.getValue())) {
+            ResourceLocation slotId = entry.getKey();
+            Item requiredItem = entry.getValue();
+            ItemStack stack = beltItems.get(slotId);
+
+            SlotDefinition slotDef = config.getAuxSlotDefinition(slotId);
+            if (slotDef == null) {
+                RideBattleLib.LOGGER.warn("未找到辅助槽位定义: {}", slotId);
                 return false;
             }
+
+            // 必需槽位不能为空
+            if (slotDef.isRequired() && (stack == null || stack.isEmpty())) {
+                RideBattleLib.LOGGER.warn("必需辅助槽位 {} 为空", slotId);
+                return false;
+            }
+
+            // 如果形态明确要求某物品，即使非必需，也必须匹配
+            if (requiredItem != null && (stack == null || !stack.is(requiredItem))) {
+                RideBattleLib.LOGGER.warn("辅助槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                return false;
+            }
+
+            RideBattleLib.LOGGER.debug("辅助槽位 {} 匹配成功", slotId);
         }
+        RideBattleLib.LOGGER.debug("辅助槽位全部匹配");
         return true;
+    }
+
+    //====================检查方法====================
+    public boolean hasAuxRequirements() {
+        return !auxRequiredItems.isEmpty();
     }
 
     //====================Getter方法====================
@@ -152,6 +202,14 @@ public class FormConfig {
 
     public List<ResourceLocation> getEffectIds() {
         return Collections.unmodifiableList(effectIds);
+    }
+
+    public Map<ResourceLocation, Item> getRequiredItems() {
+        return Collections.unmodifiableMap(requiredItems);
+    }
+
+    public Map<ResourceLocation, Item> getAuxRequiredItems() {
+        return Collections.unmodifiableMap(auxRequiredItems);
     }
 
     public boolean allowsEmptyBelt() {

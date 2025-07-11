@@ -19,10 +19,10 @@ public record TransformedAttachmentData(
                     ResourceLocation.CODEC.fieldOf("riderId").forGetter(TransformedAttachmentData::riderId),
                     ResourceLocation.CODEC.fieldOf("formId").forGetter(TransformedAttachmentData::formId),
 
-                    Codec.unboundedMap(EquipmentSlot.CODEC, ItemStack.CODEC)
+                    Codec.unboundedMap(EquipmentSlot.CODEC, ItemStack.OPTIONAL_CODEC)
                             .fieldOf("originalGear").forGetter(TransformedAttachmentData::originalGear),
 
-                    Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.CODEC)
+                    Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.OPTIONAL_CODEC)
                             .fieldOf("beltSnapshot").forGetter(TransformedAttachmentData::beltSnapshot)
             ).apply(instance, TransformedAttachmentData::new)
     );

@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib.core.system.event;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
-import net.neoforged.fml.LogicalSide;
 
 public class HenshinEvent extends Event {
     private final Player player;

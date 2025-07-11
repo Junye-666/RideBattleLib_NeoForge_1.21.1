@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.attachment;
 
+import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -18,12 +19,22 @@ public class AttachmentHandler {
         Player player = event.getEntity();
         PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
 
+        RideBattleLib.LOGGER.info("玩家登录: {} | 当前状态: {} | 变身数据: {}",
+                player.getName().getString(),
+                data.getHenshinState(),
+                data.getTransformedData() != null ? "存在" : "不存在");
+
         if (data.getTransformedData() != null &&
                 !player.getTags().contains("penalty_cooldown") &&
                 !player.getTags().contains("just_respawned")) {
 
-            HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.getTransformedData()));
+            // 确保状态正确设置为 TRANSFORMED
             HenshinSystem.INSTANCE.transitionToState(player, HenshinState.TRANSFORMED, null);
+
+            // 恢复变身状态
+            HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.getTransformedData()));
+
+            RideBattleLib.LOGGER.info("已恢复玩家 {} 的变身状态", player.getName().getString());
         }
 
         if (data.isInPenaltyCooldown()) {

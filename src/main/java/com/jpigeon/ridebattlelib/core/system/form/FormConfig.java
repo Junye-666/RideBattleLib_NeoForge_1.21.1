@@ -121,7 +121,9 @@ public class FormConfig {
 
             // 如果形态明确要求某物品，即使槽位非必需，也必须匹配
             if (requiredItem != null && (stack == null || !stack.is(requiredItem))) {
-                RideBattleLib.LOGGER.warn("槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                if (stack != null) {
+                    RideBattleLib.LOGGER.warn("槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                }
                 return false;
             }
 
@@ -152,7 +154,9 @@ public class FormConfig {
 
             // 如果形态明确要求某物品，即使非必需，也必须匹配
             if (requiredItem != null && (stack == null || !stack.is(requiredItem))) {
-                RideBattleLib.LOGGER.warn("辅助槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                if (stack != null) {
+                    RideBattleLib.LOGGER.warn("辅助槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                }
                 return false;
             }
 

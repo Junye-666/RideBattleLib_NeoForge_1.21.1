@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public class PlayerPersistentData {
     public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems;
-    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems = new HashMap<>();
+    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems;
     private final @Nullable TransformedAttachmentData transformedData;
     private HenshinState henshinState;
     private @Nullable ResourceLocation pendingFormId;
@@ -108,12 +108,12 @@ public class PlayerPersistentData {
 
                     Codec.unboundedMap(
                                     ResourceLocation.CODEC,
-                                    Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.CODEC)
+                                    Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.OPTIONAL_CODEC)
                             ).optionalFieldOf("riderBeltItems", new HashMap<>())
                             .forGetter(data -> data.riderBeltItems),
 
                     Codec.unboundedMap(ResourceLocation.CODEC,
-                                    Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.CODEC)
+                                    Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.OPTIONAL_CODEC)
                             ).optionalFieldOf("auxBeltItems", new HashMap<>())
                             .forGetter(data -> data.auxBeltItems),
 

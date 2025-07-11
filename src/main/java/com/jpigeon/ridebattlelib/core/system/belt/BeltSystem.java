@@ -103,6 +103,8 @@ public class BeltSystem implements IBeltSystem {
 
         // 插入新物品
         targetMap.put(slotId, stack.copyWithCount(1));
+        cleanInvalidStacks(mainItems);
+        cleanInvalidStacks(auxItems);
         data.setBeltItems(config.getRiderId(), mainItems);
         data.setAuxBeltItems(config.getRiderId(), auxItems);
 
@@ -224,6 +226,8 @@ public class BeltSystem implements IBeltSystem {
         }
         return true;
     }
+
+
     //====================Getters====================
 
     @Override
@@ -392,5 +396,12 @@ public class BeltSystem implements IBeltSystem {
     private Player findPlayer(UUID playerId) {
         if (Minecraft.getInstance().level == null) return null;
         return Minecraft.getInstance().level.getPlayerByUUID(playerId);
+    }
+
+    private void cleanInvalidStacks(Map<ResourceLocation, ItemStack> items) {
+        items.entrySet().removeIf(entry ->
+                entry.getValue().isEmpty() ||
+                        entry.getValue().getCount() <= 0
+        );
     }
 }

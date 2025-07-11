@@ -188,13 +188,28 @@ public class HenshinSystem implements IHenshinSystem {
     }
 
     public void transitionToState(Player player, HenshinState state, @Nullable ResourceLocation formId) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
-        data.setHenshinState(state);
-        data.setPendingFormId(formId);
+        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+
+        // 创建新数据副本
+        PlayerPersistentData newData = new PlayerPersistentData(
+                new HashMap<>(oldData.riderBeltItems),
+                new HashMap<>(oldData.auxBeltItems),
+                oldData.getTransformedData(),  // 保留现有变身数据
+                state,                         // 新状态
+                formId,                        // 新待处理形态
+                oldData.getPenaltyCooldownEnd()
+        );
+
+        // 保存更新后的数据
+        player.setData(ModAttachments.PLAYER_DATA, newData);
 
         if (player instanceof ServerPlayer serverPlayer) {
             syncHenshinState(serverPlayer);
         }
+
+        // 调试日志
+        RideBattleLib.LOGGER.info("状态变更: {} -> {} (形态: {})",
+                oldData.getHenshinState(), state, formId);
     }
 
     //====================网络通信====================

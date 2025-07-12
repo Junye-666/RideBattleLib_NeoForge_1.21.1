@@ -2,8 +2,8 @@ package com.jpigeon.ridebattlelib.core.system.network.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 
-import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -49,7 +49,7 @@ public class PacketHandler {
                         SyncHenshinStatePacket.STREAM_CODEC,
                         (packet, context) -> {
                             Player player = context.player();
-                            PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+                            RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
 
                             // 应用新状态
                             data.setHenshinState(packet.state());

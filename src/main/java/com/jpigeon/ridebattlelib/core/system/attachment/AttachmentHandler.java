@@ -17,7 +17,7 @@ public class AttachmentHandler {
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
 
         RideBattleLib.LOGGER.info("玩家登录: {} | 当前状态: {} | 变身数据: {}",
                 player.getName().getString(),
@@ -41,6 +41,14 @@ public class AttachmentHandler {
             player.addTag("penalty_cooldown");
         }
 
+        if (data.getHenshinState() == HenshinState.TRANSFORMING) {
+            data.setHenshinState(HenshinState.IDLE);
+            data.setPendingFormId(null);
+            RideBattleLib.LOGGER.info("重置玩家 {} 的状态为IDLE，因为登录时处于TRANSFORMING状态",
+                    player.getName().getString());
+        }
+
+
         if (player instanceof ServerPlayer serverPlayer) {
             // 确保腰带数据和变身状态都同步
             BeltSystem.INSTANCE.syncBeltData(serverPlayer);
@@ -55,10 +63,10 @@ public class AttachmentHandler {
 
         Player original = event.getOriginal();
         Player newPlayer = event.getEntity();
-        PlayerPersistentData originalData = original.getData(ModAttachments.PLAYER_DATA);
+        RiderData originalData = original.getData(RiderAttachments.PLAYER_DATA);
 
         // 只复制 riderBeltItems 和变身数据（但重生时不自动恢复）
-        newPlayer.setData(ModAttachments.PLAYER_DATA, new PlayerPersistentData(
+        newPlayer.setData(RiderAttachments.PLAYER_DATA, new RiderData(
                 new HashMap<>(originalData.riderBeltItems),
                 new HashMap<>(originalData.auxBeltItems),
                 originalData.getTransformedData(),
@@ -67,7 +75,7 @@ public class AttachmentHandler {
                 0
         ));
 
-        PlayerPersistentData newData = newPlayer.getData(ModAttachments.PLAYER_DATA);
+        RiderData newData = newPlayer.getData(RiderAttachments.PLAYER_DATA);
         newData.setHenshinState(HenshinState.IDLE);
         newData.setPendingFormId(null);
 

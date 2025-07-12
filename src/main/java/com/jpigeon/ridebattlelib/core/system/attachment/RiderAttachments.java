@@ -9,19 +9,19 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.HashMap;
 import java.util.function.Supplier;
 
-public class ModAttachments {
+public class RiderAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, RideBattleLib.MODID);
 
-    public static final Supplier<AttachmentType<PlayerPersistentData>> PLAYER_DATA =
+    public static final Supplier<AttachmentType<RiderData>> PLAYER_DATA =
             ATTACHMENTS.register("player_data",
-                    () -> AttachmentType.builder(() -> new PlayerPersistentData(
+                    () -> AttachmentType.builder(() -> new RiderData(
                             new HashMap<>(),
                                     new HashMap<>(),
                                     null,
                                     HenshinState.IDLE,
                                     null,
                                     0))
-                            .serialize(PlayerPersistentData.CODEC)
+                            .serialize(RiderData.CODEC)
                             .build());
 }

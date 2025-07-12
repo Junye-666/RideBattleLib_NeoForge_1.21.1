@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlelib.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
@@ -133,7 +133,7 @@ public class ExampleRiders {
                 .addForm(alphaPoweredForm)
                 .setBaseForm(alphaBaseForm.getFormId());// 设置基础形态
         alphaBaseForm.setAllowsEmptyBelt(false);
-        alphaBaseForm.setShouldPause(true);
+        alphaBaseForm.setShouldPause(false);
         alphaPoweredForm.setShouldPause(true);
 
         // 注册骑士
@@ -156,7 +156,7 @@ public class ExampleRiders {
                 if (player == null) return;
 
                 if (event.getRiderId().equals(TEST_RIDER_ALPHA)) {
-                    PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+                    RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
                     if (data.getHenshinState() == HenshinState.TRANSFORMING) {
                         DriverActionManager.INSTANCE.completeTransformation(player);
                     }

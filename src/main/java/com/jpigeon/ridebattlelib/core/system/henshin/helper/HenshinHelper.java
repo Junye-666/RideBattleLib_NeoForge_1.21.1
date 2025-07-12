@@ -2,8 +2,8 @@ package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinHelper;
-import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
@@ -125,7 +125,7 @@ public final class HenshinHelper implements IHenshinHelper {
 
     @Override
     public void setTransformed(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> beltSnapshot) {
-        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
         TransformedAttachmentData transformedData = new TransformedAttachmentData(
                 config.getRiderId(),
                 formId,
@@ -133,7 +133,7 @@ public final class HenshinHelper implements IHenshinHelper {
                 beltSnapshot
         );
 
-        PlayerPersistentData newData = new PlayerPersistentData(
+        RiderData newData = new RiderData(
                 new HashMap<>(oldData.riderBeltItems),
                 new HashMap<>(oldData.auxBeltItems),
                 transformedData,
@@ -142,14 +142,14 @@ public final class HenshinHelper implements IHenshinHelper {
                 oldData.getPenaltyCooldownEnd()
         );
 
-        player.setData(ModAttachments.PLAYER_DATA, newData);
+        player.setData(RiderAttachments.PLAYER_DATA, newData);
     }
 
     @Override
     public void removeTransformed(Player player) {
-        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
 
-        PlayerPersistentData newData = new PlayerPersistentData(
+        RiderData newData = new RiderData(
                 new HashMap<>(oldData.riderBeltItems),
                 new HashMap<>(oldData.auxBeltItems),
                 null,
@@ -158,6 +158,6 @@ public final class HenshinHelper implements IHenshinHelper {
                 oldData.getPenaltyCooldownEnd()
         );
 
-        player.setData(ModAttachments.PLAYER_DATA, newData);
+        player.setData(RiderAttachments.PLAYER_DATA, newData);
     }
 }

@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
@@ -26,7 +26,7 @@ public class DriverActionManager {
         if (config == null) return;
 
         // 设置变身状态
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
         data.setHenshinState(HenshinState.TRANSFORMING);
         data.setPendingFormId(formId);
 
@@ -67,7 +67,7 @@ public class DriverActionManager {
     }
 
     public void completeTransformation(Player player) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
         ResourceLocation formId = data.getPendingFormId();
 
         if (formId == null) {
@@ -96,7 +96,7 @@ public class DriverActionManager {
     }
 
     public void cancelHenshin(Player player) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
         if (data.getHenshinState() == HenshinState.TRANSFORMING) {
             data.setHenshinState(HenshinState.IDLE);
             data.setPendingFormId(null);

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class PlayerPersistentData {
+public class RiderData {
     public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems;
     public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems;
     private final @Nullable TransformedAttachmentData transformedData;
@@ -20,7 +20,7 @@ public class PlayerPersistentData {
     private @Nullable ResourceLocation pendingFormId;
     private long penaltyCooldownEnd;
 
-    public PlayerPersistentData(
+    public RiderData(
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems,
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems,
             @Nullable TransformedAttachmentData transformedData,
@@ -103,7 +103,7 @@ public class PlayerPersistentData {
 
     //====================Codec====================
 
-    public static final Codec<PlayerPersistentData> CODEC = RecordCodecBuilder.create(instance ->
+    public static final Codec<RiderData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
 
                     Codec.unboundedMap(
@@ -131,7 +131,7 @@ public class PlayerPersistentData {
                     Codec.LONG.fieldOf("penaltyCooldownEnd")
                             .forGetter(data -> data.penaltyCooldownEnd)
             ).apply(instance, (riderBeltItems, auxBeltItems, transformedDataOpt, henshinState, pendingFormIdOpt, penaltyCooldownEnd) ->
-                    new PlayerPersistentData(
+                    new RiderData(
                             riderBeltItems != null ? riderBeltItems : new HashMap<>(),
                             auxBeltItems,
                             transformedDataOpt.orElse(null),

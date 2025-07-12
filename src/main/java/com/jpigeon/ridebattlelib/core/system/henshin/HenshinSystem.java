@@ -3,8 +3,8 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
-import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.DriverActivationEvent;
@@ -65,12 +65,10 @@ public class HenshinSystem implements IHenshinSystem {
         if (formConfig.shouldPause()) {
             // 需要暂停的变身流程
             DriverActionManager.INSTANCE.prepareHenshin(player, formId);
-        } else if (isTransformed(player)) {
-            // 直接切换形态
-            switchForm(player, formId);
         } else {
-            // 直接变身
-            henshin(player, config.getRiderId());
+            RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+            data.setPendingFormId(formId);
+            DriverActionManager.INSTANCE.completeTransformation(player);
         }
     }
 
@@ -92,6 +90,8 @@ public class HenshinSystem implements IHenshinSystem {
 
         // 执行变身
         HenshinHelper.INSTANCE.performHenshin(player, config, formId);
+
+        transitionToState(player, HenshinState.TRANSFORMED, formId);
 
         if (player instanceof ServerPlayer serverPlayer) {
             syncTransformedState(serverPlayer);
@@ -123,7 +123,7 @@ public class HenshinSystem implements IHenshinSystem {
             BeltSystem.INSTANCE.returnItems(player);
 
             if (isPenalty) {
-            // 播放特殊解除音效
+                // 播放特殊解除音效
                 player.level().playSound(null, player.blockPosition(),
                         SoundEvents.ANVIL_LAND, SoundSource.PLAYERS,
                         0.8F, 0.5F);
@@ -134,6 +134,7 @@ public class HenshinSystem implements IHenshinSystem {
 
             // 移除给予的物品
             ItemManager.INSTANCE.removeGrantedItems(player, data.formId());
+            transitionToState(player, HenshinState.IDLE, null);
 
             //事件触发
             UnhenshinEvent.Post postUnHenshin = new UnhenshinEvent.Post(player);
@@ -174,7 +175,7 @@ public class HenshinSystem implements IHenshinSystem {
         if (player.level().isClientSide) {
             return CLIENT_TRANSFORMED_CACHE.getOrDefault(player.getUUID(), false);
         }
-        return player.getData(ModAttachments.PLAYER_DATA).getTransformedData() != null;
+        return player.getData(RiderAttachments.PLAYER_DATA).getTransformedData() != null;
     }
 
     private boolean canHenshin(Player player) {
@@ -188,10 +189,10 @@ public class HenshinSystem implements IHenshinSystem {
     }
 
     public void transitionToState(Player player, HenshinState state, @Nullable ResourceLocation formId) {
-        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
 
         // 创建新数据副本
-        PlayerPersistentData newData = new PlayerPersistentData(
+        RiderData newData = new RiderData(
                 new HashMap<>(oldData.riderBeltItems),
                 new HashMap<>(oldData.auxBeltItems),
                 oldData.getTransformedData(),  // 保留现有变身数据
@@ -201,7 +202,7 @@ public class HenshinSystem implements IHenshinSystem {
         );
 
         // 保存更新后的数据
-        player.setData(ModAttachments.PLAYER_DATA, newData);
+        player.setData(RiderAttachments.PLAYER_DATA, newData);
 
         if (player instanceof ServerPlayer serverPlayer) {
             syncHenshinState(serverPlayer);
@@ -215,7 +216,7 @@ public class HenshinSystem implements IHenshinSystem {
     //====================网络通信====================
 
     public static void syncHenshinState(ServerPlayer player) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
 
         RideBattleLib.LOGGER.info("同步变身状态: player={}, state={}, pendingForm={}",
                 player.getName().getString(), data.getHenshinState(), data.getPendingFormId());
@@ -231,7 +232,7 @@ public class HenshinSystem implements IHenshinSystem {
     @Override
     @Nullable
     public TransformedData getTransformedData(Player player) {
-        TransformedAttachmentData attachmentData = player.getData(ModAttachments.PLAYER_DATA).getTransformedData();
+        TransformedAttachmentData attachmentData = player.getData(RiderAttachments.PLAYER_DATA).getTransformedData();
         if (attachmentData == null) return null;
 
         RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());

@@ -2,8 +2,8 @@ package com.jpigeon.ridebattlelib.core.system.belt;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IBeltSystem;
-import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.ItemInsertionEvent;
 import com.jpigeon.ridebattlelib.core.system.event.SlotExtractionEvent;
 import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataDiffPacket;
@@ -70,7 +70,7 @@ public class BeltSystem implements IBeltSystem {
             return false;
         }
 
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
         // 确保我们操作的是副本，而不是只读Map
         Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
         Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>()));
@@ -118,7 +118,7 @@ public class BeltSystem implements IBeltSystem {
 
     @Override
     public ItemStack extractItem(Player player, ResourceLocation slotId) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return ItemStack.EMPTY;
 
@@ -171,7 +171,7 @@ public class BeltSystem implements IBeltSystem {
 
     @Override
     public void returnItems(Player player) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
@@ -232,7 +232,7 @@ public class BeltSystem implements IBeltSystem {
 
     @Override
     public Map<ResourceLocation, ItemStack> getBeltItems(Player player) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
 
         // 根据当前激活的骑士获取腰带数据
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
@@ -256,7 +256,7 @@ public class BeltSystem implements IBeltSystem {
 
     public void syncBeltData(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+            RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
             RiderConfig config = RiderConfig.findActiveDriverConfig(player);
             if (config == null) return;
 
@@ -277,7 +277,7 @@ public class BeltSystem implements IBeltSystem {
         Player player = findPlayer(packet.playerId());
         if (player == null) return;
 
-        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
@@ -295,8 +295,8 @@ public class BeltSystem implements IBeltSystem {
         // 更新辅助驱动器数据
         newAuxBeltItems.put(riderId, new HashMap<>(packet.auxItems()));
 
-        player.setData(ModAttachments.PLAYER_DATA,
-                new PlayerPersistentData(
+        player.setData(RiderAttachments.PLAYER_DATA,
+                new RiderData(
                         newRiderBeltItems,
                         newAuxBeltItems,
                         oldData.getTransformedData(),
@@ -312,7 +312,7 @@ public class BeltSystem implements IBeltSystem {
         Player player = findPlayer(packet.playerId());
         if (player == null) return;
 
-        PlayerPersistentData oldData = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
         ResourceLocation riderId = config.getRiderId();
@@ -381,8 +381,8 @@ public class BeltSystem implements IBeltSystem {
         newRiderBeltItems.put(riderId, currentMainItems);
         newAuxBeltItems.put(riderId, currentAuxItems);
 
-        player.setData(ModAttachments.PLAYER_DATA,
-                new PlayerPersistentData(
+        player.setData(RiderAttachments.PLAYER_DATA,
+                new RiderData(
                         newRiderBeltItems,
                         newAuxBeltItems,
                         oldData.getTransformedData(),

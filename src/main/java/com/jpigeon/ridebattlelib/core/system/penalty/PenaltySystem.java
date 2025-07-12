@@ -3,8 +3,8 @@ package com.jpigeon.ridebattlelib.core.system.penalty;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IPenaltySystem;
-import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -127,7 +127,7 @@ public class PenaltySystem implements IPenaltySystem {
 
     @Override
     public void startCooldown(Player player, int seconds) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
         data.setPenaltyCooldownEnd(System.currentTimeMillis() + seconds * 1000L);
         player.addTag("penalty_cooldown");
     }
@@ -135,7 +135,7 @@ public class PenaltySystem implements IPenaltySystem {
 
     @Override
     public boolean isInCooldown(Player player) {
-        PlayerPersistentData data = player.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
         return data.isInPenaltyCooldown();
     }
 }

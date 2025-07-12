@@ -101,7 +101,6 @@ public class FormConfig {
 
     // 匹配验证
     public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> beltItems, RiderConfig config) {
-        RideBattleLib.LOGGER.debug("开始匹配主槽位...");
         for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
             ResourceLocation slotId = entry.getKey();
             Item requiredItem = entry.getValue();
@@ -127,9 +126,8 @@ public class FormConfig {
                 return false;
             }
 
-            RideBattleLib.LOGGER.debug("槽位 {} 匹配成功", slotId);
+            RideBattleLib.LOGGER.debug("槽位 {} 匹配成功 {}", slotId, stack);
         }
-        RideBattleLib.LOGGER.debug("主槽位全部匹配");
         return true;
     }
 

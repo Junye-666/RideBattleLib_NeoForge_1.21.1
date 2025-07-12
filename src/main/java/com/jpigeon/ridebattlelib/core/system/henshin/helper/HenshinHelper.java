@@ -40,19 +40,19 @@ public final class HenshinHelper implements IHenshinHelper {
         // 保存原始装备
         Map<EquipmentSlot, ItemStack> originalGear = ARMOR.saveOriginalGear(player, config);
         // 获取指定形态的配置
-        FormConfig form = RiderRegistry.getForm(formId);
-        if (form == null) {
+        FormConfig formConfig = RiderRegistry.getForm(formId);
+        if (formConfig == null) {
             RideBattleLib.LOGGER.warn("尝试变身为未知形态: {}", formId);
             return;
         }
         // 给予形态专属物品
         ITEM.grantFormItems(player, formId);
         // 穿戴盔甲
-        ARMOR.equipArmor(player, form, beltItems);
+        ARMOR.equipArmor(player, formConfig, beltItems);
         // 应用属性和效果
-        EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, form, beltItems);
+        EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig, beltItems);
         // 设置为已变身状态
-        setTransformed(player, config, form.getFormId(), originalGear, beltItems);
+        setTransformed(player, config, formConfig.getFormId(), originalGear, beltItems);
         // 触发后置事件
         HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId);
         NeoForge.EVENT_BUS.post(postHenshin);
@@ -100,9 +100,9 @@ public final class HenshinHelper implements IHenshinHelper {
     @Override
     public void restoreTransformedState(Player player, TransformedAttachmentData attachmentData) {
         RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());
-        FormConfig form = RiderRegistry.getForm(attachmentData.formId());
+        FormConfig formConfig = RiderRegistry.getForm(attachmentData.formId());
 
-        if (config != null && form != null) {
+        if (config != null && formConfig != null) {
             // 恢复原始装备
             ARMOR.restoreOriginalGear(player, new HenshinSystem.TransformedData(
                     config,
@@ -112,10 +112,10 @@ public final class HenshinHelper implements IHenshinHelper {
             ));
 
             // 重新装备盔甲
-            ARMOR.equipArmor(player, form, attachmentData.beltSnapshot());
+            ARMOR.equipArmor(player, formConfig, attachmentData.beltSnapshot());
 
             // 重新应用属性
-            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, form, attachmentData.beltSnapshot());
+            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig, attachmentData.beltSnapshot());
 
             // 更新变身状态
             setTransformed(player, config, attachmentData.formId(),
@@ -125,7 +125,7 @@ public final class HenshinHelper implements IHenshinHelper {
 
     @Override
     public void setTransformed(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> beltSnapshot) {
-        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
         TransformedAttachmentData transformedData = new TransformedAttachmentData(
                 config.getRiderId(),
                 formId,
@@ -142,12 +142,12 @@ public final class HenshinHelper implements IHenshinHelper {
                 oldData.getPenaltyCooldownEnd()
         );
 
-        player.setData(RiderAttachments.PLAYER_DATA, newData);
+        player.setData(RiderAttachments.RIDER_DATA, newData);
     }
 
     @Override
     public void removeTransformed(Player player) {
-        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
 
         RiderData newData = new RiderData(
                 new HashMap<>(oldData.riderBeltItems),
@@ -158,6 +158,6 @@ public final class HenshinHelper implements IHenshinHelper {
                 oldData.getPenaltyCooldownEnd()
         );
 
-        player.setData(RiderAttachments.PLAYER_DATA, newData);
+        player.setData(RiderAttachments.RIDER_DATA, newData);
     }
 }

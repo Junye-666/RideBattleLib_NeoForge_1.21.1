@@ -1,9 +1,13 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -22,14 +26,21 @@ public class TriggerItemHandler {
         Player player = event.getEntity();
         ItemStack heldItem = event.getItemStack();
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) {
+            RideBattleLib.LOGGER.debug("MAN");
+            return;
+        }
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
+        ResourceLocation formId = data.getPendingFormId();
+        FormConfig formConfig = RiderRegistry.getForm(formId);
 
         if (player.level().isClientSide()) return;
-        if (config != null && heldItem.is(config.getTriggerItem())) {
+        if (heldItem.is(config.getTriggerItem())) {
             // 取消事件传播，避免物品被消耗
             event.setCanceled(true);
 
             // 触发变身逻辑
-            if (config.getTriggerType() == TriggerType.ITEM) {
+            if (formConfig.getTriggerType() == TriggerType.ITEM) {
                 // 触发变身逻辑
                 if (BeltSystem.INSTANCE.validateItems(player, config.getRiderId())
                         && (!config.hasAuxDriverEquipped(player) || config.getAuxSlotDefinitions().isEmpty())) {

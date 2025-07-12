@@ -11,9 +11,9 @@ public class ItemManager {
 
     // 给予形态物品
     public void grantFormItems(Player player, ResourceLocation formId) {
-        FormConfig form = RiderRegistry.getForm(formId);
-        if (form != null) {
-            for (ItemStack stack : form.getGrantedItems()) {
+        FormConfig formConfig = RiderRegistry.getForm(formId);
+        if (formConfig != null) {
+            for (ItemStack stack : formConfig.getGrantedItems()) {
                 if (!player.addItem(stack.copy())) {
                     player.drop(stack.copy(), false);
                 }
@@ -23,9 +23,9 @@ public class ItemManager {
 
     // 移除给予的物品
     public void removeGrantedItems(Player player, ResourceLocation formId) {
-        FormConfig form = RiderRegistry.getForm(formId);
-        if (form != null) {
-            for (ItemStack grantedItem : form.getGrantedItems()) {
+        FormConfig formConfig = RiderRegistry.getForm(formId);
+        if (formConfig != null) {
+            for (ItemStack grantedItem : formConfig.getGrantedItems()) {
                 int countToRemove = grantedItem.getCount();
 
                 // 只移除玩家背包中的物品

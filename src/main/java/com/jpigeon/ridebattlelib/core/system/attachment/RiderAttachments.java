@@ -13,8 +13,8 @@ public class RiderAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, RideBattleLib.MODID);
 
-    public static final Supplier<AttachmentType<RiderData>> PLAYER_DATA =
-            ATTACHMENTS.register("player_data",
+    public static final Supplier<AttachmentType<RiderData>> RIDER_DATA =
+            ATTACHMENTS.register("rider_data",
                     () -> AttachmentType.builder(() -> new RiderData(
                             new HashMap<>(),
                                     new HashMap<>(),

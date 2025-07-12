@@ -70,7 +70,7 @@ public class BeltSystem implements IBeltSystem {
             return false;
         }
 
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         // 确保我们操作的是副本，而不是只读Map
         Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
         Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>()));
@@ -118,7 +118,7 @@ public class BeltSystem implements IBeltSystem {
 
     @Override
     public ItemStack extractItem(Player player, ResourceLocation slotId) {
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return ItemStack.EMPTY;
 
@@ -171,7 +171,7 @@ public class BeltSystem implements IBeltSystem {
 
     @Override
     public void returnItems(Player player) {
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
@@ -232,7 +232,7 @@ public class BeltSystem implements IBeltSystem {
 
     @Override
     public Map<ResourceLocation, ItemStack> getBeltItems(Player player) {
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
         // 根据当前激活的骑士获取腰带数据
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
@@ -256,7 +256,7 @@ public class BeltSystem implements IBeltSystem {
 
     public void syncBeltData(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+            RiderData data = player.getData(RiderAttachments.RIDER_DATA);
             RiderConfig config = RiderConfig.findActiveDriverConfig(player);
             if (config == null) return;
 
@@ -277,7 +277,7 @@ public class BeltSystem implements IBeltSystem {
         Player player = findPlayer(packet.playerId());
         if (player == null) return;
 
-        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
@@ -295,7 +295,7 @@ public class BeltSystem implements IBeltSystem {
         // 更新辅助驱动器数据
         newAuxBeltItems.put(riderId, new HashMap<>(packet.auxItems()));
 
-        player.setData(RiderAttachments.PLAYER_DATA,
+        player.setData(RiderAttachments.RIDER_DATA,
                 new RiderData(
                         newRiderBeltItems,
                         newAuxBeltItems,
@@ -312,7 +312,7 @@ public class BeltSystem implements IBeltSystem {
         Player player = findPlayer(packet.playerId());
         if (player == null) return;
 
-        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
         ResourceLocation riderId = config.getRiderId();
@@ -381,7 +381,7 @@ public class BeltSystem implements IBeltSystem {
         newRiderBeltItems.put(riderId, currentMainItems);
         newAuxBeltItems.put(riderId, currentAuxItems);
 
-        player.setData(RiderAttachments.PLAYER_DATA,
+        player.setData(RiderAttachments.RIDER_DATA,
                 new RiderData(
                         newRiderBeltItems,
                         newAuxBeltItems,

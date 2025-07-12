@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.form;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -32,6 +33,7 @@ public class FormConfig {
     private Item chestplate = Items.AIR;
     private @Nullable Item leggings = Items.AIR;
     private Item boots = Items.AIR;
+    private TriggerType triggerType = TriggerType.KEY;
     private final List<AttributeModifier> attributes = new ArrayList<>();
     private final List<MobEffectInstance> effects = new ArrayList<>();
     private final List<ResourceLocation> attributeIds = new ArrayList<>();
@@ -58,6 +60,11 @@ public class FormConfig {
 
     public void setAllowsEmptyBelt(boolean allow) {
         this.allowsEmptyBelt = allow;
+    }
+
+    public FormConfig setTriggerType(TriggerType type) {
+        this.triggerType = type;
+        return this;
     }
 
     public FormConfig addAttribute(ResourceLocation attributeId, double amount,
@@ -188,6 +195,10 @@ public class FormConfig {
 
     public Item getBoots() {
         return boots;
+    }
+
+    public TriggerType getTriggerType() {
+        return triggerType;
     }
 
     public List<AttributeModifier> getAttributes() {

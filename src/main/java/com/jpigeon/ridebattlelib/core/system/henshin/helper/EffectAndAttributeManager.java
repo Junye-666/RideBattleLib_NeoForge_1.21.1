@@ -42,9 +42,9 @@ public class EffectAndAttributeManager {
 
     // 效果移除
     private void removeEffects(Player player, ResourceLocation formId) {
-        FormConfig form = RiderRegistry.getForm(formId);
-        if (form != null) {
-            for (MobEffectInstance effect : form.getEffects()) {
+        FormConfig formConfig = RiderRegistry.getForm(formId);
+        if (formConfig != null) {
+            for (MobEffectInstance effect : formConfig.getEffects()) {
                 player.removeEffect(effect.getEffect());
             }
         }
@@ -82,12 +82,12 @@ public class EffectAndAttributeManager {
     // 属性移除
     private void removeAttributes(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems) {
 
-        FormConfig form = RiderRegistry.getForm(formId);
-        if (form == null) return;
+        FormConfig formConfig = RiderRegistry.getForm(formId);
+        if (formConfig == null) return;
 
         // 移除属性修饰符
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
-        for (AttributeModifier modifier : form.getAttributes()) {
+        for (AttributeModifier modifier : formConfig.getAttributes()) {
             Holder<Attribute> holder = attributeRegistry.getHolder(
                     ResourceKey.create(Registries.ATTRIBUTE, modifier.id())
             ).orElse(null);

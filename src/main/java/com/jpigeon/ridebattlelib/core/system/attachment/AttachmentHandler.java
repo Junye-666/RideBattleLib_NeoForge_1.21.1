@@ -17,7 +17,7 @@ public class AttachmentHandler {
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
         RideBattleLib.LOGGER.info("玩家登录: {} | 当前状态: {} | 变身数据: {}",
                 player.getName().getString(),
@@ -63,10 +63,10 @@ public class AttachmentHandler {
 
         Player original = event.getOriginal();
         Player newPlayer = event.getEntity();
-        RiderData originalData = original.getData(RiderAttachments.PLAYER_DATA);
+        RiderData originalData = original.getData(RiderAttachments.RIDER_DATA);
 
         // 只复制 riderBeltItems 和变身数据（但重生时不自动恢复）
-        newPlayer.setData(RiderAttachments.PLAYER_DATA, new RiderData(
+        newPlayer.setData(RiderAttachments.RIDER_DATA, new RiderData(
                 new HashMap<>(originalData.riderBeltItems),
                 new HashMap<>(originalData.auxBeltItems),
                 originalData.getTransformedData(),
@@ -75,7 +75,7 @@ public class AttachmentHandler {
                 0
         ));
 
-        RiderData newData = newPlayer.getData(RiderAttachments.PLAYER_DATA);
+        RiderData newData = newPlayer.getData(RiderAttachments.RIDER_DATA);
         newData.setHenshinState(HenshinState.IDLE);
         newData.setPendingFormId(null);
 

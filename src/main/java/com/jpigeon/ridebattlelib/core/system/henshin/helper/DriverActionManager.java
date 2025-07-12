@@ -26,7 +26,7 @@ public class DriverActionManager {
         if (config == null) return;
 
         // 设置变身状态
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         data.setHenshinState(HenshinState.TRANSFORMING);
         data.setPendingFormId(formId);
 
@@ -67,7 +67,7 @@ public class DriverActionManager {
     }
 
     public void completeTransformation(Player player) {
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         ResourceLocation formId = data.getPendingFormId();
 
         if (formId == null) {
@@ -96,7 +96,7 @@ public class DriverActionManager {
     }
 
     public void cancelHenshin(Player player) {
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         if (data.getHenshinState() == HenshinState.TRANSFORMING) {
             data.setHenshinState(HenshinState.IDLE);
             data.setPendingFormId(null);

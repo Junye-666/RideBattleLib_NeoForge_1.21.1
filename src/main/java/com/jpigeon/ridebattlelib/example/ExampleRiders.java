@@ -43,7 +43,6 @@ public class ExampleRiders {
         RiderConfig riderAlpha = new RiderConfig(TEST_RIDER_ALPHA)
                 .setDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁护腿(穿戴在腿部)
                 .setAuxDriverItem(Items.BRICK, EquipmentSlot.OFFHAND) // 辅助驱动器: 砖块(穿戴在副手)
-                .setTriggerType(TriggerType.KEY) // 指定按键触发
                 .addDriverSlot(
                         TEST_CORE_SLOT,
                         List.of(Items.IRON_INGOT, Items.GOLD_INGOT),
@@ -59,6 +58,7 @@ public class ExampleRiders {
 
         // 创建基础形态配置
         FormConfig alphaBaseForm = new FormConfig(TEST_FORM_BASE)
+                .setTriggerType(TriggerType.KEY) // 指定按键触发
                 .setArmor(// 设置盔甲
                         Items.IRON_HELMET,
                         Items.IRON_CHESTPLATE,
@@ -89,6 +89,7 @@ public class ExampleRiders {
 
         // 创建强化形态配置
         FormConfig alphaPoweredForm = new FormConfig(TEST_FORM_POWERED)
+                .setTriggerType(TriggerType.AUTO) // 指定自动触发
                 .setArmor(// 金色盔甲
                         Items.GOLDEN_HELMET,
                         Items.GOLDEN_CHESTPLATE,
@@ -129,11 +130,13 @@ public class ExampleRiders {
 
         // 将形态添加到骑士配置
         riderAlpha
-                .addForm(alphaBaseForm)
+                .addForm(alphaBaseForm) //添加形态
                 .addForm(alphaPoweredForm)
                 .setBaseForm(alphaBaseForm.getFormId());// 设置基础形态
-        alphaBaseForm.setAllowsEmptyBelt(false);
-        alphaBaseForm.setShouldPause(false);
+
+        alphaBaseForm.setAllowsEmptyBelt(false); // 指定腰带物品的必要性
+        alphaBaseForm.setShouldPause(false); // 指定是否在驱动器键按下时暂停
+
         alphaPoweredForm.setShouldPause(true);
 
         // 注册骑士
@@ -156,7 +159,7 @@ public class ExampleRiders {
                 if (player == null) return;
 
                 if (event.getRiderId().equals(TEST_RIDER_ALPHA)) {
-                    RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+                    RiderData data = player.getData(RiderAttachments.RIDER_DATA);
                     if (data.getHenshinState() == HenshinState.TRANSFORMING) {
                         DriverActionManager.INSTANCE.completeTransformation(player);
                     }

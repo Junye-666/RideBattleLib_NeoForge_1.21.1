@@ -49,7 +49,7 @@ public class PacketHandler {
                         SyncHenshinStatePacket.STREAM_CODEC,
                         (packet, context) -> {
                             Player player = context.player();
-                            RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+                            RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
                             // 应用新状态
                             data.setHenshinState(packet.state());

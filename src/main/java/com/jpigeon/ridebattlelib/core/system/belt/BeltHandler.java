@@ -1,8 +1,11 @@
 package com.jpigeon.ridebattlelib.core.system.belt;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
+import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -26,6 +29,8 @@ public class BeltHandler {
 
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
+        ResourceLocation formId = config.matchForm(player, BeltSystem.INSTANCE.getBeltItems(player));
+        FormConfig formConfig = RiderRegistry.getForm(formId);
 
         boolean inserted = false;
         // 先尝试主驱动器槽位
@@ -52,11 +57,11 @@ public class BeltHandler {
             BeltSystem.INSTANCE.syncBeltData(player);
             event.setCanceled(true);
 
-            if (config.getTriggerType() == TriggerType.AUTO) {
+            if (formConfig.getTriggerType() == TriggerType.AUTO) {
                 if (HenshinSystem.INSTANCE.isTransformed(player)) {
                     Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
                     ResourceLocation newFormId = config.matchForm(player, currentBelt);
-                    HenshinSystem.INSTANCE.switchForm(player, newFormId);
+                    PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
                 }
             }
         }

@@ -66,7 +66,7 @@ public class HenshinSystem implements IHenshinSystem {
             // 需要暂停的变身流程
             DriverActionManager.INSTANCE.prepareHenshin(player, formId);
         } else {
-            RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+            RiderData data = player.getData(RiderAttachments.RIDER_DATA);
             data.setPendingFormId(formId);
             DriverActionManager.INSTANCE.completeTransformation(player);
         }
@@ -175,7 +175,7 @@ public class HenshinSystem implements IHenshinSystem {
         if (player.level().isClientSide) {
             return CLIENT_TRANSFORMED_CACHE.getOrDefault(player.getUUID(), false);
         }
-        return player.getData(RiderAttachments.PLAYER_DATA).getTransformedData() != null;
+        return player.getData(RiderAttachments.RIDER_DATA).getTransformedData() != null;
     }
 
     private boolean canHenshin(Player player) {
@@ -189,7 +189,7 @@ public class HenshinSystem implements IHenshinSystem {
     }
 
     public void transitionToState(Player player, HenshinState state, @Nullable ResourceLocation formId) {
-        RiderData oldData = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
 
         // 创建新数据副本
         RiderData newData = new RiderData(
@@ -202,7 +202,7 @@ public class HenshinSystem implements IHenshinSystem {
         );
 
         // 保存更新后的数据
-        player.setData(RiderAttachments.PLAYER_DATA, newData);
+        player.setData(RiderAttachments.RIDER_DATA, newData);
 
         if (player instanceof ServerPlayer serverPlayer) {
             syncHenshinState(serverPlayer);
@@ -216,7 +216,7 @@ public class HenshinSystem implements IHenshinSystem {
     //====================网络通信====================
 
     public static void syncHenshinState(ServerPlayer player) {
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
         RideBattleLib.LOGGER.info("同步变身状态: player={}, state={}, pendingForm={}",
                 player.getName().getString(), data.getHenshinState(), data.getPendingFormId());
@@ -232,7 +232,7 @@ public class HenshinSystem implements IHenshinSystem {
     @Override
     @Nullable
     public TransformedData getTransformedData(Player player) {
-        TransformedAttachmentData attachmentData = player.getData(RiderAttachments.PLAYER_DATA).getTransformedData();
+        TransformedAttachmentData attachmentData = player.getData(RiderAttachments.RIDER_DATA).getTransformedData();
         if (attachmentData == null) return null;
 
         RiderConfig config = RiderRegistry.getRider(attachmentData.riderId());

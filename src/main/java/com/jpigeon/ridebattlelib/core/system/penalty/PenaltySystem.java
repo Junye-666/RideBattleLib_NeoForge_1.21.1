@@ -127,7 +127,7 @@ public class PenaltySystem implements IPenaltySystem {
 
     @Override
     public void startCooldown(Player player, int seconds) {
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         data.setPenaltyCooldownEnd(System.currentTimeMillis() + seconds * 1000L);
         player.addTag("penalty_cooldown");
     }
@@ -135,7 +135,7 @@ public class PenaltySystem implements IPenaltySystem {
 
     @Override
     public boolean isInCooldown(Player player) {
-        RiderData data = player.getData(RiderAttachments.PLAYER_DATA);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         return data.isInPenaltyCooldown();
     }
 }

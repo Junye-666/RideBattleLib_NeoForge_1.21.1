@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -30,7 +29,6 @@ public class RiderConfig {
     private Item auxDriverItem = Items.AIR;
     private EquipmentSlot driverSlot = EquipmentSlot.LEGS;
     private EquipmentSlot auxDriverSlot = EquipmentSlot.OFFHAND;
-    private TriggerType triggerType = TriggerType.KEY;
     private Item triggerItem = Items.AIR;
     private ResourceLocation baseFormId;
     private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
@@ -65,11 +63,6 @@ public class RiderConfig {
     //获取驱动器位置
     public EquipmentSlot getDriverSlot() {
         return driverSlot;
-    }
-
-    //获取触发方式
-    public TriggerType getTriggerType() {
-        return triggerType;
     }
 
     //获取必须物品
@@ -141,12 +134,6 @@ public class RiderConfig {
     public RiderConfig setDriverItem(Item item, EquipmentSlot slot) {
         this.driverItem = item;
         this.driverSlot = slot;
-        return this;
-    }
-
-    //指定触发方式
-    public RiderConfig setTriggerType(TriggerType type) {
-        this.triggerType = type;
         return this;
     }
 
@@ -230,25 +217,25 @@ public class RiderConfig {
         }
 
         // 尝试匹配所有形态
-        for (FormConfig form : forms.values()) {
-            boolean mainMatches = form.matchesMainSlots(beltItems, config);
+        for (FormConfig formConfig : forms.values()) {
+            boolean mainMatches = formConfig.matchesMainSlots(beltItems, config);
             boolean auxMatches = true;
 
             // 检查形态是否有辅助槽位要求
-            boolean formHasAuxRequirements = !form.getAuxRequiredItems().isEmpty();
+            boolean formHasAuxRequirements = !formConfig.getAuxRequiredItems().isEmpty();
 
             if (formHasAuxRequirements) {
                 // 形态要求辅助槽位：必须装备辅助驱动器且槽位匹配
                 if (hasAuxDriverEquipped(player)) {
-                    auxMatches = form.matchesAuxSlots(beltItems, config);
+                    auxMatches = formConfig.matchesAuxSlots(beltItems, config);
                 } else {
                     auxMatches = false; // 未装备辅助驱动器但形态要求→不匹配
-                    RideBattleLib.LOGGER.debug("形态{}需要辅助驱动器，但玩家未装备", form.getFormId());
+                    RideBattleLib.LOGGER.debug("形态{}需要辅助驱动器，但玩家未装备", formConfig.getFormId());
                 }
             }
 
             if (mainMatches && auxMatches) {
-                return form.getFormId();
+                return formConfig.getFormId();
             }
         }
 

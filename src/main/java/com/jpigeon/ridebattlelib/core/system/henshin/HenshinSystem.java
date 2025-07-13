@@ -13,6 +13,7 @@ import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinStateSyncPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.SyncHenshinStatePacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import net.minecraft.ChatFormatting;
@@ -51,23 +52,36 @@ public class HenshinSystem implements IHenshinSystem {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-
         ResourceLocation formId = config.matchForm(player, beltItems);
-        FormConfig formConfig = RiderRegistry.getForm(formId);
+        FormConfig formConfig = config.getActiveFormConfig(player);
 
         if (formConfig == null) return;
         ItemStack driverItem = player.getItemBySlot(config.getDriverSlot());
 
-        DriverActivationEvent event = new DriverActivationEvent(player, driverItem);
-        NeoForge.EVENT_BUS.post(event);
+        DriverActivationEvent driverEvent = new DriverActivationEvent(player, driverItem);
+        NeoForge.EVENT_BUS.post(driverEvent);
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
+        data.setPendingFormId(formId);
+        if (data.getHenshinState() != HenshinState.TRANSFORMING) {
+            data.setHenshinState(HenshinState.TRANSFORMING);
+        }
+        // 同步状态
+        if (player.level().isClientSide) {
+            // 客户端发送同步请求
+            PacketHandler.sendToServer(new SyncHenshinStatePacket(
+                    HenshinState.TRANSFORMING,
+                    formId
+            ));
+        } else if (player instanceof ServerPlayer serverPlayer) {
+            // 服务端直接同步
+            HenshinSystem.syncHenshinState(serverPlayer);
+        }
 
         // 处理变身逻辑
         if (formConfig.shouldPause()) {
             // 需要暂停的变身流程
             DriverActionManager.INSTANCE.prepareHenshin(player, formId);
         } else {
-            RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-            data.setPendingFormId(formId);
             DriverActionManager.INSTANCE.completeTransformation(player);
         }
     }
@@ -193,7 +207,7 @@ public class HenshinSystem implements IHenshinSystem {
 
         // 创建新数据副本
         RiderData newData = new RiderData(
-                new HashMap<>(oldData.riderBeltItems),
+                new HashMap<>(oldData.mainBeltItems),
                 new HashMap<>(oldData.auxBeltItems),
                 oldData.getTransformedData(),  // 保留现有变身数据
                 state,                         // 新状态
@@ -228,6 +242,11 @@ public class HenshinSystem implements IHenshinSystem {
         ));
     }
 
+    public static void syncTransformedState(ServerPlayer player) {
+        boolean isTransformed = INSTANCE.isTransformed(player);
+        PacketHandler.sendToClient(player, new TransformedStatePacket(player.getUUID(), isTransformed));
+    }
+
     //====================Getter方法====================
     @Override
     @Nullable
@@ -244,10 +263,5 @@ public class HenshinSystem implements IHenshinSystem {
                 attachmentData.originalGear(),
                 attachmentData.beltSnapshot()
         );
-    }
-
-    public static void syncTransformedState(ServerPlayer player) {
-        boolean isTransformed = INSTANCE.isTransformed(player);
-        PacketHandler.sendToClient(player, new TransformedStatePacket(player.getUUID(), isTransformed));
     }
 }

@@ -52,7 +52,6 @@ public class AttachmentHandler {
         if (player instanceof ServerPlayer serverPlayer) {
             // 确保腰带数据和变身状态都同步
             BeltSystem.INSTANCE.syncBeltData(serverPlayer);
-            HenshinSystem.syncTransformedState(serverPlayer);
             HenshinSystem.syncHenshinState(serverPlayer);
         }
     }
@@ -65,9 +64,9 @@ public class AttachmentHandler {
         Player newPlayer = event.getEntity();
         RiderData originalData = original.getData(RiderAttachments.RIDER_DATA);
 
-        // 只复制 riderBeltItems 和变身数据（但重生时不自动恢复）
+        // 只复制 mainBeltItems 和变身数据（但重生时不自动恢复）
         newPlayer.setData(RiderAttachments.RIDER_DATA, new RiderData(
-                new HashMap<>(originalData.riderBeltItems),
+                new HashMap<>(originalData.mainBeltItems),
                 new HashMap<>(originalData.auxBeltItems),
                 originalData.getTransformedData(),
                 originalData.getHenshinState(),

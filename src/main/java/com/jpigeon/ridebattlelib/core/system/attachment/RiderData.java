@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class RiderData {
-    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems;
+    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainBeltItems;
     public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems;
     private final @Nullable TransformedAttachmentData transformedData;
     private HenshinState henshinState;
@@ -21,15 +21,15 @@ public class RiderData {
     private long penaltyCooldownEnd;
 
     public RiderData(
-            Map<ResourceLocation, Map<ResourceLocation, ItemStack>> riderBeltItems,
+            Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainBeltItems,
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems,
             @Nullable TransformedAttachmentData transformedData,
             HenshinState henshinState,
             @Nullable ResourceLocation pendingFormId,
             long penaltyCooldownEnd
     ) {
-        this.riderBeltItems = riderBeltItems != null ?
-                new HashMap<>(riderBeltItems) : new HashMap<>();
+        this.mainBeltItems = mainBeltItems != null ?
+                new HashMap<>(mainBeltItems) : new HashMap<>();
         this.auxBeltItems = auxBeltItems != null ?
                 new HashMap<>(auxBeltItems) : new HashMap<>();
         this.transformedData = transformedData;
@@ -59,9 +59,9 @@ public class RiderData {
     // Setter 方法
     public void setBeltItems(ResourceLocation riderId, Map<ResourceLocation, ItemStack> items) {
         if (items == null) {
-            riderBeltItems.remove(riderId);
+            mainBeltItems.remove(riderId);
         } else {
-            riderBeltItems.put(riderId, new HashMap<>(items));
+            mainBeltItems.put(riderId, new HashMap<>(items));
         }
     }
 
@@ -72,7 +72,7 @@ public class RiderData {
     //====================Getter方法====================
 
     public Map<ResourceLocation, ItemStack> getBeltItems(ResourceLocation riderId) {
-        return riderBeltItems.getOrDefault(riderId, new HashMap<>());
+        return mainBeltItems.getOrDefault(riderId, new HashMap<>());
     }
 
     public ItemStack getAuxBeltItems(ResourceLocation riderId, ResourceLocation slotId) {
@@ -109,8 +109,8 @@ public class RiderData {
                     Codec.unboundedMap(
                                     ResourceLocation.CODEC,
                                     Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.OPTIONAL_CODEC)
-                            ).optionalFieldOf("riderBeltItems", new HashMap<>())
-                            .forGetter(data -> data.riderBeltItems),
+                            ).optionalFieldOf("mainBeltItems", new HashMap<>())
+                            .forGetter(data -> data.mainBeltItems),
 
                     Codec.unboundedMap(ResourceLocation.CODEC,
                                     Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.OPTIONAL_CODEC)

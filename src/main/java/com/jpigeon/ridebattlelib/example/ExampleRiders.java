@@ -8,7 +8,7 @@ import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
@@ -58,7 +58,7 @@ public class ExampleRiders {
 
         // 创建基础形态配置
         FormConfig alphaBaseForm = new FormConfig(TEST_FORM_BASE)
-                .setTriggerType(TriggerType.KEY) // 指定按键触发
+                .setTriggerType(TriggerType.AUTO) // 指定按键触发
                 .setArmor(// 设置盔甲
                         Items.IRON_HELMET,
                         Items.IRON_CHESTPLATE,
@@ -137,7 +137,7 @@ public class ExampleRiders {
         alphaBaseForm.setAllowsEmptyBelt(false); // 指定腰带物品的必要性
         alphaBaseForm.setShouldPause(false); // 指定是否在驱动器键按下时暂停
 
-        alphaPoweredForm.setShouldPause(true);
+        alphaPoweredForm.setShouldPause(false);
 
         // 注册骑士
         RiderRegistry.registerRider(riderAlpha);

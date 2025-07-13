@@ -3,9 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.belt;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
-import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -14,8 +12,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.LogicalSide;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-
-import java.util.Map;
 
 @EventBusSubscriber(modid = RideBattleLib.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.DEDICATED_SERVER)
 public class BeltHandler {
@@ -29,8 +25,6 @@ public class BeltHandler {
 
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
-        ResourceLocation formId = config.matchForm(player, BeltSystem.INSTANCE.getBeltItems(player));
-        FormConfig formConfig = RiderRegistry.getForm(formId);
 
         boolean inserted = false;
         // 先尝试主驱动器槽位
@@ -55,15 +49,17 @@ public class BeltHandler {
 
         if (inserted) {
             BeltSystem.INSTANCE.syncBeltData(player);
-            event.setCanceled(true);
-
-            if (formConfig.getTriggerType() == TriggerType.AUTO) {
-                if (HenshinSystem.INSTANCE.isTransformed(player)) {
-                    Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
-                    ResourceLocation newFormId = config.matchForm(player, currentBelt);
-                    PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
-                }
+            FormConfig formConfig = config.getActiveFormConfig(player);
+            if (formConfig != null) {
+                RideBattleLib.LOGGER.debug("形态触发类型: {}", formConfig.getTriggerType());
             }
+            // 添加 null 检查
+            if (formConfig != null && formConfig.getTriggerType() == TriggerType.AUTO) {
+                RideBattleLib.LOGGER.info("自动触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                HenshinSystem.INSTANCE.driverAction(player);
+            }
+
+            event.setCanceled(true);
         }
     }
 }

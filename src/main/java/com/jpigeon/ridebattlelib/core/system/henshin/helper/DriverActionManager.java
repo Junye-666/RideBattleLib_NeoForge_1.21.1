@@ -9,7 +9,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
-import com.jpigeon.ridebattlelib.core.system.network.packet.SyncHenshinStatePacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -24,26 +23,7 @@ public class DriverActionManager {
         RideBattleLib.LOGGER.debug("玩家 {} 进入变身缓冲阶段", player.getName());
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
-
-        // 设置变身状态
-        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-        data.setHenshinState(HenshinState.TRANSFORMING);
-        data.setPendingFormId(formId);
-
-        RideBattleLib.LOGGER.info("设置待处理形态: player={}, form={}",
-                player.getName().getString(), formId);
-
-        // 同步状态
-        if (player.level().isClientSide) {
-            // 客户端发送同步请求
-            PacketHandler.sendToServer(new SyncHenshinStatePacket(
-                    HenshinState.TRANSFORMING,
-                    formId
-            ));
-        } else if (player instanceof ServerPlayer serverPlayer) {
-            // 服务端直接同步
-            HenshinSystem.syncHenshinState(serverPlayer);
-        }
+        RideBattleLib.LOGGER.info("设置待处理形态: player={}, form={}", player.getName().getString(), formId);
 
         HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId);
         NeoForge.EVENT_BUS.post(preHenshin);
@@ -69,14 +49,13 @@ public class DriverActionManager {
     public void completeTransformation(Player player) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         ResourceLocation formId = data.getPendingFormId();
-
+        RideBattleLib.LOGGER.debug("当前状态: {}, 形态ID: {}", data.getHenshinState(), formId);
         if (formId == null) {
             RideBattleLib.LOGGER.error("尝试完成变身但未设置目标形态");
             return;
         }
 
-        RideBattleLib.LOGGER.info("完成变身序列: player={}, form={}",
-                player.getName().getString(), formId);
+        RideBattleLib.LOGGER.info("完成变身序列: player={}, form={}", player.getName().getString(), formId);
 
         if (!HenshinSystem.INSTANCE.isTransformed(player)) {
             proceedHenshin(player, Objects.requireNonNull(RiderConfig.findActiveDriverConfig(player)));
@@ -91,7 +70,6 @@ public class DriverActionManager {
         // 同步状态
         if (player instanceof ServerPlayer serverPlayer) {
             HenshinSystem.syncHenshinState(serverPlayer);
-            HenshinSystem.syncTransformedState(serverPlayer);
         }
     }
 
@@ -103,7 +81,6 @@ public class DriverActionManager {
 
             if (player instanceof ServerPlayer serverPlayer) {
                 HenshinSystem.syncHenshinState(serverPlayer);
-                HenshinSystem.syncTransformedState(serverPlayer);
             }
         }
     }

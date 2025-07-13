@@ -51,11 +51,11 @@ public class EffectAndAttributeManager {
     }
 
     // 属性应用
-    private void applyAttributes(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
+    private void applyAttributes(Player player, FormConfig formConfig, Map<ResourceLocation, ItemStack> beltItems) {
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
         // 移除可能存在的旧属性
-        for (AttributeModifier modifier : form.getAttributes()) {
+        for (AttributeModifier modifier : formConfig.getAttributes()) {
             attributeRegistry.getHolder(
                     ResourceKey.create(Registries.ATTRIBUTE, modifier.id())
             ).ifPresent(holder -> {
@@ -67,7 +67,7 @@ public class EffectAndAttributeManager {
         }
 
         // 应用新属性
-        for (AttributeModifier modifier : form.getAttributes()) {
+        for (AttributeModifier modifier : formConfig.getAttributes()) {
             attributeRegistry.getHolder(
                     ResourceKey.create(Registries.ATTRIBUTE, modifier.id())
             ).ifPresent(holder -> {

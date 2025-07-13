@@ -3,7 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.form;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;

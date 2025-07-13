@@ -241,7 +241,7 @@ public class BeltSystem implements IBeltSystem {
         Map<ResourceLocation, ItemStack> allItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
 
         // 只在装备辅助驱动器时添加辅助槽位
-        if (config.hasAuxDriverEquipped(player)) { // 新增条件
+        if (config.hasAuxDriverEquipped(player)) {
             for (ResourceLocation slotId : config.getAuxSlotDefinitions().keySet()) {
                 ItemStack item = data.getAuxBeltItems(config.getRiderId(), slotId);
                 if (!item.isEmpty()) {
@@ -285,7 +285,7 @@ public class BeltSystem implements IBeltSystem {
 
         // 创建新数据
         Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newRiderBeltItems =
-                new HashMap<>(oldData.riderBeltItems);
+                new HashMap<>(oldData.mainBeltItems);
         Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newAuxBeltItems =
                 new HashMap<>(oldData.auxBeltItems);
 
@@ -322,7 +322,7 @@ public class BeltSystem implements IBeltSystem {
         Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newAuxBeltItems = new HashMap<>();
 
         // 复制主驱动器数据
-        oldData.riderBeltItems.forEach((id, items) ->
+        oldData.mainBeltItems.forEach((id, items) ->
                 newRiderBeltItems.put(id, new HashMap<>(items))
         );
 

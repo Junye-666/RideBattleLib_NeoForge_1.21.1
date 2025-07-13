@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.resources.ResourceLocation;
@@ -235,7 +236,9 @@ public class RiderConfig {
             }
 
             if (mainMatches && auxMatches) {
-                return formConfig.getFormId();
+                ResourceLocation formId = formConfig.getFormId();
+                RideBattleLib.LOGGER.debug("匹配到的形态ID: {}", formId);
+                return formId;
             }
         }
 
@@ -248,5 +251,12 @@ public class RiderConfig {
 
         RideBattleLib.LOGGER.warn("未找到匹配形态，且没有允许空腰带的基础形态");
         return null;
+    }
+
+    // 快捷获取FormConfig
+    public FormConfig getActiveFormConfig(Player player) {
+        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+        ResourceLocation formId = matchForm(player, beltItems);
+        return forms.get(formId);
     }
 }

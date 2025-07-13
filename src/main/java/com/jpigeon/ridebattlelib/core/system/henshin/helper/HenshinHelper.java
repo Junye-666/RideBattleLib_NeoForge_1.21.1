@@ -134,7 +134,7 @@ public final class HenshinHelper implements IHenshinHelper {
         );
 
         RiderData newData = new RiderData(
-                new HashMap<>(oldData.riderBeltItems),
+                new HashMap<>(oldData.mainBeltItems),
                 new HashMap<>(oldData.auxBeltItems),
                 transformedData,
                 oldData.getHenshinState(),
@@ -150,7 +150,7 @@ public final class HenshinHelper implements IHenshinHelper {
         RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
 
         RiderData newData = new RiderData(
-                new HashMap<>(oldData.riderBeltItems),
+                new HashMap<>(oldData.mainBeltItems),
                 new HashMap<>(oldData.auxBeltItems),
                 null,
                 oldData.getHenshinState(),

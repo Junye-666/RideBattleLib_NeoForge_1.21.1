@@ -1,8 +1,12 @@
-package com.jpigeon.ridebattlelib.core.system.henshin;
+package com.jpigeon.ridebattlelib.core.system.henshin.handler;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.KeyBindings;
 
+import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.ReturnItemsPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.UnhenshinPacket;
@@ -22,10 +26,13 @@ public class HenshinHandler {
         if (KeyBindings.DRIVER_KEY.consumeClick()) {
             RiderConfig config = RiderConfig.findActiveDriverConfig(player);
             if (config == null) return;
-            RideBattleLib.LOGGER.info("按键触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
-            HenshinSystem.INSTANCE.driverAction(player);
-        }
 
+            FormConfig formConfig = config.getActiveFormConfig(player);
+            if (formConfig != null && formConfig.getTriggerType() == TriggerType.KEY) {
+                RideBattleLib.LOGGER.info("按键触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                HenshinSystem.INSTANCE.driverAction(player);
+            }
+        }
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
             RideBattleLib.LOGGER.debug("发送解除变身数据包");
             PacketHandler.sendToServer(new UnhenshinPacket());

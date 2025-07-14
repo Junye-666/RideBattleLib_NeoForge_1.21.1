@@ -5,7 +5,6 @@ import net.minecraft.world.item.Items;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public class DynamicArmorRegistry {
     private static final Map<Item, Item> ITEM_ARMOR_MAP = new HashMap<>();

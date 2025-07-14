@@ -21,7 +21,7 @@ import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.List;
 
-public class ExampleRiders {
+public class ExampleBasic {
     // 定义测试骑士的ID
     private static final ResourceLocation TEST_RIDER_ALPHA =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_alpha");

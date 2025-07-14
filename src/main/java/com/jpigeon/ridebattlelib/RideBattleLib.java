@@ -8,8 +8,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.handler.HenshinHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.handler.TriggerItemHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.example.ExampleDynamicForm;
-import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -50,8 +48,8 @@ public class RideBattleLib {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        LOGGER.info("HELLO FROM COMMON SETUP");
-        // ExampleRiders.init();
+        LOGGER.info("请确保骑士初始化在commonSetup中哦~");
+        // ExampleBasic.init();
         // ExampleDynamicForm.init();
 
         event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {

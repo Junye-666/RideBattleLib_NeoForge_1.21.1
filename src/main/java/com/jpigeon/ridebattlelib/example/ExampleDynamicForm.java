@@ -30,7 +30,7 @@ public class ExampleDynamicForm {
     public static final ResourceLocation BETA_SLOT_2 =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "beta_slot_2");
 
-    public static void register() {
+    public static void betaRider() {
         // 注册RiderConfig
         RiderConfig riderBeta = new RiderConfig(TEST_RIDER_BETA)
                 .setDriverItem(Items.NETHERITE_LEGGINGS, EquipmentSlot.LEGS)
@@ -95,6 +95,6 @@ public class ExampleDynamicForm {
     }
 
     public static void init() {
-        register();
+        betaRider();
     }
 }

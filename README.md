@@ -209,5 +209,6 @@ ExampleDynamicForm.init();
 "变身！" - 现在就在你的模组中实现这句经典台词吧！
 
 RideBattleLib © 2023 JPigeon
-在MIT许可证下开源 - 自由地创造你的骑士世界！
+在MIT许可证下开源 - 自由地创造你的骑士世界!
+
 注: 在DeepSeek帮助下写的README.md

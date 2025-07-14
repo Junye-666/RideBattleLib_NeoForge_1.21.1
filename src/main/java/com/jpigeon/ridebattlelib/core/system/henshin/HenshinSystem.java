@@ -54,8 +54,8 @@ public class HenshinSystem implements IHenshinSystem {
         if (config == null) return;
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         ResourceLocation formId = config.matchForm(player, beltItems);
+        if (formId == null) return;
         FormConfig formConfig = config.getActiveFormConfig(player);
-
         if (formConfig == null) return;
         ItemStack driverItem = player.getItemBySlot(config.getDriverSlot());
 

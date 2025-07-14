@@ -58,7 +58,7 @@ public class ExampleBasic {
 
         // 创建基础形态配置
         FormConfig alphaBaseForm = new FormConfig(TEST_FORM_BASE)
-                .setTriggerType(TriggerType.AUTO) // 指定按键触发
+                .setTriggerType(TriggerType.KEY) // 指定按键触发
                 .setArmor(// 设置盔甲
                         Items.IRON_HELMET,
                         Items.IRON_CHESTPLATE,

@@ -30,4 +30,3 @@ public class DynamicArmorRegistry {
         return ITEM_ARMOR_MAP.getOrDefault(item, Items.AIR);
     }
 }
-

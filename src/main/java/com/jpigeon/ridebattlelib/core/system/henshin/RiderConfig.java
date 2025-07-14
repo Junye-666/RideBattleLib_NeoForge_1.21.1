@@ -38,96 +38,13 @@ public class RiderConfig {
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
     private final Set<ResourceLocation> auxRequiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
+    private final Map<EquipmentSlot, Item> commonArmorMap = new EnumMap<>(EquipmentSlot.class);
 
     //====================初始化方法====================
 
     //骑士Id初始化
     public RiderConfig(ResourceLocation riderId) {
         this.riderId = riderId;
-    }
-
-    //====================Getter方法====================
-
-    //获取骑士Id
-    public ResourceLocation getRiderId() {
-        return riderId;
-    }
-
-    //获取驱动器物品
-    public Item getDriverItem() {
-        return driverItem;
-    }
-
-    public Item getAuxDriverItem() {
-        return auxDriverItem;
-    }
-
-    //获取驱动器位置
-    public EquipmentSlot getDriverSlot() {
-        return driverSlot;
-    }
-
-    //获取必须物品
-    public @Nullable Item getTriggerItem() {
-        return triggerItem;
-    }
-
-    //通过玩家装备查找激活的驱动器配置
-    public static RiderConfig findActiveDriverConfig(Player player) {
-        for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
-            // 精确匹配驱动器槽位和物品
-            ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
-            if (driverStack.is(config.getDriverItem())) {
-                return config;
-            }
-        }
-        return null;
-    }
-
-    //获取必要槽位列表
-    public Set<ResourceLocation> getRequiredSlots() {
-        return Collections.unmodifiableSet(requiredSlots);
-    }
-
-    //获取槽位定义
-    public SlotDefinition getSlotDefinition(ResourceLocation slotId) {
-        return slotDefinitions.get(slotId);
-    }
-
-    //获取所有槽位定义的不可修改视图
-    public Map<ResourceLocation, SlotDefinition> getSlotDefinitions() {
-        return Collections.unmodifiableMap(slotDefinitions);
-    }
-
-    // 添加形态获取方法
-    public FormConfig getForms(ResourceLocation formId) {
-        return forms.get(formId);
-    }
-
-    public ResourceLocation getBaseFormId() {
-        return baseFormId;
-    }
-
-    private boolean isBeltEmpty(Map<ResourceLocation, ItemStack> beltItems) {
-        if (beltItems.isEmpty()) return true;
-        for (ItemStack stack : beltItems.values()) {
-            if (!stack.isEmpty()) return false;
-        }
-        return true;
-    }
-
-    public boolean hasAuxDriverEquipped(Player player) {
-        ItemStack auxStack = player.getItemBySlot(auxDriverSlot);
-        return !auxStack.isEmpty() && auxStack.is(auxDriverItem);
-    }
-
-    public SlotDefinition getAuxSlotDefinition(ResourceLocation slotId) {
-        return auxSlotDefinitions.get(slotId);
-    }
-
-    // 获取所有辅助驱动器槽位
-    public Map<ResourceLocation, SlotDefinition> getAuxSlotDefinitions() {
-        return Collections.unmodifiableMap(auxSlotDefinitions);
     }
 
     //====================Setter方法====================
@@ -277,5 +194,98 @@ public class RiderConfig {
 
         // 处理动态形态
         return DynamicFormManager.getDynamicForm(formId);
+    }
+
+    public RiderConfig setCommonArmor(EquipmentSlot slot, Item item) {
+        commonArmorMap.put(slot, item);
+        return this;
+    }
+
+    //====================Getter方法====================
+
+    //获取骑士Id
+    public ResourceLocation getRiderId() {
+        return riderId;
+    }
+
+    //获取驱动器物品
+    public Item getDriverItem() {
+        return driverItem;
+    }
+
+    public Item getAuxDriverItem() {
+        return auxDriverItem;
+    }
+
+    //获取驱动器位置
+    public EquipmentSlot getDriverSlot() {
+        return driverSlot;
+    }
+
+    //获取必须物品
+    public @Nullable Item getTriggerItem() {
+        return triggerItem;
+    }
+
+    //通过玩家装备查找激活的驱动器配置
+    public static RiderConfig findActiveDriverConfig(Player player) {
+        for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
+            // 精确匹配驱动器槽位和物品
+            ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
+            if (driverStack.is(config.getDriverItem())) {
+                return config;
+            }
+        }
+        return null;
+    }
+
+    //获取必要槽位列表
+    public Set<ResourceLocation> getRequiredSlots() {
+        return Collections.unmodifiableSet(requiredSlots);
+    }
+
+    //获取槽位定义
+    public SlotDefinition getSlotDefinition(ResourceLocation slotId) {
+        return slotDefinitions.get(slotId);
+    }
+
+    //获取所有槽位定义的不可修改视图
+    public Map<ResourceLocation, SlotDefinition> getSlotDefinitions() {
+        return Collections.unmodifiableMap(slotDefinitions);
+    }
+
+    // 添加形态获取方法
+    public FormConfig getForms(ResourceLocation formId) {
+        return forms.get(formId);
+    }
+
+    public ResourceLocation getBaseFormId() {
+        return baseFormId;
+    }
+
+    private boolean isBeltEmpty(Map<ResourceLocation, ItemStack> beltItems) {
+        if (beltItems.isEmpty()) return true;
+        for (ItemStack stack : beltItems.values()) {
+            if (!stack.isEmpty()) return false;
+        }
+        return true;
+    }
+
+    public boolean hasAuxDriverEquipped(Player player) {
+        ItemStack auxStack = player.getItemBySlot(auxDriverSlot);
+        return !auxStack.isEmpty() && auxStack.is(auxDriverItem);
+    }
+
+    public SlotDefinition getAuxSlotDefinition(ResourceLocation slotId) {
+        return auxSlotDefinitions.get(slotId);
+    }
+
+    // 获取所有辅助驱动器槽位
+    public Map<ResourceLocation, SlotDefinition> getAuxSlotDefinitions() {
+        return Collections.unmodifiableMap(auxSlotDefinitions);
+    }
+
+    public Map<EquipmentSlot, Item> getCommonArmorMap() {
+        return Collections.unmodifiableMap(commonArmorMap);
     }
 }

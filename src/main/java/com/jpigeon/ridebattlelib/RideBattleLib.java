@@ -45,15 +45,14 @@ public class RideBattleLib {
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
         RiderAttachments.ATTACHMENTS.register(modEventBus);
 
-        ExampleRiders.init();
-        ExampleDynamicForm.init();
         modEventBus.addListener(this::addCreative);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("HELLO FROM COMMON SETUP");
-
+        // ExampleRiders.init();
+        // ExampleDynamicForm.init();
 
         event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {
             if (config.getDriverItem() == null) {

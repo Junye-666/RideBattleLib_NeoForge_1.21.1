@@ -1,26 +1,31 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
+import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class DynamicFormConfig extends FormConfig {
     private final Map<ResourceLocation, ItemStack> beltSnapshot;
     private boolean shouldPause = false; // 新增字段
 
-    public DynamicFormConfig(ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems) {
+    public DynamicFormConfig(ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems, RiderConfig config) {
         super(formId);
         this.beltSnapshot = new HashMap<>(beltItems);
-        configureFromItems();
+        configureFromItems(config);
     }
 
-    private void configureFromItems() {
+    private void configureFromItems(RiderConfig config) {
         int slotIndex = 0;
         EquipmentSlot[] armorSlots = {
                 EquipmentSlot.HEAD,
@@ -28,6 +33,7 @@ public class DynamicFormConfig extends FormConfig {
                 EquipmentSlot.LEGS,
                 EquipmentSlot.FEET
         };
+        Set<EquipmentSlot> usedSlots = new HashSet<>();
 
         for (Map.Entry<ResourceLocation, ItemStack> entry : beltSnapshot.entrySet()) {
             if (slotIndex >= armorSlots.length) break;
@@ -35,9 +41,10 @@ public class DynamicFormConfig extends FormConfig {
             ItemStack stack = entry.getValue();
             if (!stack.isEmpty()) {
                 Item item = stack.getItem();
+                EquipmentSlot slot = armorSlots[slotIndex++];
+                usedSlots.add(slot);
 
                 // 设置盔甲映射
-                EquipmentSlot slot = armorSlots[slotIndex++];
                 switch (slot) {
                     case HEAD -> setHelmet(DynamicArmorRegistry.getArmorForItem(item));
                     case CHEST -> setChestplate(DynamicArmorRegistry.getArmorForItem(item));
@@ -45,10 +52,35 @@ public class DynamicFormConfig extends FormConfig {
                     case FEET -> setBoots(DynamicArmorRegistry.getArmorForItem(item));
                 }
 
-                // 添加效果 - 使用 Holder
                 for (Holder<MobEffect> holder : DynamicEffectRegistry.getEffectsForItem(item)) {
-                    // 直接使用 Holder 添加效果
                     addEffect(holder, -1, 0, true);
+                }
+            }
+        }
+
+        for (EquipmentSlot slot : armorSlots) {
+            if (!usedSlots.contains(slot)) {
+                Item commonArmor = config.getCommonArmorMap().get(slot);
+                if (commonArmor != null && commonArmor != Items.AIR) {
+                    switch (slot) {
+                        case HEAD -> setHelmet(commonArmor);
+                        case CHEST -> setChestplate(commonArmor);
+                        case LEGS -> setLeggings(commonArmor);
+                        case FEET -> setBoots(commonArmor);
+                    }
+                    RideBattleLib.LOGGER.debug("为槽位 {} 设置底衣: {}", slot, commonArmor);
+                }
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, ItemStack> entry : beltSnapshot.entrySet()) {
+            ItemStack stack = entry.getValue();
+            if (!stack.isEmpty()) {
+                Item item = stack.getItem();
+
+                for (ItemStack granted : DynamicGrantedItem.getGrantedItemsForItem(item)) {
+                    super.addGrantedItem(granted.copy());
+                    RideBattleLib.LOGGER.debug("添加GrantedItem: {} -> {}", item, granted);
                 }
             }
         }

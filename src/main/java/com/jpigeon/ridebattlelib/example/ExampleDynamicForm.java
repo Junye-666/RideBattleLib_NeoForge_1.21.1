@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.example;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicArmorRegistry;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicEffectRegistry;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicGrantedItem;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
@@ -11,6 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.List;
@@ -41,7 +43,8 @@ public class ExampleDynamicForm {
                         BETA_SLOT_2,
                         List.of(Items.REDSTONE, Items.GLOWSTONE_DUST),
                         true,
-                        false);
+                        false)
+                .setCommonArmor(EquipmentSlot.FEET, Items.LEATHER_BOOTS);
 
         FormConfig baseForm = new FormConfig(BETA_BASE_FORM)
                 .setTriggerType(TriggerType.KEY)
@@ -72,10 +75,15 @@ public class ExampleDynamicForm {
         DynamicArmorRegistry.registerItemArmor(Items.DIAMOND, Items.DIAMOND_HELMET);
         DynamicEffectRegistry.registerItemEffects(Items.DIAMOND, MobEffects.JUMP);
         DynamicEffectRegistry.registerItemEffects(Items.DIAMOND, MobEffects.ABSORPTION);
+        DynamicGrantedItem.registerItemGrantedItems(
+                Items.DIAMOND,
+                new ItemStack(Items.DIAMOND_AXE)
+        );
 
         // 绿宝石 -> 龟头 + 抗性效果
         DynamicArmorRegistry.registerItemArmor(Items.EMERALD, Items.TURTLE_HELMET);
         DynamicEffectRegistry.registerItemEffects(Items.EMERALD, MobEffects.DAMAGE_RESISTANCE);
+        DynamicGrantedItem.registerItemGrantedItems(Items.EMERALD, new ItemStack(Items.GOLDEN_CARROT));
 
         // 红石 -> 铁胸甲 + 伤害提升
         DynamicArmorRegistry.registerItemArmor(Items.REDSTONE, Items.IRON_CHESTPLATE);

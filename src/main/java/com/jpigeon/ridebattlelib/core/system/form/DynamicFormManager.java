@@ -50,7 +50,7 @@ public class DynamicFormManager {
         }
 
         // 3. 创建新形态
-        FormConfig form = new DynamicFormConfig(formId, beltItems);
+        FormConfig form = new DynamicFormConfig(formId, beltItems, config);
         FormConfig baseForm = config.getForms(config.getBaseFormId());
         if (baseForm != null) {
             form.setTriggerType(baseForm.getTriggerType());

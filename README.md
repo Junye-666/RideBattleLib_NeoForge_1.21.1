@@ -1,4 +1,4 @@
-# RideBattleLib - 让MC变身假面骑士！
+# RideBattleLib - 在MC中变身假面骑士！
 "Cyclone! Joker! さあ、お前の罪を数えろ！"
 现在，在Minecraft中喊出你的变身台词吧！
 

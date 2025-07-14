@@ -19,7 +19,7 @@ public class RiderData {
     private HenshinState henshinState;
     private @Nullable ResourceLocation pendingFormId;
     private long penaltyCooldownEnd;
-    private int currentSkillIndex = 0; // 当前选中的技能索引
+    private int currentSkillIndex; // 当前选中的技能索引
 
     public RiderData(
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainBeltItems,

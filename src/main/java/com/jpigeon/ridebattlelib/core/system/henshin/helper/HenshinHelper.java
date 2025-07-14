@@ -63,11 +63,11 @@ public final class HenshinHelper implements IHenshinHelper {
             DynamicHenshinManager.applyDynamicArmor(player, (DynamicFormConfig) formConfig);
         } else {
             // 普通形态处理
-            ARMOR.equipArmor(player, formConfig, beltItems);
+            ARMOR.equipArmor(player, formConfig);
         }
 
         // 应用属性和效果
-        EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig, beltItems);
+        EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig );
 
         // 设置为已变身状态
         setTransformed(player, config, formConfig.getFormId(), originalGear, beltItems);
@@ -91,7 +91,7 @@ public final class HenshinHelper implements IHenshinHelper {
         }
         FormConfig oldForm = RiderRegistry.getForm(oldFormId);
         if (oldForm == null) {
-            oldForm = DynamicFormManager.getDynamicForm(oldFormId); // 添加动态形态支持
+            DynamicFormManager.getDynamicForm(oldFormId);
         }
 
         FormConfig newForm = RiderRegistry.getForm(newFormId);
@@ -104,13 +104,13 @@ public final class HenshinHelper implements IHenshinHelper {
             if (newForm instanceof DynamicFormConfig) {
                 DynamicHenshinManager.applyDynamicArmor(player, (DynamicFormConfig) newForm); // 应用动态盔甲
             } else {
-                ARMOR.equipArmor(player, newForm, currentBelt); // 普通盔甲
+                ARMOR.equipArmor(player, newForm); // 普通盔甲
             }
             // 移除旧属性, 效果和物品
-            EFFECT_ATTRIBUTE.removeAttributesAndEffects(player, oldFormId, data.beltSnapshot());
+            EFFECT_ATTRIBUTE.removeAttributesAndEffects(player, oldFormId );
             ITEM.removeGrantedItems(player, oldFormId);
             // 应用新属性, 效果和物品
-            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, newForm, currentBelt);
+            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, newForm );
             ITEM.grantFormItems(player, newFormId);
             // 更新数据
             setTransformed(player, data.config(), newFormId,
@@ -139,10 +139,10 @@ public final class HenshinHelper implements IHenshinHelper {
             ));
 
             // 重新装备盔甲
-            ARMOR.equipArmor(player, formConfig, attachmentData.beltSnapshot());
+            ARMOR.equipArmor(player, formConfig);
 
             // 重新应用属性
-            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig, attachmentData.beltSnapshot());
+            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig );
 
             // 更新变身状态
             setTransformed(player, config, attachmentData.formId(),

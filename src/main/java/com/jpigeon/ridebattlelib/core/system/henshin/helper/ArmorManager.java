@@ -5,7 +5,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -20,7 +19,7 @@ import java.util.Map;
 public class ArmorManager {
     public static final ArmorManager INSTANCE = new ArmorManager();
     // 装备
-    public void equipArmor(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
+    public void equipArmor(Player player, FormConfig form) {
         // 先设置通用装备（固定槽位）
         if (form.getHelmet() != Items.AIR) {
             player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(form.getHelmet()));

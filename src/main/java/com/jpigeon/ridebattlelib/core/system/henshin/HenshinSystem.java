@@ -142,7 +142,7 @@ public class HenshinSystem implements IHenshinSystem {
             boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
 
             // 清除效果
-            EffectAndAttributeManager.INSTANCE.removeAttributesAndEffects(player, data.formId(), data.beltSnapshot());
+            EffectAndAttributeManager.INSTANCE.removeAttributesAndEffects(player, data.formId() );
 
             // 恢复装备
             ArmorManager.INSTANCE.restoreOriginalGear(player, data);

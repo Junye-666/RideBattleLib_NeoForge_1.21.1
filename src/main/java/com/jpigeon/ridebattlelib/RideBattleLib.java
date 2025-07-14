@@ -8,7 +8,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.handler.KeyHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.handler.TriggerItemHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.example.ExampleBasic;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -63,7 +62,7 @@ public class RideBattleLib {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             LOGGER.info("请确保骑士初始化在ClientSetup中哦~");
-            ExampleBasic.init();
+            // ExampleBasic.init();
             // ExampleDynamicForm.init();
 
             event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {

@@ -135,6 +135,18 @@ public class RiderConfig {
             }
         }
 
+        // 检查辅助必需槽位
+        for (ResourceLocation slotId : auxRequiredSlots) {
+            SlotDefinition slot = getAuxSlotDefinition(slotId);
+            if (slot == null) continue;
+
+            ItemStack stack = beltItems.get(slotId);
+            if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
+                RideBattleLib.LOGGER.warn("辅助必需槽位 {} 为空", slotId);
+                return null; // 辅助必需槽位不能为空
+            }
+        }
+
         // 尝试匹配所有形态
         for (FormConfig formConfig : forms.values()) {
             boolean mainMatches = formConfig.matchesMainSlots(beltItems, config);

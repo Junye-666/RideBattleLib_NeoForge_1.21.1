@@ -18,7 +18,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /*
@@ -90,9 +89,6 @@ public class FormConfig {
 
     public FormConfig addAttribute(ResourceLocation attributeId, double amount,
                                    AttributeModifier.Operation operation) {
-        UUID uuid = UUID.nameUUIDFromBytes(
-                (formId + attributeId.toString()).getBytes(StandardCharsets.UTF_8)
-        );
         attributes.add(new AttributeModifier(attributeId, amount, operation));
         attributeIds.add(attributeId);
         return this;

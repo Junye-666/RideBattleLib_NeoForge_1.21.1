@@ -17,15 +17,12 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-
-import java.util.Map;
 
 public class EffectAndAttributeManager {
     public static final EffectAndAttributeManager INSTANCE = new EffectAndAttributeManager();
     // 应用属性和效果
-    public void applyAttributesAndEffects(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
-        applyAttributes(player, form, beltItems);
+    public void applyAttributesAndEffects(Player player, FormConfig form) {
+        applyAttributes(player, form );
         applyEffects(player, form);
         // 确保动态形态的效果被应用
         if (form instanceof DynamicFormConfig) {
@@ -39,8 +36,8 @@ public class EffectAndAttributeManager {
     }
 
     // 移除属性和效果
-    public void removeAttributesAndEffects(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems) {
-        removeAttributes(player, formId, beltItems);
+    public void removeAttributesAndEffects(Player player, ResourceLocation formId) {
+        removeAttributes(player, formId );
         removeEffects(player, formId);
     }
 
@@ -68,7 +65,7 @@ public class EffectAndAttributeManager {
     }
 
     // 属性应用
-    private void applyAttributes(Player player, FormConfig formConfig, Map<ResourceLocation, ItemStack> beltItems) {
+    private void applyAttributes(Player player, FormConfig formConfig) {
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
         // 移除可能存在的旧属性
@@ -97,7 +94,7 @@ public class EffectAndAttributeManager {
     }
 
     // 属性移除
-    private void removeAttributes(Player player, ResourceLocation formId, Map<ResourceLocation, ItemStack> beltItems) {
+    private void removeAttributes(Player player, ResourceLocation formId) {
 
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) return;

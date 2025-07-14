@@ -58,6 +58,23 @@ public class FormConfig {
         return this;
     }
 
+    //单独设置
+    public void setHelmet(Item helmet) {
+        this.helmet = helmet;
+    }
+
+    public void setChestplate(Item chestplate) {
+        this.chestplate = chestplate;
+    }
+
+    public void setLeggings(@Nullable Item leggings) {
+        this.leggings = leggings;
+    }
+
+    public void setBoots(Item boots) {
+        this.boots = boots;
+    }
+
     public void setAllowsEmptyBelt(boolean allow) {
         this.allowsEmptyBelt = allow;
     }
@@ -109,15 +126,28 @@ public class FormConfig {
     // 匹配验证
     public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> beltItems, RiderConfig config) {
         for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
+
+            if (requiredItems.isEmpty() && !allowsEmptyBelt) {
+                // 检查腰带是否为空（跳过辅助槽位）
+                for (ResourceLocation slotId : config.getSlotDefinitions().keySet()) {
+                    ItemStack stack = beltItems.get(slotId);
+                    if (stack != null && !stack.isEmpty()) {
+                        return true; // 非空即匹配
+                    }
+                }
+                return false; // 所有主槽位都为空
+            }
+
             ResourceLocation slotId = entry.getKey();
             Item requiredItem = entry.getValue();
-            ItemStack stack = beltItems.get(slotId);
 
             SlotDefinition slotDef = config.getSlotDefinition(slotId);
             if (slotDef == null) {
                 RideBattleLib.LOGGER.warn("未找到槽位定义: {}", slotId);
                 return false;
             }
+
+            ItemStack stack = beltItems.get(slotId);
 
             // 必需槽位不能为空
             if (slotDef.isRequired() && (stack == null || stack.isEmpty())) {

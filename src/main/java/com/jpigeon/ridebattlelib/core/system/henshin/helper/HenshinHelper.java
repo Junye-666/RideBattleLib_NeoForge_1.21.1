@@ -8,6 +8,8 @@ import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentDat
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
@@ -37,22 +39,39 @@ public final class HenshinHelper implements IHenshinHelper {
     public void performHenshin(Player player, RiderConfig config, ResourceLocation formId) {
         if (config == null || formId == null) return;
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+
         // 保存原始装备
         Map<EquipmentSlot, ItemStack> originalGear = ARMOR.saveOriginalGear(player, config);
-        // 获取指定形态的配置
+
+        // 获取形态配置（支持动态形态）
         FormConfig formConfig = RiderRegistry.getForm(formId);
+        if (formConfig == null) {
+            formConfig = DynamicFormManager.getDynamicForm(formId);
+        }
+
         if (formConfig == null) {
             RideBattleLib.LOGGER.warn("尝试变身为未知形态: {}", formId);
             return;
         }
+
         // 给予形态专属物品
         ITEM.grantFormItems(player, formId);
-        // 穿戴盔甲
-        ARMOR.equipArmor(player, formConfig, beltItems);
+
+        // 动态形态特殊处理
+        if (formConfig instanceof DynamicFormConfig) {
+            // 应用动态盔甲
+            DynamicHenshinManager.applyDynamicArmor(player, (DynamicFormConfig) formConfig);
+        } else {
+            // 普通形态处理
+            ARMOR.equipArmor(player, formConfig, beltItems);
+        }
+
         // 应用属性和效果
         EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig, beltItems);
+
         // 设置为已变身状态
         setTransformed(player, config, formConfig.getFormId(), originalGear, beltItems);
+
         // 触发后置事件
         HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId);
         NeoForge.EVENT_BUS.post(postHenshin);
@@ -71,14 +90,22 @@ public final class HenshinHelper implements IHenshinHelper {
             NeoForge.EVENT_BUS.post(preFormSwitch);
         }
         FormConfig oldForm = RiderRegistry.getForm(oldFormId);
-        // 使用旧形态的腰带快照移除效果
-        if (oldForm == null) return;
+        if (oldForm == null) {
+            oldForm = DynamicFormManager.getDynamicForm(oldFormId); // 添加动态形态支持
+        }
+
         FormConfig newForm = RiderRegistry.getForm(newFormId);
+        if (newForm == null) {
+            newForm = DynamicFormManager.getDynamicForm(newFormId); // 添加动态形态支持
+        }
         Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
         boolean needsUpdate = !newFormId.equals(oldFormId);
         if (newForm != null && needsUpdate) {
-            // 装备新盔甲
-            ARMOR.equipArmor(player, newForm, currentBelt);
+            if (newForm instanceof DynamicFormConfig) {
+                DynamicHenshinManager.applyDynamicArmor(player, (DynamicFormConfig) newForm); // 应用动态盔甲
+            } else {
+                ARMOR.equipArmor(player, newForm, currentBelt); // 普通盔甲
+            }
             // 移除旧属性, 效果和物品
             EFFECT_ATTRIBUTE.removeAttributesAndEffects(player, oldFormId, data.beltSnapshot());
             ITEM.removeGrantedItems(player, oldFormId);

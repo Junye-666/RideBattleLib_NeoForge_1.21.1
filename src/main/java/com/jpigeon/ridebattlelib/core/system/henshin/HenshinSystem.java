@@ -9,6 +9,7 @@ import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentDat
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.event.DriverActivationEvent;
 import com.jpigeon.ridebattlelib.core.system.event.UnhenshinEvent;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
@@ -101,6 +102,23 @@ public class HenshinSystem implements IHenshinSystem {
 
         ResourceLocation formId = config.matchForm(player, beltItems);
         if (!canHenshin(player) || formId == null) return false;
+
+        FormConfig formConfig = RiderRegistry.getForm(formId);
+
+        // 如果是动态形态（不在预设注册表中）
+        if (formConfig == null) {
+            RideBattleLib.LOGGER.debug("形态 {} 未注册，尝试作为动态形态处理", formId);
+            formConfig = DynamicFormManager.getOrCreateDynamicForm(
+                    player, config, beltItems
+            );
+
+            // 确保formId一致性
+            if (!formConfig.getFormId().equals(formId)) {
+                RideBattleLib.LOGGER.warn("动态形态ID不一致: 预期={}, 实际={}",
+                        formId, formConfig.getFormId());
+                formId = formConfig.getFormId();
+            }
+        }
 
         // 执行变身
         HenshinHelper.INSTANCE.performHenshin(player, config, formId);

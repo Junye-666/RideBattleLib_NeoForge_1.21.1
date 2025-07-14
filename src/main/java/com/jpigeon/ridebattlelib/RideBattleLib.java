@@ -8,6 +8,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.handler.HenshinHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.handler.TriggerItemHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.example.ExampleDynamicForm;
 import com.jpigeon.ridebattlelib.example.ExampleRiders;
 import org.slf4j.Logger;
 
@@ -45,6 +46,7 @@ public class RideBattleLib {
         RiderAttachments.ATTACHMENTS.register(modEventBus);
 
         ExampleRiders.init();
+        ExampleDynamicForm.init();
         modEventBus.addListener(this::addCreative);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

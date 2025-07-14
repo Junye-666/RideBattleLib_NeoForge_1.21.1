@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -243,12 +244,23 @@ public class RiderConfig {
         }
 
         // 回退到基础形态
-        if (baseFormId != null && forms.containsKey(baseFormId) &&
-                forms.get(baseFormId).allowsEmptyBelt()) {
-            RideBattleLib.LOGGER.debug("未找到匹配形态，使用允许空腰带的基础形态: {}", baseFormId);
-            return baseFormId;
+        if (baseFormId != null && forms.containsKey(baseFormId) && forms.get(baseFormId).allowsEmptyBelt()) {
+            // 仅当腰带为空时才使用基础形态
+            if (isBeltEmpty(beltItems)) {
+                return baseFormId;
+            }
         }
 
+        RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
+        // 强制尝试动态形态生成
+        try {
+            FormConfig dynamicForm = DynamicFormManager.getOrCreateDynamicForm(
+                    player, this, beltItems
+            );
+            return dynamicForm.getFormId();
+        } catch (Exception e) {
+            RideBattleLib.LOGGER.error("动态形态创建失败", e);
+        }
         RideBattleLib.LOGGER.warn("未找到匹配形态，且没有允许空腰带的基础形态");
         return null;
     }
@@ -257,6 +269,13 @@ public class RiderConfig {
     public FormConfig getActiveFormConfig(Player player) {
         Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
         ResourceLocation formId = matchForm(player, beltItems);
-        return forms.get(formId);
+
+        // 优先检查预设形态
+        if (forms.containsKey(formId)) {
+            return forms.get(formId);
+        }
+
+        // 处理动态形态
+        return DynamicFormManager.getDynamicForm(formId);
     }
 }

@@ -1,6 +1,8 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import net.minecraft.core.Holder;
@@ -25,6 +27,15 @@ public class EffectAndAttributeManager {
     public void applyAttributesAndEffects(Player player, FormConfig form, Map<ResourceLocation, ItemStack> beltItems) {
         applyAttributes(player, form, beltItems);
         applyEffects(player, form);
+        // 确保动态形态的效果被应用
+        if (form instanceof DynamicFormConfig) {
+            for (MobEffectInstance effect : form.getEffects()) {
+                // 避免重复添加
+                if (!player.hasEffect(effect.getEffect())) {
+                    player.addEffect(new MobEffectInstance(effect));
+                }
+            }
+        }
     }
 
     // 移除属性和效果
@@ -43,6 +54,12 @@ public class EffectAndAttributeManager {
     // 效果移除
     private void removeEffects(Player player, ResourceLocation formId) {
         FormConfig formConfig = RiderRegistry.getForm(formId);
+
+        // 添加动态形态支持
+        if (formConfig == null) {
+            formConfig = DynamicFormManager.getDynamicForm(formId);
+        }
+
         if (formConfig != null) {
             for (MobEffectInstance effect : formConfig.getEffects()) {
                 player.removeEffect(effect.getEffect());

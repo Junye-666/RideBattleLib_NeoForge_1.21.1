@@ -150,16 +150,23 @@ private static void registerDynamicMappings() { // 一个动态映射注册方�
 解除变身（手动/吃瘪强制解除）
 
 ## ⚙️ 进阶功能
-暂停变身流程
+### 变身流程控制
 ```java
 // 在FormConfig中设置
 anyForm.setShouldPause(true); // 这样在变身时候会进入缓冲窗口
-// 有啥变身动画都往这塞
-
-// 在动画完成后继续变身
-DriverActionManager.INSTANCE.completeTransformation(player); // 反正调用这个方法就好了
 ```
-形态覆盖事件
+然后通过监听HenshinEvent
+```java
+@SubscribeEvent
+public static void onHenshin(HenshinEvent.Pre event) {
+    // 有啥变身动画, 特效, 音效, 特殊逻辑啥的都往这塞
+
+    // 在动画完成后继续变身
+    DriverActionManager.INSTANCE.completeTransformation(player); // 反正调用这个方法就好了
+}
+
+```
+### 形态覆盖事件
 ```java
 // 强制锁定特定形态
 @SubscribeEvent
@@ -173,8 +180,67 @@ if (
     }
 }
 ```
+### 技能接口
+
+简易, 但灵活的技能系统
+```java
+// 1. 创建技能ID
+ResourceLocation FIRE_ATTACK = new ResourceLocation("yourmodid", "fire_attack");
+ResourceLocation ICE_BREATH = new ResourceLocation("yourmodid", "ice_breath");
+
+// 2. 注册技能显示名称（支持多语言翻译）
+SkillSystem.registerSkillName(
+    FIRE_ATTACK,
+    Component.translatable("skill.yourmodid.fire_attack") // "火焰攻击"
+);
+
+SkillSystem.registerSkillName(
+    ICE_BREATH,
+    Component.translatable("skill.yourmodid.ice_breath") // "寒冰吐息"
+);
+
+// 3. 将技能添加到形态配置
+FormConfig dragonForm = new FormConfig(DRAGON_FORM_ID)
+    .addSkill(FIRE_ATTACK)
+    .addSkill(ICE_BREATH);
+```
+
+然后通过事件监听实现技能逻辑
+
+```java
+// 监听技能事件
+@SubscribeEvent
+public static void onSkillTrigger(SkillEvent.Pre event) {
+ResourceLocation skillId = event.getSkillId();
+
+if (skillId.equals(FIRE_ATTACK)) {
+        handleFireAttack(event.getPlayer());
+} 
+    else if (skillId.equals(ICE_BREATH)) {
+        handleIceBreath(event.getPlayer());
+    }
+}
+    
+private static void handleFireAttack(Player player) {
+    // 发射火球
+    player.level().addFreshEntity(new Fireball(player.level(), player, 0, 0, 0));
+    player.playSound(SoundEvents.BLAZE_SHOOT, 1.0f, 1.0f);
+}
+    
+private static void handleIceBreath(Player player) {
+    // 冻结前方区域
+    AABB area = new AABB(player.position())
+        .inflate(5, 2, 5)
+        .move(player.getLookAngle().scale(3));
+        
+    // 冻结区域内的水和实体
+    // ...
+    player.playSound(SoundEvents.GLASS_BREAK, 1.0f, 1.0f);
+    }
+
+```
 ## 🧪 示例
-我们提供了两个完整示例：
+我们提供了两个完整示例(不含技能方面)：
 
 ExampleBasic：基础骑士变身系统
 

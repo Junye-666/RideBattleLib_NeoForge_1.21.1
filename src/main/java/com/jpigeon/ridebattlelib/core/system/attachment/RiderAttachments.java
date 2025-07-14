@@ -21,7 +21,9 @@ public class RiderAttachments {
                                     null,
                                     HenshinState.IDLE,
                                     null,
-                                    0))
+                                    0,
+                                    0
+                            ))
                             .serialize(RiderData.CODEC)
                             .build());
 }

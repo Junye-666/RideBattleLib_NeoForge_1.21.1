@@ -166,7 +166,8 @@ public final class HenshinHelper implements IHenshinHelper {
                 transformedData,
                 oldData.getHenshinState(),
                 oldData.getPendingFormId(),
-                oldData.getPenaltyCooldownEnd()
+                oldData.getPenaltyCooldownEnd(),
+                oldData.getCurrentSkillIndex()
         );
 
         player.setData(RiderAttachments.RIDER_DATA, newData);
@@ -182,7 +183,8 @@ public final class HenshinHelper implements IHenshinHelper {
                 null,
                 oldData.getHenshinState(),
                 oldData.getPendingFormId(),
-                oldData.getPenaltyCooldownEnd()
+                oldData.getPenaltyCooldownEnd(),
+                oldData.getCurrentSkillIndex()
         );
 
         player.setData(RiderAttachments.RIDER_DATA, newData);

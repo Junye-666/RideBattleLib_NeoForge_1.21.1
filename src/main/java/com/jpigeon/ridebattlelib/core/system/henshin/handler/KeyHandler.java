@@ -72,6 +72,7 @@ public class KeyHandler {
 
         ResourceLocation skillId = form.getCurrentSkillId(player);
         if (skillId != null) {
+            // 只触发事件，不执行具体逻辑
             SkillSystem.triggerSkill(player, data.formId(), skillId);
         }
     }

@@ -230,7 +230,8 @@ public class HenshinSystem implements IHenshinSystem {
                 oldData.getTransformedData(),  // 保留现有变身数据
                 state,                         // 新状态
                 formId,                        // 新待处理形态
-                oldData.getPenaltyCooldownEnd()
+                oldData.getPenaltyCooldownEnd(),
+                0
         );
 
         // 保存更新后的数据

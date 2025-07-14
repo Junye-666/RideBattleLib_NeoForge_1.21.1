@@ -291,8 +291,6 @@ public class FormConfig {
     public ResourceLocation getCurrentSkillId(Player player) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         int index = data.getCurrentSkillIndex();
-
-        if (skillIds.isEmpty()) return null;
-        return skillIds.get(index % skillIds.size());
+        return skillIds.isEmpty() ? null : skillIds.get(index % skillIds.size());
     }
 }

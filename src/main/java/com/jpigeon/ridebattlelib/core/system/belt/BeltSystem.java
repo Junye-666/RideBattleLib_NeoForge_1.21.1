@@ -302,7 +302,8 @@ public class BeltSystem implements IBeltSystem {
                         oldData.getTransformedData(),
                         oldData.getHenshinState(),
                         oldData.getPendingFormId(),
-                        oldData.getPenaltyCooldownEnd()
+                        oldData.getPenaltyCooldownEnd(),
+                        oldData.getCurrentSkillIndex()
                 )
         );
     }
@@ -388,7 +389,8 @@ public class BeltSystem implements IBeltSystem {
                         oldData.getTransformedData(),
                         oldData.getHenshinState(),
                         oldData.getPendingFormId(),
-                        oldData.getPenaltyCooldownEnd()
+                        oldData.getPenaltyCooldownEnd(),
+                        oldData.getCurrentSkillIndex()
                 )
         );
     }

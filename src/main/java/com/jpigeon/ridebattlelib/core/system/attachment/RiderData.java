@@ -27,7 +27,8 @@ public class RiderData {
             @Nullable TransformedAttachmentData transformedData,
             HenshinState henshinState,
             @Nullable ResourceLocation pendingFormId,
-            long penaltyCooldownEnd
+            long penaltyCooldownEnd,
+            int currentSkillIndex
     ) {
         this.mainBeltItems = mainBeltItems != null ?
                 new HashMap<>(mainBeltItems) : new HashMap<>();
@@ -37,7 +38,7 @@ public class RiderData {
         this.henshinState = henshinState;
         this.pendingFormId = pendingFormId;
         this.penaltyCooldownEnd = penaltyCooldownEnd;
-        this.currentSkillIndex = 0;
+        this.currentSkillIndex = currentSkillIndex;
     }
 
     //====================Setter方法====================
@@ -150,7 +151,8 @@ public class RiderData {
                             transformedDataOpt.orElse(null),
                             henshinState,
                             pendingFormIdOpt.orElse(null),
-                            penaltyCooldownEnd
+                            penaltyCooldownEnd,
+                            currentSkillIndex
                     )
             )
     );

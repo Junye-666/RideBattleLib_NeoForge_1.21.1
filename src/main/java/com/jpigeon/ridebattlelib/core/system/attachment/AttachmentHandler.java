@@ -71,7 +71,8 @@ public class AttachmentHandler {
                 originalData.getTransformedData(),
                 originalData.getHenshinState(),
                 originalData.getPendingFormId(),
-                0
+                0,
+                originalData.getCurrentSkillIndex()
         ));
 
         RiderData newData = newPlayer.getData(RiderAttachments.RIDER_DATA);

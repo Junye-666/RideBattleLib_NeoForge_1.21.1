@@ -193,22 +193,23 @@ ExampleDynamicForm.init();
 
 编译并享受变身吧！
 
-🌟 为什么选择RideBattleLib？
+🌟 为什么选择RideBattleLib
+
 ✅ 专门为假面骑士玩法设计
 
-✅ 完整的变身生命周期管理
+✅ 完整的变身管理
 
-✅ 动态形态生成黑科技
+✅ 动态形态生成黑科技(误
 
 ✅ 丰富的扩展事件
 
-✅ 吃瘪系统原汁原味
+✅ 吃瘪系统(bushi
 
 ✅ 持续更新维护
 
 "变身！" - 现在就在你的模组中实现这句经典台词吧！
 
-RideBattleLib © 2023 JPigeon
+RideBattleLib © 2025 JPigeon
 在MIT许可证下开源 - 自由地创造你的骑士世界!
 
 注: 在DeepSeek帮助下写的README.md

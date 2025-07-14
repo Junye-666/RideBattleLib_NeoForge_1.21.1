@@ -1,6 +1,5 @@
 package com.jpigeon.ridebattlelib.core.system.skill;
 
-import com.jpigeon.ridebattlelib.api.SkillHandler;
 import com.jpigeon.ridebattlelib.core.system.event.SkillEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;

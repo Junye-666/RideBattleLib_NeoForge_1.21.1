@@ -1,7 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.api.SkillHandler;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;

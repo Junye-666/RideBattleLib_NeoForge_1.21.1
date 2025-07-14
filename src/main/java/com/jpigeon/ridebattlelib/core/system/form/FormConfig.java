@@ -46,7 +46,6 @@ public class FormConfig {
     private final List<ItemStack> grantedItems = new ArrayList<>();
     private boolean allowsEmptyBelt = false;
     private boolean shouldPause = false;
-    private final Map<ResourceLocation, SkillHandler> skills = new HashMap<>();
     private final List<ResourceLocation> skillIds = new ArrayList<>();
 
     public FormConfig(ResourceLocation formId) {
@@ -277,10 +276,6 @@ public class FormConfig {
 
     public boolean hasAuxRequirements() {
         return !auxRequiredItems.isEmpty();
-    }
-
-    public Map<ResourceLocation, SkillHandler> getSkills() {
-        return Collections.unmodifiableMap(skills);
     }
 
     public List<ResourceLocation> getSkillIds() {

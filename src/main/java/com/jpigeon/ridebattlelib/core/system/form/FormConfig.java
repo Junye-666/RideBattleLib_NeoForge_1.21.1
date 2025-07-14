@@ -1,6 +1,9 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.SkillHandler;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
@@ -10,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -43,6 +47,8 @@ public class FormConfig {
     private final List<ItemStack> grantedItems = new ArrayList<>();
     private boolean allowsEmptyBelt = false;
     private boolean shouldPause = false;
+    private final Map<ResourceLocation, SkillHandler> skills = new HashMap<>();
+    private final List<ResourceLocation> skillIds = new ArrayList<>();
 
     public FormConfig(ResourceLocation formId) {
         this.formId = formId;
@@ -201,10 +207,13 @@ public class FormConfig {
         return true;
     }
 
-    //====================检查方法====================
-    public boolean hasAuxRequirements() {
-        return !auxRequiredItems.isEmpty();
+    public FormConfig addSkill(ResourceLocation skillId) {
+        if (!skillIds.contains(skillId)) {
+            skillIds.add(skillId);
+        }
+        return this;
     }
+
 
     //====================Getter方法====================
     public ResourceLocation getFormId() {
@@ -265,5 +274,25 @@ public class FormConfig {
 
     public boolean shouldPause() {
         return shouldPause;
+    }
+
+    public boolean hasAuxRequirements() {
+        return !auxRequiredItems.isEmpty();
+    }
+
+    public Map<ResourceLocation, SkillHandler> getSkills() {
+        return Collections.unmodifiableMap(skills);
+    }
+
+    public List<ResourceLocation> getSkillIds() {
+        return Collections.unmodifiableList(skillIds);
+    }
+
+    public ResourceLocation getCurrentSkillId(Player player) {
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
+        int index = data.getCurrentSkillIndex();
+
+        if (skillIds.isEmpty()) return null;
+        return skillIds.get(index % skillIds.size());
     }
 }

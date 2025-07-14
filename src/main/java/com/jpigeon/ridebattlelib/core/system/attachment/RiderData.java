@@ -19,6 +19,7 @@ public class RiderData {
     private HenshinState henshinState;
     private @Nullable ResourceLocation pendingFormId;
     private long penaltyCooldownEnd;
+    private int currentSkillIndex = 0; // 当前选中的技能索引
 
     public RiderData(
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainBeltItems,
@@ -36,6 +37,7 @@ public class RiderData {
         this.henshinState = henshinState;
         this.pendingFormId = pendingFormId;
         this.penaltyCooldownEnd = penaltyCooldownEnd;
+        this.currentSkillIndex = 0;
     }
 
     //====================Setter方法====================
@@ -67,6 +69,10 @@ public class RiderData {
 
     public void setPenaltyCooldownEnd(long endTime) {
         this.penaltyCooldownEnd = endTime;
+    }
+
+    public void setCurrentSkillIndex(int index) {
+        this.currentSkillIndex = index;
     }
 
     //====================Getter方法====================
@@ -101,6 +107,10 @@ public class RiderData {
         return System.currentTimeMillis() < penaltyCooldownEnd;
     }
 
+    public int getCurrentSkillIndex() {
+        return currentSkillIndex;
+    }
+
     //====================Codec====================
 
     public static final Codec<RiderData> CODEC = RecordCodecBuilder.create(instance ->
@@ -129,8 +139,11 @@ public class RiderData {
                             .forGetter(data -> Optional.ofNullable(data.pendingFormId)),
 
                     Codec.LONG.fieldOf("penaltyCooldownEnd")
-                            .forGetter(data -> data.penaltyCooldownEnd)
-            ).apply(instance, (riderBeltItems, auxBeltItems, transformedDataOpt, henshinState, pendingFormIdOpt, penaltyCooldownEnd) ->
+                            .forGetter(data -> data.penaltyCooldownEnd),
+
+                    Codec.INT.optionalFieldOf("currentSkillIndex", 0)
+                            .forGetter(RiderData::getCurrentSkillIndex)
+            ).apply(instance, (riderBeltItems, auxBeltItems, transformedDataOpt, henshinState, pendingFormIdOpt, penaltyCooldownEnd, currentSkillIndex) ->
                     new RiderData(
                             riderBeltItems != null ? riderBeltItems : new HashMap<>(),
                             auxBeltItems,

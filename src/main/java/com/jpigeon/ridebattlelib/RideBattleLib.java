@@ -4,7 +4,7 @@ import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
-import com.jpigeon.ridebattlelib.core.system.henshin.handler.HenshinHandler;
+import com.jpigeon.ridebattlelib.core.system.henshin.handler.KeyHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.handler.TriggerItemHandler;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
@@ -37,7 +37,7 @@ public class RideBattleLib {
         modEventBus.addListener(PacketHandler::register);
 
         NeoForge.EVENT_BUS.register(this);
-        NeoForge.EVENT_BUS.register(HenshinHandler.class);
+        NeoForge.EVENT_BUS.register(KeyHandler.class);
         NeoForge.EVENT_BUS.register(BeltHandler.class);
         NeoForge.EVENT_BUS.register(TriggerItemHandler.class);
         NeoForge.EVENT_BUS.register(AttachmentHandler.class);

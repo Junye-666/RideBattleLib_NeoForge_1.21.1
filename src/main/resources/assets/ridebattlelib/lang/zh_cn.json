@@ -1,6 +1,7 @@
 {
-  "category.ridebattlelib": "骑士大战Lib",
+  "category.ridebattlelib": "骑士战争",
   "key.ridebattlelib.unhenshin": "解除变身",
   "key.ridebattlelib.driver_activate": "驱动器按键",
-  "key.ridebattlelib.return_items": "返回驱动器物品"
+  "key.ridebattlelib.return_items": "返回驱动器物品",
+  "key.ridebattlelib.skill": "技能"
 }

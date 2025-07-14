@@ -20,6 +20,7 @@ public class ClientModEvents {
         event.register(KeyBindings.UNHENSHIN_KEY);
         event.register(KeyBindings.DRIVER_KEY);
         event.register(KeyBindings.RETURN_ITEMS_KEY);
+        event.register(KeyBindings.SKILL_KEY);
     }
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {

@@ -1,6 +1,7 @@
 {
-  "category.ridebattlelib": "Kamen Rider Lib",
+  "category.ridebattlelib": "RideBattle",
   "key.ridebattlelib.unhenshin": "UnHenshin",
   "key.ridebattlelib.driver_activate": "Activate Driver",
-  "key.ridebattlelib.return_items": "Return Driver Items"
+  "key.ridebattlelib.return_items": "Return Driver Items",
+  "key.ridebattlelib.skill": "Skill"
 }

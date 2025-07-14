@@ -23,4 +23,10 @@ public class KeyBindings {
             GLFW.GLFW_KEY_X,
             "category.ridebattlelib"
     );
+    public static final KeyMapping SKILL_KEY = new KeyMapping(
+            "key.ridebattlelib.skill",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_R,
+            "category.ridebattlelib"
+    );
 }

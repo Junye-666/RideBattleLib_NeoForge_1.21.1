@@ -17,7 +17,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 public class PacketHandler {
     public static void register(final RegisterPayloadHandlersEvent event) {
         event.registrar(RideBattleLib.MODID)
-                .versioned("0.9.5-dynamicBeta")
+                .versioned("0.9.6")
                 .playToServer(HenshinPacket.TYPE, HenshinPacket.STREAM_CODEC,
                         (payload, context) -> HenshinSystem.INSTANCE.henshin(context.player(), payload.riderId()))
                 .playToServer(UnhenshinPacket.TYPE, UnhenshinPacket.STREAM_CODEC,

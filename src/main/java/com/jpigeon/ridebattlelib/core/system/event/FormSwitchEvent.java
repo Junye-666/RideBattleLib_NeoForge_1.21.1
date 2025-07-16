@@ -31,9 +31,6 @@ public class FormSwitchEvent extends Event {
         }
 
         public void setCanceled(boolean canceled) {
-            if (!isCancelable()) {
-                throw new UnsupportedOperationException("Attempted to cancel a non-cancelable event");
-            }
             this.canceled = canceled;
         }
     }

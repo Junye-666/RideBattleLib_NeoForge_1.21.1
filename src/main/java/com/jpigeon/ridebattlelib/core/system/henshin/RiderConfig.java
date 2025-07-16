@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
+import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.resources.ResourceLocation;
@@ -11,6 +12,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -111,6 +113,20 @@ public class RiderConfig {
         RideBattleLib.LOGGER.debug("开始匹配形态，玩家: {}", player.getName().getString());
         RideBattleLib.LOGGER.debug("当前腰带内容: {}", beltItems);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return null;
+        FormOverrideEvent overrideEvent = new FormOverrideEvent(player, beltItems, null);
+        NeoForge.EVENT_BUS.post(overrideEvent);
+
+        if (overrideEvent.isCanceled()) {
+            RideBattleLib.LOGGER.debug("被FormOverrideEvent取消，跳过形态匹配");
+            return null;
+        }
+
+        ResourceLocation overrideForm = overrideEvent.getOverrideForm();
+        if (overrideForm != null) {
+            RideBattleLib.LOGGER.debug("形态被覆盖为: {}", overrideForm);
+            return overrideForm;
+        }
 
         if (isBeltEmpty(beltItems)) {
             if (baseFormId != null && forms.containsKey(baseFormId) &&

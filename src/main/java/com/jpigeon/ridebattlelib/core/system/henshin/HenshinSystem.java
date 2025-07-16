@@ -61,6 +61,8 @@ public class HenshinSystem implements IHenshinSystem {
 
         DriverActivationEvent driverEvent = new DriverActivationEvent(player, driverItem);
         NeoForge.EVENT_BUS.post(driverEvent);
+        if (driverEvent.isCanceled()) return;
+
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         data.setPendingFormId(formId);
         if (data.getHenshinState() != HenshinState.TRANSFORMING) {

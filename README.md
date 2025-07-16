@@ -255,6 +255,8 @@ ExampleDynamicForm.init();
 # 📦 安装与使用
 添加RideBattleLib到你的build.gradle
 
+快速启动:看看RiderManager这个管理层吧, 里面有方便快捷的方法
+
 创建你的骑士配置！
 
 编译并享受变身吧！

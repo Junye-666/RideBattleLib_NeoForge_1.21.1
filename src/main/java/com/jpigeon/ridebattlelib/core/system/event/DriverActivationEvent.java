@@ -15,7 +15,7 @@ public class DriverActivationEvent extends Event {
     }
 
     public boolean isCanceled() {
-        return activated;
+        return !activated;
     }
 
     public void setCanceled(boolean canceled) {

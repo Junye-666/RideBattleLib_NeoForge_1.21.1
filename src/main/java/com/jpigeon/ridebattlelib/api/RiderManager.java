@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.api;
 import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
@@ -48,6 +49,10 @@ public final class RiderManager {
     // 快捷检查变身状态
     public static boolean isTransformed(Player player) {
         return HenshinSystem.INSTANCE.isTransformed(player);
+    }
+
+    public static void completeHenshin(Player player){
+        DriverActionManager.INSTANCE.completeTransformation(player);
     }
 
     // ================ 腰带系统快捷方法 ================

@@ -1,4 +1,5 @@
 # RideBattleLib - 在MC中变身假面骑士！
+**简体中文** | [English](README_en.md)
 "Cyclone! Joker! さあ、お前の罪を数えろ！"
 现在，在Minecraft中喊出你的变身台词吧！
 
@@ -6,7 +7,8 @@
 欢迎来到 RideBattleLib - 一个为MC高版本（1.21.1，NeoForge）打造的假面骑士变身系统库！想象一下：
 在Minecraft中插入道具，转动腰带，喊出"Henshin！" - 这一切都成为可能！
 无论你是想重现Build的满装瓶系统，还是创造 ☆全☆新☆的☆骑☆士☆系☆统 ，RideBattleLib都能让你轻松实现！
-此页面为1.21.1, [1.21.8在这](https://github.com/Junye-666/RideBattleLib_NeoForge_1.21.8)
+
+此页为1.21.1, [1.21.8在这](https://github.com/Junye-666/RideBattleLib_NeoForge_1.21.8)
 
 ## ✨ 核心功能
 ### 🧩 1. 骑士变身系统

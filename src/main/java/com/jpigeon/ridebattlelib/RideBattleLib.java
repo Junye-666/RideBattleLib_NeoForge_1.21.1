@@ -56,20 +56,4 @@ public class RideBattleLib {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
     }
-
-    @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public static class ClientModEvents {
-        @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event) {
-            LOGGER.info("请确保骑士初始化在ClientSetup中哦~");
-            // ExampleBasic.init();
-            // ExampleDynamicForm.init();
-
-            event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {
-                if (config.getDriverItem() == null) {
-                    LOGGER.error("骑士 {} 未设置驱动器物品!", config.getRiderId());
-                }
-            }));
-        }
-    }
 }

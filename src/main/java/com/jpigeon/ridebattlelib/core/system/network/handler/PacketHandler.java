@@ -32,6 +32,8 @@ public class PacketHandler {
                 .playToServer(ReturnItemsPacket.TYPE, ReturnItemsPacket.STREAM_CODEC,
                         (payload, context) ->
                                 BeltSystem.INSTANCE.returnItems(context.player()))
+                .playToServer(ExtractItemPacket.TYPE, ExtractItemPacket.STREAM_CODEC,
+                        (payload, context) -> BeltSystem.INSTANCE.extractItem(context.player(), payload.slotId()))
                 .playToClient(BeltDataDiffPacket.TYPE, BeltDataDiffPacket.STREAM_CODEC,
                         (payload, context) -> BeltSystem.INSTANCE.applyDiffPacket(payload)
                 )

@@ -66,8 +66,8 @@ public final class RiderManager {
         return BeltSystem.INSTANCE.insertItem(player, slotId, stack);
     }
 
-    // 将物品从腰带中取出
-    public static ItemStack extractBeltItem(Player player, ResourceLocation slotId) {
+    // 将单个物品从腰带中取出
+    public static ItemStack extractSingleItem(Player player, ResourceLocation slotId) {
         return BeltSystem.INSTANCE.extractItem(player, slotId);
     }
 

@@ -41,6 +41,7 @@ public class RiderConfig {
     private final Set<ResourceLocation> auxRequiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
     private final Map<EquipmentSlot, Item> commonArmorMap = new EnumMap<>(EquipmentSlot.class);
+    private boolean allowDynamicForms = false;
 
     //====================初始化方法====================
 
@@ -196,15 +197,16 @@ public class RiderConfig {
             }
         }
 
-        RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
-        // 强制尝试动态形态生成
-        try {
-            FormConfig dynamicForm = DynamicFormManager.getOrCreateDynamicForm(
-                    player, this, beltItems
-            );
-            return dynamicForm.getFormId();
-        } catch (Exception e) {
-            RideBattleLib.LOGGER.error("动态形态创建失败", e);
+        if (this.allowsDynamicForms()) {
+            RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
+            try {
+                FormConfig dynamicForm = DynamicFormManager.getOrCreateDynamicForm(player, this, beltItems);
+                return dynamicForm.getFormId();
+            } catch (Exception e) {
+                RideBattleLib.LOGGER.error("动态形态创建失败", e);
+            }
+        } else {
+            RideBattleLib.LOGGER.debug("该骑士不支持动态形态，跳过动态形态生成");
         }
         RideBattleLib.LOGGER.warn("未找到匹配形态，且没有允许空腰带的基础形态");
         return null;
@@ -226,6 +228,11 @@ public class RiderConfig {
 
     public RiderConfig setCommonArmor(EquipmentSlot slot, Item item) {
         commonArmorMap.put(slot, item);
+        return this;
+    }
+
+    public RiderConfig setAllowDynamicForms(boolean allow) {
+        this.allowDynamicForms = allow;
         return this;
     }
 
@@ -315,5 +322,9 @@ public class RiderConfig {
 
     public Map<EquipmentSlot, Item> getCommonArmorMap() {
         return Collections.unmodifiableMap(commonArmorMap);
+    }
+
+    public boolean allowsDynamicForms() {
+        return allowDynamicForms;
     }
 }

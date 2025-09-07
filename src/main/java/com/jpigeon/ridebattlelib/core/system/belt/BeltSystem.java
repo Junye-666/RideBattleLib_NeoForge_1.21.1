@@ -5,6 +5,7 @@ import com.jpigeon.ridebattlelib.api.IBeltSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.ItemInsertionEvent;
+import com.jpigeon.ridebattlelib.core.system.event.ReturnItemsEvent;
 import com.jpigeon.ridebattlelib.core.system.event.SlotExtractionEvent;
 import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
@@ -18,9 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /*
  * 腰带系统
@@ -44,6 +43,13 @@ public class BeltSystem implements IBeltSystem {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return false;
 
+        ItemInsertionEvent.Pre preInsertion = new ItemInsertionEvent.Pre(player, slotId, stack, config);
+        NeoForge.EVENT_BUS.post(preInsertion);
+
+        stack = preInsertion.getStack();
+
+        if (preInsertion.isCanceled()) return false;
+
         // 阻止驱动器物品
         if (stack.is(config.getDriverItem()) || stack.is(config.getAuxDriverItem())) {
             return false;
@@ -53,13 +59,6 @@ public class BeltSystem implements IBeltSystem {
         if (stack.is(config.getTriggerItem())) {
             return false;
         }
-
-        ItemInsertionEvent.Pre preInsertion = new ItemInsertionEvent.Pre(player, slotId, stack, config);
-        NeoForge.EVENT_BUS.post(preInsertion);
-
-        if (preInsertion.isCanceled()) return false;
-
-        stack = preInsertion.getStack();
 
         boolean isAuxSlot = config.getAuxSlotDefinitions().containsKey(slotId);
         SlotDefinition slot = isAuxSlot ?
@@ -124,50 +123,22 @@ public class BeltSystem implements IBeltSystem {
 
         boolean isAuxSlot = config.getAuxSlotDefinitions().containsKey(slotId);
         Map<ResourceLocation, ItemStack> targetMap = isAuxSlot ?
-                data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>()) :
-                data.getBeltItems(config.getRiderId());
+                new HashMap<>(data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>())) :
+                new HashMap<>(data.getBeltItems(config.getRiderId()));
 
-        ItemStack extracted = targetMap.remove(slotId);
-        if (extracted != null && !extracted.isEmpty()) {
-
-            SlotExtractionEvent.Pre preExtraction = new SlotExtractionEvent.Pre(player, slotId, extracted, config);
-            NeoForge.EVENT_BUS.post(preExtraction);
-            if (preExtraction.isCanceled()) {
-                // 取消操作，将物品放回腰带
-                targetMap.put(slotId, extracted);
-                return ItemStack.EMPTY;
-            }
-
-            extracted = preExtraction.getExtractedStack();
-
-            if (extracted.isEmpty()) {
-                // 更新数据
-                if (isAuxSlot) {
-                    data.setAuxBeltItems(config.getRiderId(), targetMap);
-                } else {
-                    data.setBeltItems(config.getRiderId(), targetMap);
-                }
-                syncBeltData(player);
-                return ItemStack.EMPTY;
-            }
-
-            returnItemToPlayer(player, extracted);
-
-            // 直接更新数据
-            if (isAuxSlot) {
-                data.setAuxBeltItems(config.getRiderId(), targetMap);
-            } else {
-                data.setBeltItems(config.getRiderId(), targetMap);
-            }
-
-            syncBeltData(player);
-
-            SlotExtractionEvent.Post postEvent = new SlotExtractionEvent.Post(player, slotId, extracted, config);
-            NeoForge.EVENT_BUS.post(postEvent);
+        // 先检查物品是否存在
+        if (!targetMap.containsKey(slotId) || targetMap.get(slotId).isEmpty()) {
+            return ItemStack.EMPTY;
         }
-        return extracted != null ? extracted : ItemStack.EMPTY;
-    }
 
+        // 获取物品副本用于返回
+        ItemStack extracted = targetMap.get(slotId).copy();
+
+        // 使用内部方法执行提取
+        boolean success = extractItemInternal(player, slotId, targetMap, config, isAuxSlot);
+
+        return success ? extracted : ItemStack.EMPTY;
+    }
 
     @Override
     public void returnItems(Player player) {
@@ -175,24 +146,102 @@ public class BeltSystem implements IBeltSystem {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
+        // 创建事件用于检查是否应该取消返还
+        ReturnItemsEvent.Pre preReturn = new ReturnItemsEvent.Pre(player, config);
+        NeoForge.EVENT_BUS.post(preReturn);
+
+        // 如果事件被取消，直接返回
+        if (preReturn.isCanceled()) {
+            RideBattleLib.LOGGER.debug("返还所有物品事件被取消");
+            return;
+        }
+
         // 返还主驱动器物品
-        Map<ResourceLocation, ItemStack> mainItems = data.getBeltItems(config.getRiderId());
-        mainItems.values().forEach(stack -> returnItemToPlayer(player, stack));
+        Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
+        // 创建副本用于迭代，避免并发修改异常
+        List<ResourceLocation> mainSlots = new ArrayList<>(mainItems.keySet());
+
+        for (ResourceLocation slotId : mainSlots) {
+            extractItemInternal(player, slotId, mainItems, config, false);
+        }
 
         // 返还辅助驱动器物品
-        Map<ResourceLocation, ItemStack> auxItems = data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>());
-        auxItems.values().forEach(stack -> returnItemToPlayer(player, stack));
+        Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>()));
+        // 创建副本用于迭代，避免并发修改异常
+        List<ResourceLocation> auxSlots = new ArrayList<>(auxItems.keySet());
 
-        // 清空数据
-        data.setBeltItems(config.getRiderId(), new HashMap<>());
-        data.setAuxBeltItems(config.getRiderId(), new HashMap<>());
-        syncBeltData(player);
+        for (ResourceLocation slotId : auxSlots) {
+            extractItemInternal(player, slotId, auxItems, config, true);
+        }
+
+        // 触发返还完成事件
+        ReturnItemsEvent.Post postReturn = new ReturnItemsEvent.Post(player, config);
+        NeoForge.EVENT_BUS.post(postReturn);
     }
 
     private void returnItemToPlayer(Player player, ItemStack stack) {
         if (!player.addItem(stack.copy())) {
             player.drop(stack.copy(), false);
         }
+    }
+
+    /**
+     * 内部提取方法，包含提取物品的核心逻辑
+     * @return 如果成功提取并返还给玩家，返回 true；如果事件被取消，返回 false
+     */
+    private boolean extractItemInternal(Player player, ResourceLocation slotId,
+                                        Map<ResourceLocation, ItemStack> targetMap,
+                                        RiderConfig config, boolean isAuxSlot) {
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
+
+        // 先检查物品是否存在
+        if (!targetMap.containsKey(slotId) || targetMap.get(slotId).isEmpty()) {
+            return false;
+        }
+
+        // 获取物品副本用于事件
+        ItemStack extracted = targetMap.get(slotId).copy();
+
+        // 创建事件并发布
+        SlotExtractionEvent.Pre preExtraction = new SlotExtractionEvent.Pre(player, slotId, extracted.copy(), config);
+        NeoForge.EVENT_BUS.post(preExtraction);
+
+        // 如果事件被取消，直接返回 false，不执行任何操作
+        if (preExtraction.isCanceled()) {
+            RideBattleLib.LOGGER.debug("提取事件被取消，物品保留在腰带中");
+            return false;
+        }
+
+        // 从腰带中移除物品
+        targetMap.remove(slotId);
+        extracted = preExtraction.getExtractedStack();
+
+        if (extracted.isEmpty()) {
+            // 更新数据
+            if (isAuxSlot) {
+                data.setAuxBeltItems(config.getRiderId(), targetMap);
+            } else {
+                data.setBeltItems(config.getRiderId(), targetMap);
+            }
+            syncBeltData(player);
+            return false;
+        }
+
+        returnItemToPlayer(player, extracted);
+
+        // 更新数据
+        if (isAuxSlot) {
+            data.setAuxBeltItems(config.getRiderId(), targetMap);
+        } else {
+            data.setBeltItems(config.getRiderId(), targetMap);
+        }
+
+        syncBeltData(player);
+
+        SlotExtractionEvent.Post postEvent = new SlotExtractionEvent.Post(player, slotId, extracted, config);
+        NeoForge.EVENT_BUS.post(postEvent);
+
+        return true;
     }
 
     //====================检测方法====================

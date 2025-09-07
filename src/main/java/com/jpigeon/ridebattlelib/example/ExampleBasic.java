@@ -45,13 +45,13 @@ public class ExampleBasic {
                 .setAuxDriverItem(Items.BRICK, EquipmentSlot.OFFHAND) // 辅助驱动器: 砖块(穿戴在副手)
                 .addDriverSlot(
                         TEST_CORE_SLOT,
-                        List.of(Items.IRON_INGOT, Items.GOLD_INGOT),
+                        List.of(Items.IRON_INGOT, Items.GOLD_INGOT, Items.DIAMOND),
                         true,
                         true
                 ) // 腰带中的核心槽位: 接受铁锭或金锭(必要槽位)
                 .addAuxSlot(
                         TEST_ENERGY_SLOT,
-                        List.of(Items.REDSTONE, Items.GLOWSTONE_DUST),
+                        List.of(Items.REDSTONE, Items.GLOWSTONE_DUST, Items.APPLE),
                         true,
                         false
                 ); // 辅助驱动器中的能量槽位: 接受红石或荧石粉(非必要)

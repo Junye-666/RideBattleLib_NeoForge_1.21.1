@@ -45,7 +45,8 @@ public class Config
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
     {
-        RideBattleLib.LOGGER.info("Loaded config: penaltyThreshold={}, cooldown={}s, explosionPower={}",
+        RideBattleLib.LOGGER.info("Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}",
+                PENALTY_ENABLED.get(),
                 PENALTY_THRESHOLD.get(),
                 COOLDOWN_DURATION.get(),
                 EXPLOSION_POWER.get());

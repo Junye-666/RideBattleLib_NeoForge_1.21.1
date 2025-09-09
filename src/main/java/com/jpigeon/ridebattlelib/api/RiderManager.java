@@ -1,6 +1,6 @@
 package com.jpigeon.ridebattlelib.api;
 
-import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
@@ -9,6 +9,7 @@ import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.UnhenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
+import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -55,25 +56,25 @@ public final class RiderManager {
         DriverActionManager.INSTANCE.completeTransformation(player);
     }
 
-    // ================ 腰带系统快捷方法 ================
-    // 获取玩家腰带物品
-    public static Map<ResourceLocation, ItemStack> getBeltItems(Player player) {
-        return BeltSystem.INSTANCE.getBeltItems(player);
+    // ================驱动器系统快捷方法 ================
+    // 获取玩家驱动器物品
+    public static Map<ResourceLocation, ItemStack> getDriverItems(Player player) {
+        return DriverSystem.INSTANCE.getDriverItems(player);
     }
 
-    // 插入物品至腰带
-    public static boolean insertBeltItem(Player player, ResourceLocation slotId, ItemStack stack) {
-        return BeltSystem.INSTANCE.insertItem(player, slotId, stack);
+    // 插入物品至驱动器
+    public static boolean insertDriverItem(Player player, ResourceLocation slotId, ItemStack stack) {
+        return DriverSystem.INSTANCE.insertItem(player, slotId, stack);
     }
 
-    // 将单个物品从腰带中取出
+    // 将单个物品从驱动器中取出
     public static ItemStack extractSingleItem(Player player, ResourceLocation slotId) {
-        return BeltSystem.INSTANCE.extractItem(player, slotId);
+        return DriverSystem.INSTANCE.extractItem(player, slotId);
     }
 
-    // 返还所有腰带物品
-    public static void returnBeltItems(Player player) {
-        BeltSystem.INSTANCE.returnItems(player);
+    // 返还所有驱动器物品
+    public static void returnDriverItems(Player player) {
+        DriverSystem.INSTANCE.returnItems(player);
     }
 
     // ================ 吃瘪系统快捷方法 ================
@@ -92,6 +93,12 @@ public final class RiderManager {
     // 检查是否在冷却中
     public static boolean isInCooldown(Player player) {
         return PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
+    }
+
+    // ================ 技能系统快捷方法 ================
+    // 触发技能
+    public static boolean triggerSkill(Player player, ResourceLocation formId, ResourceLocation skillId){
+        return SkillSystem.triggerSkill(player, formId, skillId);
     }
 
     // ================ 快速获取 ================
@@ -117,6 +124,6 @@ public final class RiderManager {
     // 强制刷新客户端状态
     public static void syncClientState(ServerPlayer player) {
         HenshinSystem.syncTransformedState(player);
-        BeltSystem.INSTANCE.syncBeltData(player);
+        DriverSystem.INSTANCE.syncDriverData(player);
     }
 }

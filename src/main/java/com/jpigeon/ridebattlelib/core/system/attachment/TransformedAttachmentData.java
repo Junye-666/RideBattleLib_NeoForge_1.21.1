@@ -12,7 +12,7 @@ public record TransformedAttachmentData(
         ResourceLocation riderId,
         ResourceLocation formId,
         Map<EquipmentSlot, ItemStack> originalGear,
-        Map<ResourceLocation, ItemStack> beltSnapshot
+        Map<ResourceLocation, ItemStack> driverSnapshot
 ) {
     public static final Codec<TransformedAttachmentData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
@@ -23,7 +23,7 @@ public record TransformedAttachmentData(
                             .fieldOf("originalGear").forGetter(TransformedAttachmentData::originalGear),
 
                     Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.OPTIONAL_CODEC)
-                            .fieldOf("beltSnapshot").forGetter(TransformedAttachmentData::beltSnapshot)
+                            .fieldOf("driverSnapshot").forGetter(TransformedAttachmentData::driverSnapshot)
             ).apply(instance, TransformedAttachmentData::new)
     );
 }

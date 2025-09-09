@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
-import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
+import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
+import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
@@ -35,8 +35,8 @@ public class RiderConfig {
     private EquipmentSlot auxDriverSlot = EquipmentSlot.OFFHAND;
     private Item triggerItem = Items.AIR;
     private ResourceLocation baseFormId;
-    private final Map<ResourceLocation, SlotDefinition> slotDefinitions = new HashMap<>();
-    private final Map<ResourceLocation, SlotDefinition> auxSlotDefinitions = new HashMap<>();
+    private final Map<ResourceLocation, DriverSlotDefinition> slotDefinitions = new HashMap<>();
+    private final Map<ResourceLocation, DriverSlotDefinition> auxSlotDefinitions = new HashMap<>();
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
     private final Set<ResourceLocation> auxRequiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
@@ -45,33 +45,34 @@ public class RiderConfig {
 
     //====================初始化方法====================
 
-    //骑士Id初始化
+    // 骑士Id初始化
     public RiderConfig(ResourceLocation riderId) {
         this.riderId = riderId;
     }
 
     //====================Setter方法====================
 
-    //指定驱动器物品
+    // 指定驱动器物品
     public RiderConfig setDriverItem(Item item, EquipmentSlot slot) {
         this.driverItem = item;
         this.driverSlot = slot;
         return this;
     }
 
-    //指定触发用物品
+    // 指定触发用物品
     public RiderConfig setTriggerItem(@Nullable Item item) {
         this.triggerItem = item != null ? item : Items.AIR;
         return this;
     }
 
+    // 添加驱动器槽位
     public RiderConfig addDriverSlot(ResourceLocation slotId,
                                      List<Item> allowedItems,
                                      boolean isRequired,
                                      boolean allowReplace) {
 
         slotDefinitions.put(slotId,
-                new SlotDefinition(allowedItems, null, allowReplace,  false, isRequired));
+                new DriverSlotDefinition(allowedItems, null, allowReplace,  false, isRequired));
 
         if (isRequired) {
             requiredSlots.add(slotId);
@@ -95,7 +96,7 @@ public class RiderConfig {
     }
 
     public RiderConfig addAuxSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired, boolean allowReplace) {
-        auxSlotDefinitions.put(slotId, new SlotDefinition(allowedItems, null, allowReplace, true, isRequired));
+        auxSlotDefinitions.put(slotId, new DriverSlotDefinition(allowedItems, null, allowReplace, true, isRequired));
         if (isRequired) {
             auxRequiredSlots.add(slotId);
         }
@@ -110,12 +111,10 @@ public class RiderConfig {
     }
 
     // 形态匹配
-    public ResourceLocation matchForm(Player player, Map<ResourceLocation, ItemStack> beltItems) {
-        RideBattleLib.LOGGER.debug("开始匹配形态，玩家: {}", player.getName().getString());
-        RideBattleLib.LOGGER.debug("当前腰带内容: {}", beltItems);
+    public ResourceLocation matchForm(Player player, Map<ResourceLocation, ItemStack> driverItems) {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return null;
-        FormOverrideEvent overrideEvent = new FormOverrideEvent(player, beltItems, null);
+        FormOverrideEvent overrideEvent = new FormOverrideEvent(player, driverItems, null);
         NeoForge.EVENT_BUS.post(overrideEvent);
 
         if (overrideEvent.isCanceled()) {
@@ -129,23 +128,26 @@ public class RiderConfig {
             return overrideForm;
         }
 
-        if (isBeltEmpty(beltItems)) {
+        if (isDriverEmpty(driverItems)) {
             if (baseFormId != null && forms.containsKey(baseFormId) &&
-                    forms.get(baseFormId).allowsEmptyBelt()) {
-                RideBattleLib.LOGGER.debug("使用允许空腰带的基础形态: {}", baseFormId);
+                    forms.get(baseFormId).allowsEmptyDriver()) {
+                RideBattleLib.LOGGER.debug("使用允许空驱动器的基础形态: {}", baseFormId);
                 return baseFormId;
             } else {
-                RideBattleLib.LOGGER.warn("腰带为空，且没有允许空腰带的基础形态");
+                RideBattleLib.LOGGER.warn("驱动器为空，且没有允许空驱动器的基础形态");
                 return null;
             }
         }
 
+        RideBattleLib.LOGGER.debug("开始匹配形态，玩家: {}", player.getName().getString());
+        RideBattleLib.LOGGER.debug("当前驱动器内容: {}", driverItems);
+
         // 先检查是否所有“必需槽位”都有有效物品
         for (ResourceLocation slotId : requiredSlots) {
-            SlotDefinition slot = getSlotDefinition(slotId);
+            DriverSlotDefinition slot = getSlotDefinition(slotId);
             if (slot == null) continue;
 
-            ItemStack stack = beltItems.get(slotId);
+            ItemStack stack = driverItems.get(slotId);
             if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
                 RideBattleLib.LOGGER.warn("必需槽位 {} 为空", slotId);
                 return null; // 必需槽位不能为空
@@ -154,10 +156,10 @@ public class RiderConfig {
 
         // 检查辅助必需槽位
         for (ResourceLocation slotId : auxRequiredSlots) {
-            SlotDefinition slot = getAuxSlotDefinition(slotId);
+            DriverSlotDefinition slot = getAuxSlotDefinition(slotId);
             if (slot == null) continue;
 
-            ItemStack stack = beltItems.get(slotId);
+            ItemStack stack = driverItems.get(slotId);
             if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
                 RideBattleLib.LOGGER.warn("辅助必需槽位 {} 为空", slotId);
                 return null; // 辅助必需槽位不能为空
@@ -166,7 +168,7 @@ public class RiderConfig {
 
         // 尝试匹配所有形态
         for (FormConfig formConfig : forms.values()) {
-            boolean mainMatches = formConfig.matchesMainSlots(beltItems, config);
+            boolean mainMatches = formConfig.matchesMainSlots(driverItems, config);
             boolean auxMatches = true;
 
             // 检查形态是否有辅助槽位要求
@@ -175,7 +177,7 @@ public class RiderConfig {
             if (formHasAuxRequirements) {
                 // 形态要求辅助槽位：必须装备辅助驱动器且槽位匹配
                 if (hasAuxDriverEquipped(player)) {
-                    auxMatches = formConfig.matchesAuxSlots(beltItems, config);
+                    auxMatches = formConfig.matchesAuxSlots(driverItems, config);
                 } else {
                     auxMatches = false; // 未装备辅助驱动器但形态要求→不匹配
                     RideBattleLib.LOGGER.debug("形态{}需要辅助驱动器，但玩家未装备", formConfig.getFormId());
@@ -189,18 +191,10 @@ public class RiderConfig {
             }
         }
 
-        // 回退到基础形态
-        if (baseFormId != null && forms.containsKey(baseFormId) && forms.get(baseFormId).allowsEmptyBelt()) {
-            // 仅当腰带为空时才使用基础形态
-            if (isBeltEmpty(beltItems)) {
-                return baseFormId;
-            }
-        }
-
         if (this.allowsDynamicForms()) {
             RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
             try {
-                FormConfig dynamicForm = DynamicFormManager.getOrCreateDynamicForm(player, this, beltItems);
+                FormConfig dynamicForm = DynamicFormManager.getOrCreateDynamicForm(player, this, driverItems);
                 return dynamicForm.getFormId();
             } catch (Exception e) {
                 RideBattleLib.LOGGER.error("动态形态创建失败", e);
@@ -208,14 +202,14 @@ public class RiderConfig {
         } else {
             RideBattleLib.LOGGER.debug("该骑士不支持动态形态，跳过动态形态生成");
         }
-        RideBattleLib.LOGGER.warn("未找到匹配形态，且没有允许空腰带的基础形态");
+        RideBattleLib.LOGGER.warn("未找到匹配形态，且没有允许空驱动器的基础形态");
         return null;
     }
 
     // 快捷获取FormConfig
     public FormConfig getActiveFormConfig(Player player) {
-        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
-        ResourceLocation formId = matchForm(player, beltItems);
+        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
+        ResourceLocation formId = matchForm(player, driverItems);
 
         // 优先检查预设形态
         if (forms.containsKey(formId)) {
@@ -280,12 +274,12 @@ public class RiderConfig {
     }
 
     //获取槽位定义
-    public SlotDefinition getSlotDefinition(ResourceLocation slotId) {
+    public DriverSlotDefinition getSlotDefinition(ResourceLocation slotId) {
         return slotDefinitions.get(slotId);
     }
 
     //获取所有槽位定义的不可修改视图
-    public Map<ResourceLocation, SlotDefinition> getSlotDefinitions() {
+    public Map<ResourceLocation, DriverSlotDefinition> getSlotDefinitions() {
         return Collections.unmodifiableMap(slotDefinitions);
     }
 
@@ -298,9 +292,10 @@ public class RiderConfig {
         return baseFormId;
     }
 
-    private boolean isBeltEmpty(Map<ResourceLocation, ItemStack> beltItems) {
-        if (beltItems.isEmpty()) return true;
-        for (ItemStack stack : beltItems.values()) {
+    // 驱动器是否为空
+    private boolean isDriverEmpty(Map<ResourceLocation, ItemStack> driverItems) {
+        if (driverItems.isEmpty()) return true;
+        for (ItemStack stack : driverItems.values()) {
             if (!stack.isEmpty()) return false;
         }
         return true;
@@ -311,12 +306,12 @@ public class RiderConfig {
         return !auxStack.isEmpty() && auxStack.is(auxDriverItem);
     }
 
-    public SlotDefinition getAuxSlotDefinition(ResourceLocation slotId) {
+    public DriverSlotDefinition getAuxSlotDefinition(ResourceLocation slotId) {
         return auxSlotDefinitions.get(slotId);
     }
 
     // 获取所有辅助驱动器槽位
-    public Map<ResourceLocation, SlotDefinition> getAuxSlotDefinitions() {
+    public Map<ResourceLocation, DriverSlotDefinition> getAuxSlotDefinitions() {
         return Collections.unmodifiableMap(auxSlotDefinitions);
     }
 

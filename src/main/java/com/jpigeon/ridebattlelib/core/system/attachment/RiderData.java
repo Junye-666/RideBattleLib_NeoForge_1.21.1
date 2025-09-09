@@ -13,27 +13,27 @@ import java.util.Map;
 import java.util.Optional;
 
 public class RiderData {
-    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainBeltItems;
-    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems;
+    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainDriverItems;
+    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxDriverItems;
     private final @Nullable TransformedAttachmentData transformedData;
     private HenshinState henshinState;
     private @Nullable ResourceLocation pendingFormId;
     private long penaltyCooldownEnd;
-    private int currentSkillIndex; // 当前选中的技能索引
+    private int currentSkillIndex;
 
     public RiderData(
-            Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainBeltItems,
-            Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxBeltItems,
+            Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainDriverItems,
+            Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxDriverItems,
             @Nullable TransformedAttachmentData transformedData,
             HenshinState henshinState,
             @Nullable ResourceLocation pendingFormId,
             long penaltyCooldownEnd,
             int currentSkillIndex
     ) {
-        this.mainBeltItems = mainBeltItems != null ?
-                new HashMap<>(mainBeltItems) : new HashMap<>();
-        this.auxBeltItems = auxBeltItems != null ?
-                new HashMap<>(auxBeltItems) : new HashMap<>();
+        this.mainDriverItems = mainDriverItems != null ?
+                new HashMap<>(mainDriverItems) : new HashMap<>();
+        this.auxDriverItems = auxDriverItems != null ?
+                new HashMap<>(auxDriverItems) : new HashMap<>();
         this.transformedData = transformedData;
         this.henshinState = henshinState;
         this.pendingFormId = pendingFormId;
@@ -43,11 +43,11 @@ public class RiderData {
 
     //====================Setter方法====================
 
-    public void setAuxBeltItems(ResourceLocation riderId, Map<ResourceLocation, ItemStack> items) {
+    public void setAuxDriverItems(ResourceLocation riderId, Map<ResourceLocation, ItemStack> items) {
         if (items == null) {
-            auxBeltItems.remove(riderId);
+            auxDriverItems.remove(riderId);
         } else {
-            auxBeltItems.put(riderId, new HashMap<>(items));
+            auxDriverItems.put(riderId, new HashMap<>(items));
         }
     }
 
@@ -60,11 +60,11 @@ public class RiderData {
     }
 
     // Setter 方法
-    public void setBeltItems(ResourceLocation riderId, Map<ResourceLocation, ItemStack> items) {
+    public void setDriverItems(ResourceLocation riderId, Map<ResourceLocation, ItemStack> items) {
         if (items == null) {
-            mainBeltItems.remove(riderId);
+            mainDriverItems.remove(riderId);
         } else {
-            mainBeltItems.put(riderId, new HashMap<>(items));
+            mainDriverItems.put(riderId, new HashMap<>(items));
         }
     }
 
@@ -78,12 +78,12 @@ public class RiderData {
 
     //====================Getter方法====================
 
-    public Map<ResourceLocation, ItemStack> getBeltItems(ResourceLocation riderId) {
-        return mainBeltItems.getOrDefault(riderId, new HashMap<>());
+    public Map<ResourceLocation, ItemStack> getDriverItems(ResourceLocation riderId) {
+        return mainDriverItems.getOrDefault(riderId, new HashMap<>());
     }
 
-    public ItemStack getAuxBeltItems(ResourceLocation riderId, ResourceLocation slotId) {
-        return auxBeltItems.getOrDefault(riderId, Collections.emptyMap())
+    public ItemStack getAuxDriverItems(ResourceLocation riderId, ResourceLocation slotId) {
+        return auxDriverItems.getOrDefault(riderId, Collections.emptyMap())
                 .getOrDefault(slotId, ItemStack.EMPTY);
     }
 
@@ -120,13 +120,13 @@ public class RiderData {
                     Codec.unboundedMap(
                                     ResourceLocation.CODEC,
                                     Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.OPTIONAL_CODEC)
-                            ).optionalFieldOf("mainBeltItems", new HashMap<>())
-                            .forGetter(data -> data.mainBeltItems),
+                            ).optionalFieldOf("mainDriverItems", new HashMap<>())
+                            .forGetter(data -> data.mainDriverItems),
 
                     Codec.unboundedMap(ResourceLocation.CODEC,
                                     Codec.unboundedMap(ResourceLocation.CODEC, ItemStack.OPTIONAL_CODEC)
-                            ).optionalFieldOf("auxBeltItems", new HashMap<>())
-                            .forGetter(data -> data.auxBeltItems),
+                            ).optionalFieldOf("auxDriverItems", new HashMap<>())
+                            .forGetter(data -> data.auxDriverItems),
 
                     TransformedAttachmentData.CODEC.optionalFieldOf("getTransformedData")
                             .forGetter(data -> Optional.ofNullable(data.transformedData)),
@@ -144,10 +144,10 @@ public class RiderData {
 
                     Codec.INT.optionalFieldOf("currentSkillIndex", 0)
                             .forGetter(RiderData::getCurrentSkillIndex)
-            ).apply(instance, (riderBeltItems, auxBeltItems, transformedDataOpt, henshinState, pendingFormIdOpt, penaltyCooldownEnd, currentSkillIndex) ->
+            ).apply(instance, (riderDriverItems, auxDriverItems, transformedDataOpt, henshinState, pendingFormIdOpt, penaltyCooldownEnd, currentSkillIndex) ->
                     new RiderData(
-                            riderBeltItems != null ? riderBeltItems : new HashMap<>(),
-                            auxBeltItems,
+                            riderDriverItems != null ? riderDriverItems : new HashMap<>(),
+                            auxDriverItems,
                             transformedDataOpt.orElse(null),
                             henshinState,
                             pendingFormIdOpt.orElse(null),

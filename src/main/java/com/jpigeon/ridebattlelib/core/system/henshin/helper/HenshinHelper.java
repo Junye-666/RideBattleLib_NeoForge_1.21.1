@@ -5,7 +5,7 @@ import com.jpigeon.ridebattlelib.api.IHenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
-import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
@@ -38,7 +38,7 @@ public final class HenshinHelper implements IHenshinHelper {
     @Override
     public void performHenshin(Player player, RiderConfig config, ResourceLocation formId) {
         if (config == null || formId == null) return;
-        Map<ResourceLocation, ItemStack> beltItems = BeltSystem.INSTANCE.getBeltItems(player);
+        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
 
         // 保存原始装备
         Map<EquipmentSlot, ItemStack> originalGear = ARMOR.saveOriginalGear(player, config);
@@ -70,7 +70,7 @@ public final class HenshinHelper implements IHenshinHelper {
         EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig );
 
         // 设置为已变身状态
-        setTransformed(player, config, formConfig.getFormId(), originalGear, beltItems);
+        setTransformed(player, config, formConfig.getFormId(), originalGear, driverItems);
 
         // 触发后置事件
         HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, config.getRiderId(), formId);
@@ -98,7 +98,7 @@ public final class HenshinHelper implements IHenshinHelper {
         if (newForm == null) {
             newForm = DynamicFormManager.getDynamicForm(newFormId); // 添加动态形态支持
         }
-        Map<ResourceLocation, ItemStack> currentBelt = BeltSystem.INSTANCE.getBeltItems(player);
+        Map<ResourceLocation, ItemStack> currentDriver = DriverSystem.INSTANCE.getDriverItems(player);
         boolean needsUpdate = !newFormId.equals(oldFormId);
         if (newForm != null && needsUpdate) {
             if (newForm instanceof DynamicFormConfig) {
@@ -114,7 +114,7 @@ public final class HenshinHelper implements IHenshinHelper {
             ITEM.grantFormItems(player, newFormId);
             // 更新数据
             setTransformed(player, data.config(), newFormId,
-                    data.originalGear(), currentBelt);
+                    data.originalGear(), currentDriver);
         }
 
         // 触发形态切换事件
@@ -135,7 +135,7 @@ public final class HenshinHelper implements IHenshinHelper {
                     config,
                     attachmentData.formId(),
                     attachmentData.originalGear(),
-                    attachmentData.beltSnapshot()
+                    attachmentData.driverSnapshot()
             ));
 
             // 重新装备盔甲
@@ -146,23 +146,23 @@ public final class HenshinHelper implements IHenshinHelper {
 
             // 更新变身状态
             setTransformed(player, config, attachmentData.formId(),
-                    attachmentData.originalGear(), attachmentData.beltSnapshot());
+                    attachmentData.originalGear(), attachmentData.driverSnapshot());
         }
     }
 
     @Override
-    public void setTransformed(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> beltSnapshot) {
+    public void setTransformed(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> driverSnapshot) {
         RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
         TransformedAttachmentData transformedData = new TransformedAttachmentData(
                 config.getRiderId(),
                 formId,
                 originalGear,
-                beltSnapshot
+                driverSnapshot
         );
 
         RiderData newData = new RiderData(
-                new HashMap<>(oldData.mainBeltItems),
-                new HashMap<>(oldData.auxBeltItems),
+                new HashMap<>(oldData.mainDriverItems),
+                new HashMap<>(oldData.auxDriverItems),
                 transformedData,
                 oldData.getHenshinState(),
                 oldData.getPendingFormId(),
@@ -178,8 +178,8 @@ public final class HenshinHelper implements IHenshinHelper {
         RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
 
         RiderData newData = new RiderData(
-                new HashMap<>(oldData.mainBeltItems),
-                new HashMap<>(oldData.auxBeltItems),
+                new HashMap<>(oldData.mainDriverItems),
+                new HashMap<>(oldData.auxDriverItems),
                 null,
                 oldData.getHenshinState(),
                 oldData.getPendingFormId(),

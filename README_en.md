@@ -4,7 +4,7 @@ Bring the iconic transformation scenes to your Minecraft world!
 
 ## 🎯 Overview
 Welcome to RideBattleLib - a Kamen Rider transformation system library for modern Minecraft (1.21.1, NeoForge)! Imagine:
-Inserting items into a belt, turning the driver, and shouting "Henshin!" - all within Minecraft!
+Inserting items into a driver, turning the driver, and shouting "Henshin!" - all within Minecraft!
 Whether you want to recreate Build's Full Bottle system or create an ☆entirely new☆ Rider system, RideBattleLib makes it possible!
 
 ## ✨ Core Features
@@ -20,17 +20,17 @@ Complete state management (Idle → Transforming → Transformed)
 ```java
 // Create a Rider Driver
 RiderConfig myRider = new RiderConfig(MY_RIDER_ID)
-    .setDriverItem(ModItems.ANY_DRIVER.get(), EquipmentSlot.LEGS) // Belt on legs
+    .setDriverItem(ModItems.ANY_DRIVER.get(), EquipmentSlot.LEGS) // Driver on legs(waist)
     .setAuxDriverItem(ModItems.ANY_AUX_DRIVER.get(), EquipmentSlot.OFFHAND); // Secondary driver in offhand
 ```
-### ⚡ 2. Belt System
+### ⚡ 2. Driver System
 Item insertion/extraction mechanics
 
 Slot validation system
 
 Dual system: Main driver + Auxiliary driver
 
-One-click item return (clear belt)
+One-click item return (clear driver)
 
 ```java
 RiderConfig myRider = new RiderConfig(MY_RIDER_ID)
@@ -44,7 +44,7 @@ RiderConfig myRider = new RiderConfig(MY_RIDER_ID)
 ### 🔮 3. Form System
 Preconfigured forms (Base, Power-up, etc.)
 
-Dynamic form generation (auto-create forms based on belt items!)
+Dynamic form generation (auto-create forms based on driver items!)
 
 Form-specific attributes/effects
 
@@ -85,7 +85,7 @@ public void onHenshin(HenshinEvent.Post event) {
 ### 🌐 6. Network Synchronization
 Real-time transformation state sync
 
-Belt data synchronization
+Driver data synchronization
 
 Client/server data consistency
 
@@ -110,7 +110,7 @@ Insert items into belt slots
 
 Trigger transformation (key/item/auto)
 
-Switch forms by changing belt items
+Switch forms by changing driver items
 
 Untransform (manual/penalty)
 

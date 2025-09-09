@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.core.system.belt;
+package com.jpigeon.ridebattlelib.core.system.driver;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -12,4 +12,4 @@ import java.util.function.Consumer;
  * @param allowReplace     允许被新物品自动替换
  * @param isAuxSlot       是否是辅助槽
  */
-public record SlotDefinition(List<Item> allowedItems, Consumer<Player> onInsertCallback, boolean allowReplace, boolean isAuxSlot, boolean isRequired) {}
+public record DriverSlotDefinition(List<Item> allowedItems, Consumer<Player> onInsertCallback, boolean allowReplace, boolean isAuxSlot, boolean isRequired) {}

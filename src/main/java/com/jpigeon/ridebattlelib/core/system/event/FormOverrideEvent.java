@@ -11,14 +11,14 @@ import java.util.Map;
 // 在变身前匹配形态时强制覆盖匹配的形态(相当于形态琐)
 public class FormOverrideEvent extends Event {
     private final Player player;
-    private final Map<ResourceLocation, ItemStack> beltItems;
+    private final Map<ResourceLocation, ItemStack> driverItems;
     private final ResourceLocation currentForm;
     private ResourceLocation overrideForm;
     private boolean canceled = false;
 
-    public FormOverrideEvent(Player player, Map<ResourceLocation, ItemStack> beltItems, ResourceLocation currentForm) {
+    public FormOverrideEvent(Player player, Map<ResourceLocation, ItemStack> driverItems, ResourceLocation currentForm) {
         this.player = player;
-        this.beltItems = Collections.unmodifiableMap(beltItems);
+        this.driverItems = Collections.unmodifiableMap(driverItems);
         this.currentForm = currentForm;
         this.overrideForm = null;
     }
@@ -27,8 +27,8 @@ public class FormOverrideEvent extends Event {
         return player;
     }
 
-    public Map<ResourceLocation, ItemStack> getBeltItems() {
-        return beltItems;
+    public Map<ResourceLocation, ItemStack> getDriverItems() {
+        return driverItems;
     }
 
     public ResourceLocation getCurrentForm() {

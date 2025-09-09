@@ -6,10 +6,10 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
 
-public interface IBeltSystem {
+public interface IDriverSystem {
     boolean insertItem(Player player, ResourceLocation slotId, ItemStack stack);
     ItemStack extractItem(Player player, ResourceLocation slotId);
     boolean validateItems(Player player, ResourceLocation riderId);
-    Map<ResourceLocation, ItemStack> getBeltItems(Player player);
+    Map<ResourceLocation, ItemStack> getDriverItems(Player player);
     void returnItems(Player player);
 }

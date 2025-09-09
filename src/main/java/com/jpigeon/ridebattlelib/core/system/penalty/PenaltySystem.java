@@ -58,7 +58,7 @@ public class PenaltySystem implements IPenaltySystem {
         // 强制解除变身
         HenshinSystem.INSTANCE.unHenshin(player);
 
-        // 创建爆炸效果
+        // 爆炸
         PenaltyEvent.Particle explosion = new PenaltyEvent.Particle(player);
         NeoForge.EVENT_BUS.post(explosion);
         if (!explosion.isCanceled()){
@@ -76,21 +76,21 @@ public class PenaltySystem implements IPenaltySystem {
             if (!player.level().isClientSide()) {
                 player.level().playSound(
                         player,
-                        player.getX(), player.getY(), player.getZ(), // 精确坐标版本
+                        player.getX(), player.getY(), player.getZ(),
                         SoundEvents.GENERIC_EXPLODE.value(),
                         SoundSource.PLAYERS,
                         1.0F,
-                        1.0F + player.level().random.nextFloat() * 0.2F // 随机音高变化
+                        1.0F + player.level().random.nextFloat() * 0.2F
                 );
             }
         }
 
-        // 击飞玩家
+        // 击飞
         Vec3 knockBack = player.getLookAngle().reverse().scale(1.5).add(0, 1.0, 0);
         player.setDeltaMovement(knockBack);
         player.hurtMarked = true;
 
-        // 添加保护效果
+        // 保护效果
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 4));
         player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1));
         player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 100, 0));
@@ -115,7 +115,7 @@ public class PenaltySystem implements IPenaltySystem {
         int cooldown = getCooldownDuration();
         player.addEffect(new MobEffectInstance(
                 MobEffects.MOVEMENT_SLOWDOWN,
-                cooldown * 20,  // 秒转tick
+                cooldown * 20,
                 0,
                 false,
                 true

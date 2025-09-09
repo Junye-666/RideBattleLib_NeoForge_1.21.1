@@ -6,7 +6,7 @@
 
 🎯 概述
 欢迎来到 RideBattleLib - 一个为MC高版本（1.21.1，NeoForge）打造的假面骑士变身系统库！想象一下：
-在Minecraft中插入道具，转动腰带，喊出"Henshin！" - 这一切都成为可能！
+在Minecraft中插入道具，转动驱动器，喊出"Henshin！" - 这一切都成为可能！
 无论你是想重现Build的满装瓶系统，还是创造 ☆全☆新☆的☆骑☆士☆系☆统 ，RideBattleLib都能让你轻松实现！
 
 此页为1.21.1, [1.21.8在这](https://github.com/Junye-666/RideBattleLib_NeoForge_1.21.8)
@@ -29,17 +29,17 @@ RiderConfig myRider = new RiderConfig(MY_RIDER_ID)
         ; // 务必注意冒号的位置, 别写早了导致错误
 ```
 
-### ⚡ 2. 腰带系统
+### ⚡ 2. 驱动器系统
 物品插入/取出机制
 
 槽位验证系统
 
 主驱动器+辅助驱动器双系统
 
-物品返还功能（一键清空腰带）
+物品返还功能（一键清空驱动器）
 
 ```java
-// 以以上骑士为例, 规定其腰带接受的物品
+// 以以上骑士为例, 规定其驱动器接受的物品
 RiderConfig myRider = new RiderConfig(MY_RIDER_ID)
         .addDriverSlot( // 添加一个主驱动器上的槽位
                 SOME_SLOT, // 槽位的ResourceLocation(这里默认在前面定义过, 这里直接调用)
@@ -68,7 +68,7 @@ RiderConfig myRider = new RiderConfig(MY_RIDER_ID)
 ### 🔮 3. 形态系统
 预设形态配置（基础形态，强化形态等）
 
-动态形态生成（根据腰带物品自动创建新形态！）
+动态形态生成（根据驱动器物品自动创建新形态！）
 
 形态专属属性/效果加成
 
@@ -127,7 +127,7 @@ SoundSource.PLAYERS, 1.0F, 1.0F);
 
 我们甚至有半自动化的生成!
 ```java
-// 假设根本没手动注册任何形态, 仅注册了riderConfig+腰带槽位
+// 假设根本没手动注册任何形态, 仅注册了riderConfig+驱动器槽位
 private static void registerDynamicMappings() { // 一个动态映射注册方法
     DynamicArmorRegistry.registerItemArmor(BuildItems.RABBIT_BOTTLE, ModItems.RABBIT_ELEMENT.get()); // 为物品绑定对应盔甲
     DynamicEffectRegistry.registerItemEffects(BuildItems.RABBIT_BOTTLE, MobEffects.JUMP); // 为物品绑定对应效果
@@ -145,11 +145,11 @@ private static void registerDynamicMappings() { // 一个动态映射注册方�
 ## 🎮 玩家体验
 装备驱动器
 
-插入道具到腰带槽位
+插入道具到驱动器槽位
 
 触发变身（按键/使用道具）
 
-切换形态（更换腰带物品）
+切换形态（更换驱动器物品）
 
 解除变身（手动/吃瘪强制解除）
 

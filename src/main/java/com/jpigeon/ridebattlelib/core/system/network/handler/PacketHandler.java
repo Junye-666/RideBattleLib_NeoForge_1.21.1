@@ -5,9 +5,9 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
-import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
-import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,16 +26,16 @@ public class PacketHandler {
                 .playToServer(SwitchFormPacket.TYPE, SwitchFormPacket.STREAM_CODEC,
                         (payload, context) ->
                                 HenshinSystem.INSTANCE.switchForm(context.player(), payload.formId()))
-                .playToClient(BeltDataSyncPacket.TYPE, BeltDataSyncPacket.STREAM_CODEC,
+                .playToClient(DriverDataSyncPacket.TYPE, DriverDataSyncPacket.STREAM_CODEC,
                         (payload, context) ->
-                                BeltSystem.INSTANCE.applySyncPacket(payload))
+                                DriverSystem.INSTANCE.applySyncPacket(payload))
                 .playToServer(ReturnItemsPacket.TYPE, ReturnItemsPacket.STREAM_CODEC,
                         (payload, context) ->
-                                BeltSystem.INSTANCE.returnItems(context.player()))
+                                DriverSystem.INSTANCE.returnItems(context.player()))
                 .playToServer(ExtractItemPacket.TYPE, ExtractItemPacket.STREAM_CODEC,
-                        (payload, context) -> BeltSystem.INSTANCE.extractItem(context.player(), payload.slotId()))
-                .playToClient(BeltDataDiffPacket.TYPE, BeltDataDiffPacket.STREAM_CODEC,
-                        (payload, context) -> BeltSystem.INSTANCE.applyDiffPacket(payload)
+                        (payload, context) -> DriverSystem.INSTANCE.extractItem(context.player(), payload.slotId()))
+                .playToClient(DriverDataDiffPacket.TYPE, DriverDataDiffPacket.STREAM_CODEC,
+                        (payload, context) -> DriverSystem.INSTANCE.applyDiffPacket(payload)
                 )
                 .playToClient(TransformedStatePacket.TYPE, TransformedStatePacket.STREAM_CODEC,
                         (payload, context) -> HenshinSystem.CLIENT_TRANSFORMED_CACHE.put(payload.playerId(), payload.isTransformed()))

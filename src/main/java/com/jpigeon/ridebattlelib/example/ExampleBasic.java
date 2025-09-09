@@ -48,7 +48,7 @@ public class ExampleBasic {
                         List.of(Items.IRON_INGOT, Items.GOLD_INGOT, Items.DIAMOND),
                         true,
                         true
-                ) // 腰带中的核心槽位: 接受铁锭或金锭(必要槽位)
+                ) // 驱动器中的核心槽位: 接受铁锭或金锭(必要槽位)
                 .addAuxSlot(
                         TEST_ENERGY_SLOT,
                         List.of(Items.REDSTONE, Items.GLOWSTONE_DUST, Items.APPLE),
@@ -134,7 +134,7 @@ public class ExampleBasic {
                 .addForm(alphaPoweredForm)
                 .setBaseForm(alphaBaseForm.getFormId());// 设置基础形态
 
-        alphaBaseForm.setAllowsEmptyBelt(false); // 指定腰带物品的必要性
+        alphaBaseForm.setAllowsEmptyDriver(false); // 指定驱动器物品的必要性
         alphaBaseForm.setShouldPause(false); // 指定是否在驱动器键按下时暂停
 
         alphaPoweredForm.setShouldPause(false);

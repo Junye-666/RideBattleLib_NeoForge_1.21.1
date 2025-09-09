@@ -1,7 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.attachment;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.belt.BeltSystem;
+import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
@@ -50,8 +50,8 @@ public class AttachmentHandler {
 
 
         if (player instanceof ServerPlayer serverPlayer) {
-            // 确保腰带数据和变身状态都同步
-            BeltSystem.INSTANCE.syncBeltData(serverPlayer);
+            // 确保驱动器数据和变身状态都同步
+            DriverSystem.INSTANCE.syncDriverData(serverPlayer);
             HenshinSystem.syncHenshinState(serverPlayer);
         }
     }
@@ -64,10 +64,10 @@ public class AttachmentHandler {
         Player newPlayer = event.getEntity();
         RiderData originalData = original.getData(RiderAttachments.RIDER_DATA);
 
-        // 只复制 mainBeltItems 和变身数据（但重生时不自动恢复）
+        // 只复制 mainDriverItems 和变身数据（但重生时不自动恢复）
         newPlayer.setData(RiderAttachments.RIDER_DATA, new RiderData(
-                new HashMap<>(originalData.mainBeltItems),
-                new HashMap<>(originalData.auxBeltItems),
+                new HashMap<>(originalData.mainDriverItems),
+                new HashMap<>(originalData.auxDriverItems),
                 originalData.getTransformedData(),
                 originalData.getHenshinState(),
                 originalData.getPendingFormId(),

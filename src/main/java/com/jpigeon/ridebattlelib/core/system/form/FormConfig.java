@@ -3,7 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.form;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
-import com.jpigeon.ridebattlelib.core.system.belt.SlotDefinition;
+import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import net.minecraft.core.Holder;
@@ -43,7 +43,7 @@ public class FormConfig {
     private final Map<ResourceLocation, Item> requiredItems = new HashMap<>();
     private final Map<ResourceLocation, Item> auxRequiredItems = new HashMap<>();
     private final List<ItemStack> grantedItems = new ArrayList<>();
-    private boolean allowsEmptyBelt = false;
+    private boolean allowsEmptyDriver = false;
     private boolean shouldPause = false;
     private final List<ResourceLocation> skillIds = new ArrayList<>();
 
@@ -78,40 +78,43 @@ public class FormConfig {
         this.boots = boots;
     }
 
-    public void setAllowsEmptyBelt(boolean allow) {
-        this.allowsEmptyBelt = allow;
+    public void setAllowsEmptyDriver(boolean allow) {
+        this.allowsEmptyDriver = allow;
     }
 
+    // 触发方式
     public FormConfig setTriggerType(TriggerType type) {
         this.triggerType = type;
         return this;
     }
 
+    // 添加属性修饰符
     public FormConfig addAttribute(ResourceLocation attributeId, double amount,
                                    AttributeModifier.Operation operation) {
         attributes.add(new AttributeModifier(attributeId, amount, operation));
         attributeIds.add(attributeId);
         return this;
     }
-
+    // 添加生物效果
     public FormConfig addEffect(Holder<MobEffect> effect, int duration,
                                 int amplifier, boolean hideParticles) {
         ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
         effectIds.add(effectId);
-        effects.add(new MobEffectInstance(effect, duration, amplifier, false, hideParticles));
+        boolean visible = !hideParticles;
+        effects.add(new MobEffectInstance(effect, duration, amplifier, false, visible));
         return this;
     }
-
+    // 添加必要物品（主驱动器）
     public FormConfig addRequiredItem(ResourceLocation slotId, Item item) {
         requiredItems.put(slotId, item);
         return this;
     }
-
+    // 添加必要物品（副驱动器）
     public FormConfig addAuxRequiredItem(ResourceLocation slotId, Item item) {
         auxRequiredItems.put(slotId, item);
         return this;
     }
-
+    // 给予物品（变身后）
     public FormConfig addGrantedItem(ItemStack stack) {
         if (!stack.isEmpty()) {
             grantedItems.add(stack.copy());
@@ -124,13 +127,13 @@ public class FormConfig {
     }
 
     // 匹配验证
-    public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> beltItems, RiderConfig config) {
+    public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
         for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
 
-            if (requiredItems.isEmpty() && !allowsEmptyBelt) {
-                // 检查腰带是否为空（跳过辅助槽位）
+            if (requiredItems.isEmpty() && !allowsEmptyDriver) {
+                // 检查驱动器是否为空（跳过辅助槽位）
                 for (ResourceLocation slotId : config.getSlotDefinitions().keySet()) {
-                    ItemStack stack = beltItems.get(slotId);
+                    ItemStack stack = driverItems.get(slotId);
                     if (stack != null && !stack.isEmpty()) {
                         return true; // 非空即匹配
                     }
@@ -141,13 +144,13 @@ public class FormConfig {
             ResourceLocation slotId = entry.getKey();
             Item requiredItem = entry.getValue();
 
-            SlotDefinition slotDef = config.getSlotDefinition(slotId);
+            DriverSlotDefinition slotDef = config.getSlotDefinition(slotId);
             if (slotDef == null) {
                 RideBattleLib.LOGGER.warn("未找到槽位定义: {}", slotId);
                 return false;
             }
 
-            ItemStack stack = beltItems.get(slotId);
+            ItemStack stack = driverItems.get(slotId);
 
             // 必需槽位不能为空
             if (slotDef.isRequired() && (stack == null || stack.isEmpty())) {
@@ -168,14 +171,14 @@ public class FormConfig {
         return true;
     }
 
-    public boolean matchesAuxSlots(Map<ResourceLocation, ItemStack> beltItems, RiderConfig config) {
+    public boolean matchesAuxSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
         RideBattleLib.LOGGER.debug("开始匹配辅助槽位...");
         for (Map.Entry<ResourceLocation, Item> entry : auxRequiredItems.entrySet()) {
             ResourceLocation slotId = entry.getKey();
             Item requiredItem = entry.getValue();
-            ItemStack stack = beltItems.get(slotId);
+            ItemStack stack = driverItems.get(slotId);
 
-            SlotDefinition slotDef = config.getAuxSlotDefinition(slotId);
+            DriverSlotDefinition slotDef = config.getAuxSlotDefinition(slotId);
             if (slotDef == null) {
                 RideBattleLib.LOGGER.warn("未找到辅助槽位定义: {}", slotId);
                 return false;
@@ -258,8 +261,8 @@ public class FormConfig {
         return Collections.unmodifiableMap(auxRequiredItems);
     }
 
-    public boolean allowsEmptyBelt() {
-        return allowsEmptyBelt;
+    public boolean allowsEmptyDriver() {
+        return allowsEmptyDriver;
     }
 
     public List<ItemStack> getGrantedItems() {

@@ -64,7 +64,7 @@ public class ExampleDynamicForm {
                 .addForm(baseForm)
                 .setBaseForm(BETA_BASE_FORM);
 
-        baseForm.setAllowsEmptyBelt(true);
+        baseForm.setAllowsEmptyDriver(true);
 
         RiderRegistry.registerRider(riderBeta);
         registerDynamicMappings();

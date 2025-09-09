@@ -14,26 +14,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public record BeltDataDiffPacket(
+public record DriverDataDiffPacket(
         UUID playerId,
         Map<ResourceLocation, ItemStack> changes,
         boolean fullSync
 ) implements CustomPacketPayload {
 
     public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "belt_diff_sync");
+            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_diff_sync");
 
-    public static final Type<BeltDataDiffPacket> TYPE = new Type<>(ID);
+    public static final Type<DriverDataDiffPacket> TYPE = new Type<>(ID);
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, BeltDataDiffPacket> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, DriverDataDiffPacket> STREAM_CODEC =
             StreamCodec.composite(
                     UUIDStreamCodec.INSTANCE,
-                    BeltDataDiffPacket::playerId,
+                    DriverDataDiffPacket::playerId,
                     createChangesCodec(),
-                    BeltDataDiffPacket::changes,
+                    DriverDataDiffPacket::changes,
                     ByteBufCodecs.BOOL,
-                    BeltDataDiffPacket::fullSync,
-                    BeltDataDiffPacket::new
+                    DriverDataDiffPacket::fullSync,
+                    DriverDataDiffPacket::new
             );
 
     private static StreamCodec<RegistryFriendlyByteBuf, Map<ResourceLocation, ItemStack>> createChangesCodec() {

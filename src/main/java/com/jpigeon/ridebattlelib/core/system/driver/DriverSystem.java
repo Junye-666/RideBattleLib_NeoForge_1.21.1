@@ -1,17 +1,17 @@
-package com.jpigeon.ridebattlelib.core.system.belt;
+package com.jpigeon.ridebattlelib.core.system.driver;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.api.IBeltSystem;
+import com.jpigeon.ridebattlelib.api.IDriverSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.ItemInsertionEvent;
 import com.jpigeon.ridebattlelib.core.system.event.ReturnItemsEvent;
 import com.jpigeon.ridebattlelib.core.system.event.SlotExtractionEvent;
-import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataDiffPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
-import com.jpigeon.ridebattlelib.core.system.network.packet.BeltDataSyncPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,14 +22,14 @@ import net.neoforged.neoforge.common.NeoForge;
 import java.util.*;
 
 /*
- * 腰带系统
- * 管理腰带内部物品的存储和操作
+ * 驱动器系统
+ * 管理驱动器内部物品的存储和操作
  * insertItem 存入物品
  * extractItem 提取物品
  * returnItems 退回所有物品
  */
-public class BeltSystem implements IBeltSystem {
-    public static final BeltSystem INSTANCE = new BeltSystem();
+public class DriverSystem implements IDriverSystem {
+    public static final DriverSystem INSTANCE = new DriverSystem();
 
     //====================核心方法====================
 
@@ -61,7 +61,7 @@ public class BeltSystem implements IBeltSystem {
         }
 
         boolean isAuxSlot = config.getAuxSlotDefinitions().containsKey(slotId);
-        SlotDefinition slot = isAuxSlot ?
+        DriverSlotDefinition slot = isAuxSlot ?
                 config.getAuxSlotDefinition(slotId) :
                 config.getSlotDefinition(slotId);
 
@@ -71,8 +71,8 @@ public class BeltSystem implements IBeltSystem {
 
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         // 确保我们操作的是副本，而不是只读Map
-        Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
-        Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>()));
+        Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getDriverItems(config.getRiderId()));
+        Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>()));
 
         Map<ResourceLocation, ItemStack> targetMap = isAuxSlot ? auxItems : mainItems;
 
@@ -89,10 +89,10 @@ public class BeltSystem implements IBeltSystem {
                     targetMap.put(slotId, toInsert);
 
                     // 更新数据存储
-                    data.setBeltItems(config.getRiderId(), mainItems);
-                    data.setAuxBeltItems(config.getRiderId(), auxItems);
+                    data.setDriverItems(config.getRiderId(), mainItems);
+                    data.setAuxDriverItems(config.getRiderId(), auxItems);
 
-                    syncBeltData(player);
+                    syncDriverData(player);
                     stack.shrink(1);
                     return true;
                 }
@@ -104,10 +104,10 @@ public class BeltSystem implements IBeltSystem {
         targetMap.put(slotId, stack.copyWithCount(1));
         cleanInvalidStacks(mainItems);
         cleanInvalidStacks(auxItems);
-        data.setBeltItems(config.getRiderId(), mainItems);
-        data.setAuxBeltItems(config.getRiderId(), auxItems);
+        data.setDriverItems(config.getRiderId(), mainItems);
+        data.setAuxDriverItems(config.getRiderId(), auxItems);
 
-        syncBeltData(player);
+        syncDriverData(player);
 
         ItemInsertionEvent.Post postEvent = new ItemInsertionEvent.Post(player, slotId, stack, config);
         NeoForge.EVENT_BUS.post(postEvent);
@@ -123,8 +123,8 @@ public class BeltSystem implements IBeltSystem {
 
         boolean isAuxSlot = config.getAuxSlotDefinitions().containsKey(slotId);
         Map<ResourceLocation, ItemStack> targetMap = isAuxSlot ?
-                new HashMap<>(data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>())) :
-                new HashMap<>(data.getBeltItems(config.getRiderId()));
+                new HashMap<>(data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>())) :
+                new HashMap<>(data.getDriverItems(config.getRiderId()));
 
         // 先检查物品是否存在
         if (!targetMap.containsKey(slotId) || targetMap.get(slotId).isEmpty()) {
@@ -157,7 +157,7 @@ public class BeltSystem implements IBeltSystem {
         }
 
         // 返还主驱动器物品
-        Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
+        Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getDriverItems(config.getRiderId()));
         // 创建副本用于迭代，避免并发修改异常
         List<ResourceLocation> mainSlots = new ArrayList<>(mainItems.keySet());
 
@@ -166,7 +166,7 @@ public class BeltSystem implements IBeltSystem {
         }
 
         // 返还辅助驱动器物品
-        Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>()));
+        Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>()));
         // 创建副本用于迭代，避免并发修改异常
         List<ResourceLocation> auxSlots = new ArrayList<>(auxItems.keySet());
 
@@ -208,22 +208,22 @@ public class BeltSystem implements IBeltSystem {
 
         // 如果事件被取消，直接返回 false，不执行任何操作
         if (preExtraction.isCanceled()) {
-            RideBattleLib.LOGGER.debug("提取事件被取消，物品保留在腰带中");
+            RideBattleLib.LOGGER.debug("提取事件被取消，物品保留在驱动器中");
             return false;
         }
 
-        // 从腰带中移除物品
+        // 从驱动器中移除物品
         targetMap.remove(slotId);
         extracted = preExtraction.getExtractedStack();
 
         if (extracted.isEmpty()) {
             // 更新数据
             if (isAuxSlot) {
-                data.setAuxBeltItems(config.getRiderId(), targetMap);
+                data.setAuxDriverItems(config.getRiderId(), targetMap);
             } else {
-                data.setBeltItems(config.getRiderId(), targetMap);
+                data.setDriverItems(config.getRiderId(), targetMap);
             }
-            syncBeltData(player);
+            syncDriverData(player);
             return false;
         }
 
@@ -231,12 +231,12 @@ public class BeltSystem implements IBeltSystem {
 
         // 更新数据
         if (isAuxSlot) {
-            data.setAuxBeltItems(config.getRiderId(), targetMap);
+            data.setAuxDriverItems(config.getRiderId(), targetMap);
         } else {
-            data.setBeltItems(config.getRiderId(), targetMap);
+            data.setDriverItems(config.getRiderId(), targetMap);
         }
 
-        syncBeltData(player);
+        syncDriverData(player);
 
         SlotExtractionEvent.Post postEvent = new SlotExtractionEvent.Post(player, slotId, extracted, config);
         NeoForge.EVENT_BUS.post(postEvent);
@@ -261,8 +261,8 @@ public class BeltSystem implements IBeltSystem {
                 }
             }
 
-            ItemStack item = getBeltItems(player).get(slotId);
-            SlotDefinition slot = config.getSlotDefinition(slotId);
+            ItemStack item = getDriverItems(player).get(slotId);
+            DriverSlotDefinition slot = config.getSlotDefinition(slotId);
 
             // 详细日志输出
             RideBattleLib.LOGGER.info("验证槽位: {} | 物品: {} | 允许物品: {}",
@@ -280,19 +280,19 @@ public class BeltSystem implements IBeltSystem {
     //====================Getters====================
 
     @Override
-    public Map<ResourceLocation, ItemStack> getBeltItems(Player player) {
+    public Map<ResourceLocation, ItemStack> getDriverItems(Player player) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
-        // 根据当前激活的骑士获取腰带数据
+        // 根据当前激活的骑士获取驱动器数据
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return new HashMap<>();
 
-        Map<ResourceLocation, ItemStack> allItems = new HashMap<>(data.getBeltItems(config.getRiderId()));
+        Map<ResourceLocation, ItemStack> allItems = new HashMap<>(data.getDriverItems(config.getRiderId()));
 
         // 只在装备辅助驱动器时添加辅助槽位
         if (config.hasAuxDriverEquipped(player)) {
             for (ResourceLocation slotId : config.getAuxSlotDefinitions().keySet()) {
-                ItemStack item = data.getAuxBeltItems(config.getRiderId(), slotId);
+                ItemStack item = data.getAuxDriverItems(config.getRiderId(), slotId);
                 if (!item.isEmpty()) {
                     allItems.put(slotId, item);
                 }
@@ -303,17 +303,17 @@ public class BeltSystem implements IBeltSystem {
 
     //====================网络通信方法====================
 
-    public void syncBeltData(Player player) {
+    public void syncDriverData(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
             RiderData data = player.getData(RiderAttachments.RIDER_DATA);
             RiderConfig config = RiderConfig.findActiveDriverConfig(player);
             if (config == null) return;
 
             // 分别发送主/辅助驱动器数据
-            Map<ResourceLocation, ItemStack> mainItems = data.getBeltItems(config.getRiderId());
-            Map<ResourceLocation, ItemStack> auxItems = data.auxBeltItems.getOrDefault(config.getRiderId(), new HashMap<>());
+            Map<ResourceLocation, ItemStack> mainItems = data.getDriverItems(config.getRiderId());
+            Map<ResourceLocation, ItemStack> auxItems = data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>());
 
-            PacketHandler.sendToClient(serverPlayer, new BeltDataSyncPacket(
+            PacketHandler.sendToClient(serverPlayer, new DriverDataSyncPacket(
                     player.getUUID(),
                     new HashMap<>(mainItems),
                     new HashMap<>(auxItems)
@@ -322,7 +322,7 @@ public class BeltSystem implements IBeltSystem {
     }
 
     // 客户端应用同步包
-    public void applySyncPacket(BeltDataSyncPacket packet) {
+    public void applySyncPacket(DriverDataSyncPacket packet) {
         Player player = findPlayer(packet.playerId());
         if (player == null) return;
 
@@ -333,21 +333,21 @@ public class BeltSystem implements IBeltSystem {
         ResourceLocation riderId = config.getRiderId();
 
         // 创建新数据
-        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newRiderBeltItems =
-                new HashMap<>(oldData.mainBeltItems);
-        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newAuxBeltItems =
-                new HashMap<>(oldData.auxBeltItems);
+        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newRiderDriverItems =
+                new HashMap<>(oldData.mainDriverItems);
+        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newAuxDriverItems =
+                new HashMap<>(oldData.auxDriverItems);
 
         // 更新主驱动器数据
-        newRiderBeltItems.put(riderId, new HashMap<>(packet.mainItems()));
+        newRiderDriverItems.put(riderId, new HashMap<>(packet.mainItems()));
 
         // 更新辅助驱动器数据
-        newAuxBeltItems.put(riderId, new HashMap<>(packet.auxItems()));
+        newAuxDriverItems.put(riderId, new HashMap<>(packet.auxItems()));
 
         player.setData(RiderAttachments.RIDER_DATA,
                 new RiderData(
-                        newRiderBeltItems,
-                        newAuxBeltItems,
+                        newRiderDriverItems,
+                        newAuxDriverItems,
                         oldData.getTransformedData(),
                         oldData.getHenshinState(),
                         oldData.getPendingFormId(),
@@ -358,7 +358,7 @@ public class BeltSystem implements IBeltSystem {
     }
 
     // 客户端应用差异包
-    public void applyDiffPacket(BeltDataDiffPacket packet) {
+    public void applyDiffPacket(DriverDataDiffPacket packet) {
         Player player = findPlayer(packet.playerId());
         if (player == null) return;
 
@@ -368,26 +368,26 @@ public class BeltSystem implements IBeltSystem {
         ResourceLocation riderId = config.getRiderId();
 
         // 创建新数据（深拷贝）
-        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newRiderBeltItems = new HashMap<>();
-        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newAuxBeltItems = new HashMap<>();
+        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newRiderDriverItems = new HashMap<>();
+        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> newAuxDriverItems = new HashMap<>();
 
         // 复制主驱动器数据
-        oldData.mainBeltItems.forEach((id, items) ->
-                newRiderBeltItems.put(id, new HashMap<>(items))
+        oldData.mainDriverItems.forEach((id, items) ->
+                newRiderDriverItems.put(id, new HashMap<>(items))
         );
 
         // 复制辅助驱动器数据
-        oldData.auxBeltItems.forEach((id, items) ->
-                newAuxBeltItems.put(id, new HashMap<>(items))
+        oldData.auxDriverItems.forEach((id, items) ->
+                newAuxDriverItems.put(id, new HashMap<>(items))
         );
 
-        // 获取当前骑士的主驱动器腰带数据
+        // 获取当前骑士的主驱动器数据
         Map<ResourceLocation, ItemStack> currentMainItems =
-                new HashMap<>(newRiderBeltItems.getOrDefault(riderId, new HashMap<>()));
+                new HashMap<>(newRiderDriverItems.getOrDefault(riderId, new HashMap<>()));
 
-        // 获取当前骑士的辅助驱动器腰带数据
+        // 获取当前骑士的辅助驱动器数据
         Map<ResourceLocation, ItemStack> currentAuxItems =
-                new HashMap<>(newAuxBeltItems.getOrDefault(riderId, new HashMap<>()));
+                new HashMap<>(newAuxDriverItems.getOrDefault(riderId, new HashMap<>()));
 
         // 应用变更
         if (packet.fullSync()) {
@@ -428,13 +428,13 @@ public class BeltSystem implements IBeltSystem {
         }
 
         // 更新数据
-        newRiderBeltItems.put(riderId, currentMainItems);
-        newAuxBeltItems.put(riderId, currentAuxItems);
+        newRiderDriverItems.put(riderId, currentMainItems);
+        newAuxDriverItems.put(riderId, currentAuxItems);
 
         player.setData(RiderAttachments.RIDER_DATA,
                 new RiderData(
-                        newRiderBeltItems,
-                        newAuxBeltItems,
+                        newRiderDriverItems,
+                        newAuxDriverItems,
                         oldData.getTransformedData(),
                         oldData.getHenshinState(),
                         oldData.getPendingFormId(),

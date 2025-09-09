@@ -13,23 +13,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public record BeltDataSyncPacket(UUID playerId,
-                                 Map<ResourceLocation, ItemStack> mainItems,
-                                 Map<ResourceLocation, ItemStack> auxItems
+public record DriverDataSyncPacket(UUID playerId,
+                                   Map<ResourceLocation, ItemStack> mainItems,
+                                   Map<ResourceLocation, ItemStack> auxItems
 ) implements CustomPacketPayload {
 
     public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "belt_sync");
+            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_sync");
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, BeltDataSyncPacket> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, DriverDataSyncPacket> STREAM_CODEC =
             StreamCodec.composite(
                     UUIDStreamCodec.INSTANCE,
-                    BeltDataSyncPacket::playerId,
+                    DriverDataSyncPacket::playerId,
                     createMapCodec(),
-                    BeltDataSyncPacket::mainItems,
+                    DriverDataSyncPacket::mainItems,
                     createMapCodec(),
-                    BeltDataSyncPacket::auxItems,
-                    BeltDataSyncPacket::new
+                    DriverDataSyncPacket::auxItems,
+                    DriverDataSyncPacket::new
             );
 
     private static StreamCodec<RegistryFriendlyByteBuf, Map<ResourceLocation, ItemStack>> createMapCodec() {
@@ -54,7 +54,7 @@ public record BeltDataSyncPacket(UUID playerId,
         );
     }
 
-    public static final Type<BeltDataSyncPacket> TYPE = new Type<>(ID);
+    public static final Type<DriverDataSyncPacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

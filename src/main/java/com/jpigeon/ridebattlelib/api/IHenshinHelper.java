@@ -13,6 +13,6 @@ public interface IHenshinHelper {
     void performHenshin(Player player, RiderConfig config, ResourceLocation formId);
     void performFormSwitch(Player player, ResourceLocation newFormId);
     void restoreTransformedState(Player player, TransformedAttachmentData data);
-    void setTransformed(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> beltSnapshot);
+    void setTransformed(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> driverSnapshot);
     void removeTransformed(Player player);
 }

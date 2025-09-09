@@ -33,13 +33,13 @@ public class DynamicFormManager {
         }
     }
 
-    public static FormConfig getOrCreateDynamicForm(Player player, RiderConfig config, Map<ResourceLocation, ItemStack> beltItems) {
+    public static FormConfig getOrCreateDynamicForm(Player player, RiderConfig config, Map<ResourceLocation, ItemStack> driverItems) {
         // 1. 生成formId
-        ResourceLocation formId = generateFormId(config.getRiderId(), beltItems);
+        ResourceLocation formId = generateFormId(config.getRiderId(), driverItems);
 
         RideBattleLib.LOGGER.info("创建动态形态: {}", formId);
         RideBattleLib.LOGGER.debug("槽位内容: {}",
-                beltItems.entrySet().stream()
+                driverItems.entrySet().stream()
                         .map(e -> e.getKey() + "=" + e.getValue().getItem())
                         .collect(Collectors.joining(", ")));
 
@@ -50,7 +50,7 @@ public class DynamicFormManager {
         }
 
         // 3. 创建新形态
-        FormConfig form = new DynamicFormConfig(formId, beltItems, config);
+        FormConfig form = new DynamicFormConfig(formId, driverItems, config);
         FormConfig baseForm = config.getForms(config.getBaseFormId());
         if (baseForm != null) {
             form.setTriggerType(baseForm.getTriggerType());
@@ -74,14 +74,14 @@ public class DynamicFormManager {
 
     private static ResourceLocation generateFormId(
             ResourceLocation riderId,
-            Map<ResourceLocation, ItemStack> beltItems
+            Map<ResourceLocation, ItemStack> driverItems
     ) {
         // 提取骑士基础ID (e.g. "kamen_rider_build" -> "build")
         String baseId = riderId.getPath().replace("kamen_rider_", "");
 
         // 收集物品ID并去重
         Set<String> itemParts = new LinkedHashSet<>();
-        for (ItemStack stack : beltItems.values()) {
+        for (ItemStack stack : driverItems.values()) {
             if (!stack.isEmpty()) {
                 ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
                 String trimmedId = trimCommonSuffix(itemId.getPath());

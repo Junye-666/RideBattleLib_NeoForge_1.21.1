@@ -13,13 +13,10 @@ public class RespawnHandler {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         Player player = event.getEntity();
 
-        // 清除重生标记
         player.removeTag("just_respawned");
 
-        // 清除冷却标记
         player.removeTag("penalty_cooldown");
 
-        // 确保玩家没有自动恢复变身
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             HenshinSystem.INSTANCE.unHenshin(player);
         }

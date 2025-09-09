@@ -15,11 +15,11 @@ public class PenaltyHandler {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
 
-        // 检查是否需要触发吃瘪
+        // 是否需要触发吃瘪
         if (PenaltySystem.shouldTriggerPenalty(player)) {
             PenaltySystem.PENALTY_SYSTEM.forceUnhenshin(player);
 
-            // 设置生命值为安全值
+            // 设生命值为安全值
             player.setHealth(6.0f);
         }
     }
@@ -29,12 +29,11 @@ public class PenaltyHandler {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
 
-        // 强制解除变身
+        // 强制解除
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             HenshinSystem.INSTANCE.unHenshin(player);
         }
 
-        // 清除冷却标记
         player.removeTag("penalty_cooldown");
     }
 }

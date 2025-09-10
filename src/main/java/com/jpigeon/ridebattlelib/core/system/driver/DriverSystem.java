@@ -256,7 +256,7 @@ public class DriverSystem implements IDriverSystem {
             if (config.getAuxSlotDefinitions().containsKey(slotId)) {
                 // 辅助槽位仅在装备辅助驱动器时验证
                 if (!config.hasAuxDriverEquipped(player)) {
-                    RideBattleLib.LOGGER.info("跳过辅助槽位{}验证（未装备驱动器）", slotId);
+                    RideBattleLib.LOGGER.debug("跳过辅助槽位{}验证（未装备驱动器）", slotId);
                     continue;
                 }
             }
@@ -265,7 +265,7 @@ public class DriverSystem implements IDriverSystem {
             DriverSlotDefinition slot = config.getSlotDefinition(slotId);
 
             // 详细日志输出
-            RideBattleLib.LOGGER.info("验证槽位: {} | 物品: {} | 允许物品: {}",
+            RideBattleLib.LOGGER.debug("验证槽位: {} | 物品: {} | 允许物品: {}",
                     slotId, item.getItem(), slot.allowedItems()
             );
 

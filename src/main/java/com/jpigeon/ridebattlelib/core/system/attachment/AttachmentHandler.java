@@ -1,10 +1,12 @@
 package com.jpigeon.ridebattlelib.core.system.attachment;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -19,10 +21,12 @@ public class AttachmentHandler {
         Player player = event.getEntity();
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
-        RideBattleLib.LOGGER.info("玩家登录: {} | 当前状态: {} | 变身数据: {}",
-                player.getName().getString(),
-                data.getHenshinState(),
-                data.getTransformedData() != null ? "存在" : "不存在");
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("玩家登录: {} | 当前状态: {} | 变身数据: {}",
+                    player.getName().getString(),
+                    data.getHenshinState(),
+                    data.getTransformedData() != null ? "存在" : "不存在");
+        }
 
         if (data.getTransformedData() != null &&
                 !player.getTags().contains("penalty_cooldown") &&
@@ -33,8 +37,9 @@ public class AttachmentHandler {
 
             // 恢复变身状态
             HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.getTransformedData()));
-
-            RideBattleLib.LOGGER.info("已恢复玩家 {} 的变身状态", player.getName().getString());
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("已恢复玩家 {} 的变身状态", player.getName().getString());
+            }
         }
 
         if (data.isInPenaltyCooldown()) {
@@ -44,7 +49,7 @@ public class AttachmentHandler {
         if (data.getHenshinState() == HenshinState.TRANSFORMING) {
             data.setHenshinState(HenshinState.IDLE);
             data.setPendingFormId(null);
-            RideBattleLib.LOGGER.info("重置玩家 {} 的状态为IDLE，因为登录时处于TRANSFORMING状态",
+            RideBattleLib.LOGGER.debug("重置玩家 {} 的状态为IDLE，因为登录时处于TRANSFORMING状态",
                     player.getName().getString());
         }
 

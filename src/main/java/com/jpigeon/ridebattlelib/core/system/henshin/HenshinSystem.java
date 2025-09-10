@@ -17,6 +17,7 @@ import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinStateSyncPack
 import com.jpigeon.ridebattlelib.core.system.network.packet.SyncHenshinStatePacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -109,7 +110,9 @@ public class HenshinSystem implements IHenshinSystem {
 
         // 如果是动态形态（不在预设注册表中）
         if (formConfig == null) {
-            RideBattleLib.LOGGER.debug("形态 {} 未注册，尝试作为动态形态处理", formId);
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("形态 {} 未注册，尝试作为动态形态处理", formId);
+            }
             formConfig = DynamicFormManager.getOrCreateDynamicForm(
                     player, config, driverItems
             );
@@ -144,7 +147,7 @@ public class HenshinSystem implements IHenshinSystem {
             boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
 
             // 清除效果
-            EffectAndAttributeManager.INSTANCE.removeAttributesAndEffects(player, data.formId() );
+            EffectAndAttributeManager.INSTANCE.removeAttributesAndEffects(player, data.formId());
 
             // 恢复装备
             ArmorManager.INSTANCE.restoreOriginalGear(player, data);
@@ -173,6 +176,7 @@ public class HenshinSystem implements IHenshinSystem {
             //事件触发
             UnhenshinEvent.Post postUnHenshin = new UnhenshinEvent.Post(player);
             NeoForge.EVENT_BUS.post(postUnHenshin);
+            RideBattleLib.LOGGER.info("玩家 {} 解除变身", player.getName().getString());
         }
     }
 
@@ -243,9 +247,10 @@ public class HenshinSystem implements IHenshinSystem {
             syncHenshinState(serverPlayer);
         }
 
-        // 调试日志
-        RideBattleLib.LOGGER.info("状态变更: {} -> {} (形态: {})",
-                oldData.getHenshinState(), state, formId);
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("状态变更: {} -> {} (形态: {})",
+                    oldData.getHenshinState(), state, formId);
+        }
     }
 
     //====================网络通信====================
@@ -253,8 +258,10 @@ public class HenshinSystem implements IHenshinSystem {
     public static void syncHenshinState(ServerPlayer player) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
-        RideBattleLib.LOGGER.info("同步变身状态: player={}, state={}, pendingForm={}",
-                player.getName().getString(), data.getHenshinState(), data.getPendingFormId());
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("同步变身状态: player={}, state={}, pendingForm={}",
+                    player.getName().getString(), data.getHenshinState(), data.getPendingFormId());
+        }
 
         PacketHandler.sendToClient(player, new HenshinStateSyncPacket(
                 player.getUUID(),

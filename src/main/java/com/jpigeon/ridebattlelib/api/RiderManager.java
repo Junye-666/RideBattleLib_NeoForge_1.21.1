@@ -18,12 +18,20 @@ import net.minecraft.world.item.ItemStack;
 import javax.annotation.Nullable;
 import java.util.Map;
 
-
+/**
+ * 假面骑士系统快捷方法管理器。
+ * 提供静态方法供其他模组调用，如变身、形态切换、物品管理等。
+ * 所有方法均线程安全，可在客户端或服务端调用。
+ */
 public final class RiderManager {
     private RiderManager() {} // 防止实例化
 
     // ================ 变身系统快捷方法 ================
-    // 快捷变身
+    /**
+     * 尝试让玩家变身。
+     * @param player 玩家
+     * @return 是否成功发起变身
+     */
     public static boolean transform(Player player) {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config != null) {
@@ -33,7 +41,11 @@ public final class RiderManager {
         return false;
     }
 
-    // 快捷解除
+    /**
+     * 解除让玩家变身。
+     * @param player 玩家
+     * @return 是否成功解除变身
+     */
     public static boolean unTransform(Player player) {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             PacketHandler.sendToServer(new UnhenshinPacket(player.getUUID()));
@@ -42,16 +54,29 @@ public final class RiderManager {
         return false;
     }
 
-    // 快捷切换形态
-    public static void switchForm(Player player, ResourceLocation newFormId) {
-        PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
+    /**
+     * 尝试切换玩家形态。
+     * @param player 玩家
+     * @return 是否成功切换
+     */
+    public static boolean switchForm(Player player, ResourceLocation newFormId) {
+        if (!HenshinSystem.INSTANCE.isTransformed(player)){
+            PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
+            return true;
+        }
+        return false;
     }
 
-    // 快捷检查变身状态
+    /**
+     * 快捷检查变身状态
+     */
     public static boolean isTransformed(Player player) {
         return HenshinSystem.INSTANCE.isTransformed(player);
     }
 
+    /**
+     * 快捷完成变身序列
+     */
     public static void completeHenshin(Player player){
         DriverActionManager.INSTANCE.completeTransformation(player);
     }

@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.handler;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.KeyBindings;
 
@@ -14,6 +15,7 @@ import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.ReturnItemsPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.UnhenshinPacket;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -36,12 +38,16 @@ public class KeyHandler {
 
             FormConfig formConfig = config.getActiveFormConfig(player);
             if (formConfig != null && formConfig.getTriggerType() == TriggerType.KEY) {
-                RideBattleLib.LOGGER.info("按键触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("按键触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                }
                 HenshinSystem.INSTANCE.driverAction(player);
             }
         }
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
-            RideBattleLib.LOGGER.debug("发送解除变身数据包");
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("发送解除变身数据包");
+            }
             PacketHandler.sendToServer(new UnhenshinPacket(player.getUUID()));
         }
 

@@ -1,8 +1,10 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -26,7 +28,9 @@ public class DynamicFormManager {
             long lastUsed = LAST_USED.getOrDefault(entry.getKey(), 0L);
 
             if (now - lastUsed > UNLOAD_DELAY) {
-                RideBattleLib.LOGGER.info("卸载动态形态: {}", entry.getKey());
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("卸载动态形态: {}", entry.getKey());
+                }
                 it.remove();
                 LAST_USED.remove(entry.getKey());
             }
@@ -37,11 +41,13 @@ public class DynamicFormManager {
         // 1. 生成formId
         ResourceLocation formId = generateFormId(config.getRiderId(), driverItems);
 
-        RideBattleLib.LOGGER.info("创建动态形态: {}", formId);
-        RideBattleLib.LOGGER.debug("槽位内容: {}",
-                driverItems.entrySet().stream()
-                        .map(e -> e.getKey() + "=" + e.getValue().getItem())
-                        .collect(Collectors.joining(", ")));
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("创建动态形态: {}", formId);
+            RideBattleLib.LOGGER.debug("槽位内容: {}",
+                    driverItems.entrySet().stream()
+                            .map(e -> e.getKey() + "=" + e.getValue().getItem())
+                            .collect(Collectors.joining(", ")));
+        }
 
         // 2. 检查缓存
         if (DYNAMIC_FORMS.containsKey(formId)) {

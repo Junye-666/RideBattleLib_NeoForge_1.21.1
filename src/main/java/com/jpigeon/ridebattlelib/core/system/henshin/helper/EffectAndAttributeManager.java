@@ -1,10 +1,12 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -114,8 +116,11 @@ public class EffectAndAttributeManager {
             }
         }
         // 记录并报告任何残留效果
-        for (Holder<MobEffect> activeEffect : player.getActiveEffectsMap().keySet()) {
-            activeEffect.unwrapKey().ifPresent(key -> RideBattleLib.LOGGER.warn("残留效果: {}", key.location()));
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            for (Holder<MobEffect> activeEffect : player.getActiveEffectsMap().keySet()) {
+                activeEffect.unwrapKey().ifPresent(key ->
+                        RideBattleLib.LOGGER.debug("移除残留效果: {}", key.location()));
+            }
         }
     }
 }

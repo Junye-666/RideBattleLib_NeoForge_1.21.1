@@ -1,11 +1,13 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -20,14 +22,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-/*
-  * 骑士形态配置
-  * setArmor 盔甲设置
-  * addAttribute 添加属性修饰符
-  * addEffect 添加效果
-  * addRequiredItem 添加必需物品
-  * addGrantedItem 添加变身后给予玩家的物品
-  * setShouldPause 添加形态变身时是否缓冲(默认false->0帧起手的变身)
+/**
+ * 形态配置类。
+ * 定义变身后的盔甲、属性修饰符、状态效果、技能等。
+ * <p>
+ * 可通过 RiderConfig.addForm() 添加。
  */
 public class FormConfig {
     private final ResourceLocation formId;
@@ -154,19 +153,19 @@ public class FormConfig {
 
             // 必需槽位不能为空
             if (slotDef.isRequired() && (stack == null || stack.isEmpty())) {
-                RideBattleLib.LOGGER.warn("必需槽位 {} 为空", slotId);
                 return false;
             }
 
             // 如果形态明确要求某物品，即使槽位非必需，也必须匹配
             if (requiredItem != null && (stack == null || !stack.is(requiredItem))) {
-                if (stack != null) {
-                    RideBattleLib.LOGGER.warn("槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                if (stack != null && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
                 }
                 return false;
             }
-
-            RideBattleLib.LOGGER.debug("槽位 {} 匹配成功 {}", slotId, stack);
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("槽位 {} 匹配成功 {}", slotId, stack);
+            }
         }
         return true;
     }
@@ -180,27 +179,31 @@ public class FormConfig {
 
             DriverSlotDefinition slotDef = config.getAuxSlotDefinition(slotId);
             if (slotDef == null) {
-                RideBattleLib.LOGGER.warn("未找到辅助槽位定义: {}", slotId);
+                RideBattleLib.LOGGER.warn("未找到辅助槽位: {}", slotId);
                 return false;
             }
 
             // 必需槽位不能为空
             if (slotDef.isRequired() && (stack == null || stack.isEmpty())) {
-                RideBattleLib.LOGGER.warn("必需辅助槽位 {} 为空", slotId);
                 return false;
             }
 
             // 如果形态明确要求某物品，即使非必需，也必须匹配
             if (requiredItem != null && (stack == null || !stack.is(requiredItem))) {
                 if (stack != null) {
-                    RideBattleLib.LOGGER.warn("辅助槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("辅助槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
+                    }
                 }
                 return false;
             }
-
-            RideBattleLib.LOGGER.debug("辅助槽位 {} 匹配成功", slotId);
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("辅助槽位 {} 匹配成功", slotId);
+            }
         }
-        RideBattleLib.LOGGER.debug("辅助槽位全部匹配");
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("辅助槽位全部匹配");
+        }
         return true;
     }
 

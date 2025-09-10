@@ -1,9 +1,11 @@
 package com.jpigeon.ridebattlelib.core.system.driver;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -50,12 +52,14 @@ public class DriverHandler {
         if (inserted) {
             DriverSystem.INSTANCE.syncDriverData(player);
             FormConfig formConfig = config.getActiveFormConfig(player);
-            if (formConfig != null) {
+            if (formConfig != null && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
                 RideBattleLib.LOGGER.debug("形态触发类型: {}", formConfig.getTriggerType());
             }
             // 添加 null 检查
             if (formConfig != null && formConfig.getTriggerType() == TriggerType.AUTO) {
-                RideBattleLib.LOGGER.info("自动触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+                    RideBattleLib.LOGGER.debug("自动触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                }
                 HenshinSystem.INSTANCE.driverAction(player);
             }
 

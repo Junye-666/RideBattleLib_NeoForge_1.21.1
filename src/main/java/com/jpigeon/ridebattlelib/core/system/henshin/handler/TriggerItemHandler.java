@@ -39,7 +39,7 @@ public class TriggerItemHandler {
             if (formConfig != null && formConfig.getTriggerType() == TriggerType.ITEM) {
                 RideBattleLib.LOGGER.debug("检测到ITEM驱动方式");
                 // 触发驱动器
-                RideBattleLib.LOGGER.info("物品触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                RideBattleLib.LOGGER.debug("物品触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
                 HenshinSystem.INSTANCE.driverAction(player);
             }
 

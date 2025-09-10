@@ -1,7 +1,9 @@
 package com.jpigeon.ridebattlelib.core.system.form;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
@@ -68,7 +70,9 @@ public class DynamicFormConfig extends FormConfig {
                         case LEGS -> setLeggings(commonArmor);
                         case FEET -> setBoots(commonArmor);
                     }
-                    RideBattleLib.LOGGER.debug("为槽位 {} 设置底衣: {}", slot, commonArmor);
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("为槽位 {} 设置底衣: {}", slot, commonArmor);
+                    }
                 }
             }
         }

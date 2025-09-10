@@ -1,11 +1,13 @@
 package com.jpigeon.ridebattlelib.core.system.henshin;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -19,13 +21,9 @@ import java.util.*;
 
 
 /**
- * 实现假面骑士实例相关的注册
- * 骑士ID
- * 所需驱动器
- * 必要物品
- * 必要条件
- * 关联盔甲
- * 等等
+ * 假面骑士配置类。
+ * 用于定义骑士的驱动器、槽位、形态、触发物品等。
+ * 可通过 RiderRegistry.registerRider() 注册。
  */
 public class RiderConfig {
     private final ResourceLocation riderId;
@@ -72,7 +70,7 @@ public class RiderConfig {
                                      boolean allowReplace) {
 
         slotDefinitions.put(slotId,
-                new DriverSlotDefinition(allowedItems, null, allowReplace,  false, isRequired));
+                new DriverSlotDefinition(allowedItems, null, allowReplace, false, isRequired));
 
         if (isRequired) {
             requiredSlots.add(slotId);
@@ -138,9 +136,11 @@ public class RiderConfig {
                 return null;
             }
         }
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("开始匹配形态，玩家: {}", player.getName().getString());
+            RideBattleLib.LOGGER.debug("当前驱动器内容: {}", driverItems);
+        }
 
-        RideBattleLib.LOGGER.debug("开始匹配形态，玩家: {}", player.getName().getString());
-        RideBattleLib.LOGGER.debug("当前驱动器内容: {}", driverItems);
 
         // 先检查是否所有“必需槽位”都有有效物品
         for (ResourceLocation slotId : requiredSlots) {
@@ -149,7 +149,9 @@ public class RiderConfig {
 
             ItemStack stack = driverItems.get(slotId);
             if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
-                RideBattleLib.LOGGER.warn("必需槽位 {} 为空", slotId);
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("必需槽位 {} 为空", slotId);
+                }
                 return null; // 必需槽位不能为空
             }
         }
@@ -161,7 +163,9 @@ public class RiderConfig {
 
             ItemStack stack = driverItems.get(slotId);
             if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
-                RideBattleLib.LOGGER.warn("辅助必需槽位 {} 为空", slotId);
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("辅助必需槽位 {} 为空", slotId);
+                }
                 return null; // 辅助必需槽位不能为空
             }
         }
@@ -180,19 +184,25 @@ public class RiderConfig {
                     auxMatches = formConfig.matchesAuxSlots(driverItems, config);
                 } else {
                     auxMatches = false; // 未装备辅助驱动器但形态要求→不匹配
-                    RideBattleLib.LOGGER.debug("形态{}需要辅助驱动器，但玩家未装备", formConfig.getFormId());
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("形态{}需要辅助驱动器，但玩家未装备", formConfig.getFormId());
+                    }
                 }
             }
 
             if (mainMatches && auxMatches) {
                 ResourceLocation formId = formConfig.getFormId();
-                RideBattleLib.LOGGER.debug("匹配到的形态ID: {}", formId);
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("匹配到的形态ID: {}", formId);
+                }
                 return formId;
             }
         }
 
         if (this.allowsDynamicForms()) {
-            RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
+            }
             try {
                 FormConfig dynamicForm = DynamicFormManager.getOrCreateDynamicForm(player, this, driverItems);
                 return dynamicForm.getFormId();
@@ -200,7 +210,9 @@ public class RiderConfig {
                 RideBattleLib.LOGGER.error("动态形态创建失败", e);
             }
         } else {
-            RideBattleLib.LOGGER.debug("该骑士不支持动态形态，跳过动态形态生成");
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("该骑士不支持动态形态，跳过动态形态生成");
+            }
         }
         RideBattleLib.LOGGER.warn("未找到匹配形态，且没有允许空驱动器的基础形态");
         return null;

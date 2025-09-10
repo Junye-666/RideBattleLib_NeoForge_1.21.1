@@ -7,6 +7,7 @@ import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.PenaltyEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -61,7 +62,7 @@ public class PenaltySystem implements IPenaltySystem {
         // 爆炸
         PenaltyEvent.Particle explosion = new PenaltyEvent.Particle(player);
         NeoForge.EVENT_BUS.post(explosion);
-        if (!explosion.isCanceled()){
+        if (!explosion.isCanceled()) {
             player.level().explode(player,
                     player.getX(), player.getY() + 0.5, player.getZ(),
                     getExplosionPower(),
@@ -122,8 +123,8 @@ public class PenaltySystem implements IPenaltySystem {
         ));
 
         Random random = new Random();
-        int chance =  random.nextInt(100);
-        if (chance < 10){
+        int chance = random.nextInt(100);
+        if (chance < 10) {
             player.displayClientMessage(
                     Component.literal("我的身体已经菠萝菠萝哒!")
                             .withStyle(ChatFormatting.RED),
@@ -136,8 +137,9 @@ public class PenaltySystem implements IPenaltySystem {
                     true
             );
         }
-
-        RideBattleLib.LOGGER.info("玩家 {} 触发吃瘪系统", player.getName().getString());
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("玩家 {} 触发吃瘪系统", player.getName().getString());
+        }
     }
 
     @Override

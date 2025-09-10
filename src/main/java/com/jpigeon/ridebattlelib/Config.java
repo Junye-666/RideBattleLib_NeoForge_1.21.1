@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib;
 
 
+import io.netty.handler.logging.LogLevel;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
@@ -11,6 +12,8 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class Config
 {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+
+    public static final ModConfigSpec.EnumValue<LogLevel> LOG_LEVEL;
     public static final ModConfigSpec.BooleanValue PENALTY_ENABLED;
     public static final ModConfigSpec.IntValue PENALTY_THRESHOLD;
     public static final ModConfigSpec.IntValue COOLDOWN_DURATION;
@@ -18,6 +21,10 @@ public class Config
 
 
     static {
+        LOG_LEVEL = BUILDER
+                .comment("日志等级")
+                .defineEnum("logLevel", LogLevel.INFO);
+
         PENALTY_ENABLED = BUILDER
                 .comment("是否启用吃瘪")
                 .define("penaltyEnabled", true);
@@ -45,7 +52,8 @@ public class Config
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
     {
-        RideBattleLib.LOGGER.info("Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}",
+        RideBattleLib.LOGGER.debug("Loaded config: logLevel={}, penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}",
+                LOG_LEVEL.get(),
                 PENALTY_ENABLED.get(),
                 PENALTY_THRESHOLD.get(),
                 COOLDOWN_DURATION.get(),

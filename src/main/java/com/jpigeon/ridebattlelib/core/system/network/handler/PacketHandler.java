@@ -19,13 +19,26 @@ public class PacketHandler {
         event.registrar(RideBattleLib.MODID)
                 .versioned("0.9.9.1")
                 .playToServer(HenshinPacket.TYPE, HenshinPacket.STREAM_CODEC,
-                        (payload, context) -> HenshinSystem.INSTANCE.henshin(context.player(), payload.riderId()))
+                        (payload, context) -> {
+                            Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
+                            if (targetPlayer != null) {
+                                HenshinSystem.INSTANCE.henshin(targetPlayer, payload.riderId());
+                            }
+                        })
                 .playToServer(UnhenshinPacket.TYPE, UnhenshinPacket.STREAM_CODEC,
-                        (payload, context) ->
-                                HenshinSystem.INSTANCE.unHenshin(context.player()))
+                        (payload, context) -> {
+                            Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
+                            if (targetPlayer != null) {
+                                HenshinSystem.INSTANCE.unHenshin(targetPlayer);
+                            }
+                        })
                 .playToServer(SwitchFormPacket.TYPE, SwitchFormPacket.STREAM_CODEC,
-                        (payload, context) ->
-                                HenshinSystem.INSTANCE.switchForm(context.player(), payload.formId()))
+                        (payload, context) -> {
+                            Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
+                            if (targetPlayer != null) {
+                                HenshinSystem.INSTANCE.switchForm(context.player(), payload.formId());
+                            }
+                        })
                 .playToClient(DriverDataSyncPacket.TYPE, DriverDataSyncPacket.STREAM_CODEC,
                         (payload, context) ->
                                 DriverSystem.INSTANCE.applySyncPacket(payload))

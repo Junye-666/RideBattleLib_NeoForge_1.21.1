@@ -27,7 +27,7 @@ public final class RiderManager {
     public static boolean transform(Player player) {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config != null) {
-            PacketHandler.sendToServer(new HenshinPacket(config.getRiderId()));
+            PacketHandler.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));
             return true;
         }
         return false;
@@ -36,7 +36,7 @@ public final class RiderManager {
     // 快捷解除
     public static boolean unTransform(Player player) {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
-            PacketHandler.sendToServer(new UnhenshinPacket());
+            PacketHandler.sendToServer(new UnhenshinPacket(player.getUUID()));
             return true;
         }
         return false;
@@ -44,7 +44,7 @@ public final class RiderManager {
 
     // 快捷切换形态
     public static void switchForm(Player player, ResourceLocation newFormId) {
-        PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
+        PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
     }
 
     // 快捷检查变身状态

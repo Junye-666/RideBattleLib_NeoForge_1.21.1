@@ -36,14 +36,14 @@ public class DriverActionManager {
     public void proceedHenshin(Player player, RiderConfig config) {
         RideBattleLib.LOGGER.debug("使玩家 {} 继续变身 {}", player.getName(), config.getRiderId());
         if (HenshinSystem.INSTANCE.isTransformed(player)) return;
-        PacketHandler.sendToServer(new HenshinPacket(config.getRiderId()));
+        PacketHandler.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));
         RideBattleLib.LOGGER.info("发送变身包: {}", config.getRiderId());
     }
 
     public void proceedFormSwitch(Player player, ResourceLocation newFormId) {
         RideBattleLib.LOGGER.debug("玩家 {} 进入形态切换阶段", player.getName());
         RideBattleLib.LOGGER.info("发送形态切换包: {}", newFormId);
-        PacketHandler.sendToServer(new SwitchFormPacket(newFormId));
+        PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
     }
 
     public void completeTransformation(Player player) {

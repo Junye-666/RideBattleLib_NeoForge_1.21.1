@@ -42,7 +42,7 @@ public class KeyHandler {
         }
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
             RideBattleLib.LOGGER.debug("发送解除变身数据包");
-            PacketHandler.sendToServer(new UnhenshinPacket());
+            PacketHandler.sendToServer(new UnhenshinPacket(player.getUUID()));
         }
 
         if (KeyBindings.RETURN_ITEMS_KEY.consumeClick()) {

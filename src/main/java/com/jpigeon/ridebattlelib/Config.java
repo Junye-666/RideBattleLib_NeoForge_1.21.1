@@ -22,11 +22,9 @@ public class Config
 
     static {
         LOG_LEVEL = BUILDER
-                .comment("日志等级")
                 .defineEnum("logLevel", LogLevel.INFO);
 
         PENALTY_ENABLED = BUILDER
-                .comment("是否启用吃瘪")
                 .define("penaltyEnabled", true);
 
         // 惩罚触发阈值（默认3次）

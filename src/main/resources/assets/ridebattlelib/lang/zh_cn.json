@@ -3,5 +3,10 @@
   "key.ridebattlelib.unhenshin": "解除变身",
   "key.ridebattlelib.driver_activate": "驱动器按键",
   "key.ridebattlelib.return_items": "返回驱动器物品",
-  "key.ridebattlelib.skill": "技能"
+  "key.ridebattlelib.skill": "技能",
+  "ridebattlelib.configuration.logLevel": "日志等级",
+  "ridebattlelib.configuration.penaltyEnabled": "启用吃瘪",
+  "ridebattlelib.configuration.penaltyThreshold": "吃瘪阈值",
+  "ridebattlelib.configuration.cooldownDuration": "吃瘪冷却时间",
+  "ridebattlelib.configuration.explosionPower": "吃瘪爆炸强度"
 }

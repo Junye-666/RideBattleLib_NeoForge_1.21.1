@@ -3,5 +3,10 @@
   "key.ridebattlelib.unhenshin": "UnHenshin",
   "key.ridebattlelib.driver_activate": "Activate Driver",
   "key.ridebattlelib.return_items": "Return Driver Items",
-  "key.ridebattlelib.skill": "Skill"
+  "key.ridebattlelib.skill": "Skill",
+  "ridebattlelib.configuration.logLevel": "Log Level",
+  "ridebattlelib.configuration.penaltyEnabled": "Penalty Enabled",
+  "ridebattlelib.configuration.penaltyThreshold": "Threshold to Penalty",
+  "ridebattlelib.configuration.cooldownDuration": "Penalty Cooldown Time",
+  "ridebattlelib.configuration.explosionPower": "Penalty Explosion Power"
 }

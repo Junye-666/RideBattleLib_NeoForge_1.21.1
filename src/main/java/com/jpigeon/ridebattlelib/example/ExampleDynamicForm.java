@@ -44,6 +44,7 @@ public class ExampleDynamicForm {
                         List.of(Items.REDSTONE, Items.GLOWSTONE_DUST),
                         true,
                         false)
+                .setAllowDynamicForms(true)
                 .setCommonArmor(EquipmentSlot.FEET, Items.LEATHER_BOOTS);
 
         FormConfig baseForm = new FormConfig(BETA_BASE_FORM)

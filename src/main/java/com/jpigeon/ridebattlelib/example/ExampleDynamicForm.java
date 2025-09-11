@@ -58,8 +58,7 @@ public class ExampleDynamicForm {
                     ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
                     8.0,
                     AttributeModifier.Operation.ADD_VALUE)
-            .addSkill(SkillTest.ALPHA_KICK)
-            .addSkill(SkillTest.ALPHA_PUNCH);
+            ;
 
 
     public static void betaRider() {

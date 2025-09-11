@@ -8,5 +8,7 @@
   "ridebattlelib.configuration.penaltyEnabled": "启用吃瘪",
   "ridebattlelib.configuration.penaltyThreshold": "吃瘪阈值",
   "ridebattlelib.configuration.cooldownDuration": "吃瘪冷却时间",
-  "ridebattlelib.configuration.explosionPower": "吃瘪爆炸强度"
+  "ridebattlelib.configuration.explosionPower": "吃瘪爆炸强度",
+  "skill.alpha_kick": "Alpha骑士踢",
+  "skill.alpha_punch": "Alpha骑士拳"
 }

@@ -38,96 +38,98 @@ public class ExampleBasic {
     private static final ResourceLocation TEST_ENERGY_SLOT =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "energy_slot");
 
-    private static void alphaRider() {
-        // 创建骑士配置
-        RiderConfig riderAlpha = new RiderConfig(TEST_RIDER_ALPHA)
-                .setDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁护腿(穿戴在腿部)
-                .setAuxDriverItem(Items.BRICK, EquipmentSlot.OFFHAND) // 辅助驱动器: 砖块(穿戴在副手)
-                .addDriverSlot(
-                        TEST_CORE_SLOT,
-                        List.of(Items.IRON_INGOT, Items.GOLD_INGOT, Items.DIAMOND),
-                        true,
-                        true
-                ) // 驱动器中的核心槽位: 接受铁锭或金锭(必要槽位)
-                .addAuxSlot(
-                        TEST_ENERGY_SLOT,
-                        List.of(Items.REDSTONE, Items.GLOWSTONE_DUST, Items.APPLE),
-                        true,
-                        false
-                ); // 辅助驱动器中的能量槽位: 接受红石或荧石粉(非必要)
+    // 定义RiderConfig
+    public static final RiderConfig riderAlpha = new RiderConfig(TEST_RIDER_ALPHA)
+            .setDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁护腿(穿戴在腿部)
+            .setAuxDriverItem(Items.BRICK, EquipmentSlot.OFFHAND) // 辅助驱动器: 砖块(穿戴在副手)
+            .addDriverSlot(
+                    TEST_CORE_SLOT,
+                    List.of(Items.IRON_INGOT, Items.GOLD_INGOT, Items.DIAMOND),
+                    true,
+                    true
+            ) // 驱动器中的核心槽位: 接受铁锭或金锭(必要槽位)
+            .addAuxSlot(
+                    TEST_ENERGY_SLOT,
+                    List.of(Items.REDSTONE, Items.GLOWSTONE_DUST, Items.APPLE),
+                    true,
+                    false
+            ); // 辅助驱动器中的能量槽位: 接受红石或荧石粉(非必要)
 
-        // 创建基础形态配置
-        FormConfig alphaBaseForm = new FormConfig(TEST_FORM_BASE)
-                .setTriggerType(TriggerType.KEY) // 指定按键触发
-                .setArmor(// 设置盔甲
-                        Items.IRON_HELMET,
-                        Items.IRON_CHESTPLATE,
-                        null,
-                        Items.IRON_BOOTS
-                )
-                .addAttribute(// 增加生命值
-                        ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
-                        8.0,
-                        AttributeModifier.Operation.ADD_VALUE
-                )
-                .addAttribute(// 增加移动速度
-                        ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"),
-                        0.1,
-                        AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
-                )
-                .addEffect(// 墳加夜视效果
-                        MobEffects.NIGHT_VISION,
-                        114514,
-                        0,
-                        true
-                )
-                .addRequiredItem(// 要求核心槽位有铁锭
-                        TEST_CORE_SLOT,
-                        Items.IRON_INGOT
-                )
-                .addGrantedItem(Items.IRON_SWORD.getDefaultInstance());
+    // 创建基础形态配置
+    public static final FormConfig alphaBaseForm = new FormConfig(TEST_FORM_BASE)
+            .setTriggerType(TriggerType.KEY) // 指定按键触发
+            .setArmor(// 设置盔甲
+                    Items.IRON_HELMET,
+                    Items.IRON_CHESTPLATE,
+                    null,
+                    Items.IRON_BOOTS
+            )
+            .addAttribute(// 增加生命值
+                    ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
+                    8.0,
+                    AttributeModifier.Operation.ADD_VALUE
+            )
+            .addAttribute(// 增加移动速度
+                    ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"),
+                    0.1,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+            )
+            .addEffect(// 墳加夜视效果
+                    MobEffects.NIGHT_VISION,
+                    114514,
+                    0,
+                    true
+            )
+            .addRequiredItem(// 要求核心槽位有铁锭
+                    TEST_CORE_SLOT,
+                    Items.IRON_INGOT
+            )
+            .addGrantedItem(Items.IRON_SWORD.getDefaultInstance());
 
-        // 创建强化形态配置
-        FormConfig alphaPoweredForm = new FormConfig(TEST_FORM_POWERED)
-                .setTriggerType(TriggerType.AUTO) // 指定自动触发
-                .setArmor(// 金色盔甲
-                        Items.GOLDEN_HELMET,
-                        Items.GOLDEN_CHESTPLATE,
-                        null,
-                        Items.GOLDEN_BOOTS
-                )
-                .addAttribute(// 更高生命值
-                        ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
-                        12.0,
-                        AttributeModifier.Operation.ADD_VALUE
-                )
-                .addAttribute(// 更高移动速度
-                        ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"),
-                        0.2,
-                        AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
-                )
-                .addEffect(// 增加力量效果
-                        MobEffects.DAMAGE_BOOST,
-                        114514,
-                        0,
-                        true
-                )
-                .addEffect(
-                        MobEffects.NIGHT_VISION,
-                        114514,
-                        0,
-                        true
-                )
-                .addRequiredItem(// 要求核心槽位有金锭
-                        TEST_CORE_SLOT,
-                        Items.GOLD_INGOT
-                )
-                .addAuxRequiredItem(// 要求辅助驱动器内能量槽位有物品
-                        TEST_ENERGY_SLOT,
-                        Items.REDSTONE
-                )
-                .addGrantedItem(Items.NETHERITE_SWORD.getDefaultInstance());
+    // 创建强化形态配置
+    public static final FormConfig alphaPoweredForm = new FormConfig(TEST_FORM_POWERED)
+            .setTriggerType(TriggerType.AUTO) // 指定自动触发
+            .setArmor(// 金色盔甲
+                    Items.GOLDEN_HELMET,
+                    Items.GOLDEN_CHESTPLATE,
+                    null,
+                    Items.GOLDEN_BOOTS
+            )
+            .addAttribute(// 更高生命值
+                    ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
+                    12.0,
+                    AttributeModifier.Operation.ADD_VALUE
+            )
+            .addAttribute(// 更高移动速度
+                    ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"),
+                    0.2,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+            )
+            .addEffect(// 增加力量效果
+                    MobEffects.DAMAGE_BOOST,
+                    114514,
+                    0,
+                    true
+            )
+            .addEffect(
+                    MobEffects.NIGHT_VISION,
+                    114514,
+                    0,
+                    true
+            )
+            .addRequiredItem(// 要求核心槽位有金锭
+                    TEST_CORE_SLOT,
+                    Items.GOLD_INGOT
+            )
+            .addAuxRequiredItem(// 要求辅助驱动器内能量槽位有物品
+                    TEST_ENERGY_SLOT,
+                    Items.REDSTONE
+            )
+            .addGrantedItem(Items.NETHERITE_SWORD.getDefaultInstance());
 
+
+
+    private static void registerAlphaRider() {
         // 将形态添加到骑士配置
         riderAlpha
                 .addForm(alphaBaseForm) //添加形态
@@ -144,7 +146,7 @@ public class ExampleBasic {
     }
 
     public static void init() {
-        alphaRider();
+        registerAlphaRider();
         registerPauseResumeHandler(); // 添加测试用的暂停/继续处理器
     }
 

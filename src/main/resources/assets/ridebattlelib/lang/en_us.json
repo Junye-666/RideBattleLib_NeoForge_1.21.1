@@ -8,5 +8,7 @@
   "ridebattlelib.configuration.penaltyEnabled": "Penalty Enabled",
   "ridebattlelib.configuration.penaltyThreshold": "Threshold to Penalty",
   "ridebattlelib.configuration.cooldownDuration": "Penalty Cooldown Time",
-  "ridebattlelib.configuration.explosionPower": "Penalty Explosion Power"
+  "ridebattlelib.configuration.explosionPower": "Penalty Explosion Power",
+  "skill.alpha_kick": "Alpha Kick",
+  "skill.alpha_punch": "Alpha Punch"
 }

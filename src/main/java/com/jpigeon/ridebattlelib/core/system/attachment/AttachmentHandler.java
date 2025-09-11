@@ -49,8 +49,10 @@ public class AttachmentHandler {
         if (data.getHenshinState() == HenshinState.TRANSFORMING) {
             data.setHenshinState(HenshinState.IDLE);
             data.setPendingFormId(null);
-            RideBattleLib.LOGGER.debug("重置玩家 {} 的状态为IDLE，因为登录时处于TRANSFORMING状态",
-                    player.getName().getString());
+            if(Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+                RideBattleLib.LOGGER.debug("重置玩家 {} 的状态为IDLE，因为登录时处于TRANSFORMING状态",
+                        player.getName().getString());
+            }
         }
 
 

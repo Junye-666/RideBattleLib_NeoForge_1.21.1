@@ -123,7 +123,7 @@ public final class RiderManager {
     // ================ 技能系统快捷方法 ================
     // 触发技能
     public static boolean triggerSkill(Player player, ResourceLocation formId, ResourceLocation skillId){
-        return SkillSystem.triggerSkill(player, formId, skillId);
+        return SkillSystem.triggerSkillEvent(player, formId, skillId);
     }
 
     // ================ 快速获取 ================

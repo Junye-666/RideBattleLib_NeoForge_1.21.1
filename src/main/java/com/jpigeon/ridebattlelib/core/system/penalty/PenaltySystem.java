@@ -45,6 +45,10 @@ public class PenaltySystem implements IPenaltySystem {
         return Config.EXPLOSION_POWER.get().floatValue();
     }
 
+    public int getKnockBackStrength() {
+        return Config.KNOCKBACK_STRENGTH.get();
+    }
+
     public static boolean shouldTriggerPenalty(Player player) {
         PenaltySystem instance = getInstance();
         return HenshinSystem.INSTANCE.isTransformed(player) &&
@@ -87,7 +91,7 @@ public class PenaltySystem implements IPenaltySystem {
         }
 
         // 击飞
-        Vec3 knockBack = player.getLookAngle().reverse().scale(1.5).add(0, 1.0, 0);
+        Vec3 knockBack = player.getLookAngle().reverse().scale(getKnockBackStrength()).add(0, 1.0, 0);
         player.setDeltaMovement(knockBack);
         player.hurtMarked = true;
 

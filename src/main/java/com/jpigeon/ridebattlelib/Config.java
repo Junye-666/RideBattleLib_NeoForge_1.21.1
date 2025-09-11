@@ -18,6 +18,7 @@ public class Config
     public static final ModConfigSpec.IntValue PENALTY_THRESHOLD;
     public static final ModConfigSpec.IntValue COOLDOWN_DURATION;
     public static final ModConfigSpec.IntValue EXPLOSION_POWER;
+    public static final ModConfigSpec.IntValue KNOCKBACK_STRENGTH;
 
 
     static {
@@ -42,6 +43,10 @@ public class Config
                 .comment("吃瘪触发时爆炸强度 (为0时取消)")
                 .defineInRange("explosionPower", 2, 0, 10);
 
+        KNOCKBACK_STRENGTH = BUILDER
+                .comment("吃瘪触发时击退强度")
+                .defineInRange("knockbackStrength", (int) 1.5, 0, 20);
+
         BUILDER.build();
     }
 
@@ -50,11 +55,12 @@ public class Config
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
     {
-        RideBattleLib.LOGGER.debug("Loaded config: logLevel={}, penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}",
+        RideBattleLib.LOGGER.debug("Loaded config: logLevel={}, penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}",
                 LOG_LEVEL.get(),
                 PENALTY_ENABLED.get(),
                 PENALTY_THRESHOLD.get(),
                 COOLDOWN_DURATION.get(),
-                EXPLOSION_POWER.get());
+                EXPLOSION_POWER.get(),
+                KNOCKBACK_STRENGTH.get());
     }
 }

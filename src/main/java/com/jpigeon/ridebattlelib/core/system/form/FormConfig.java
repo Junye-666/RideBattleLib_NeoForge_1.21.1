@@ -171,7 +171,9 @@ public class FormConfig {
     }
 
     public boolean matchesAuxSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
-        RideBattleLib.LOGGER.debug("开始匹配辅助槽位...");
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+            RideBattleLib.LOGGER.debug("开始匹配辅助槽位...");
+        }
         for (Map.Entry<ResourceLocation, Item> entry : auxRequiredItems.entrySet()) {
             ResourceLocation slotId = entry.getKey();
             Item requiredItem = entry.getValue();

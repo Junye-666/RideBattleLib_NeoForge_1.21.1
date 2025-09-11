@@ -30,37 +30,40 @@ public class ExampleDynamicForm {
     public static final ResourceLocation BETA_SLOT_2 =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "beta_slot_2");
 
+    public static final RiderConfig riderBeta = new RiderConfig(TEST_RIDER_BETA)
+            .setDriverItem(Items.NETHERITE_LEGGINGS, EquipmentSlot.LEGS)
+            .addDriverSlot(
+                    BETA_SLOT_1,
+                    List.of(Items.EMERALD, Items.DIAMOND),
+                    true,
+                    false)
+            .addDriverSlot(
+                    BETA_SLOT_2,
+                    List.of(Items.REDSTONE, Items.GLOWSTONE_DUST),
+                    true,
+                    false)
+            .setAllowDynamicForms(true)
+            .setCommonArmor(EquipmentSlot.FEET, Items.LEATHER_BOOTS);
+
+    public static final FormConfig baseForm = new FormConfig(BETA_BASE_FORM)
+            .setTriggerType(TriggerType.KEY)
+            .setArmor(
+                    Items.LEATHER_HELMET,
+                    Items.LEATHER_CHESTPLATE,
+                    null,
+                    Items.LEATHER_BOOTS)
+            .addRequiredItem(BETA_SLOT_1, Items.AIR)
+            .addRequiredItem(BETA_SLOT_2, Items.AIR)
+            .addAttribute(
+                    ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
+                    8.0,
+                    AttributeModifier.Operation.ADD_VALUE)
+            .addSkill(SkillTest.ALPHA_KICK)
+            .addSkill(SkillTest.ALPHA_PUNCH);
+
+
     public static void betaRider() {
         // 注册RiderConfig
-        RiderConfig riderBeta = new RiderConfig(TEST_RIDER_BETA)
-                .setDriverItem(Items.NETHERITE_LEGGINGS, EquipmentSlot.LEGS)
-                .addDriverSlot(
-                        BETA_SLOT_1,
-                        List.of(Items.EMERALD, Items.DIAMOND),
-                        true,
-                        false)
-                .addDriverSlot(
-                        BETA_SLOT_2,
-                        List.of(Items.REDSTONE, Items.GLOWSTONE_DUST),
-                        true,
-                        false)
-                .setAllowDynamicForms(true)
-                .setCommonArmor(EquipmentSlot.FEET, Items.LEATHER_BOOTS);
-
-        FormConfig baseForm = new FormConfig(BETA_BASE_FORM)
-                .setTriggerType(TriggerType.KEY)
-                .setArmor(
-                        Items.LEATHER_HELMET,
-                        Items.LEATHER_CHESTPLATE,
-                        null,
-                        Items.LEATHER_BOOTS)
-                .addRequiredItem(BETA_SLOT_1, Items.AIR)
-                .addRequiredItem(BETA_SLOT_2, Items.AIR)
-                .addAttribute(
-                        ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"),
-                        8.0,
-                        AttributeModifier.Operation.ADD_VALUE);
-
         riderBeta
                 .addForm(baseForm)
                 .setBaseForm(BETA_BASE_FORM);

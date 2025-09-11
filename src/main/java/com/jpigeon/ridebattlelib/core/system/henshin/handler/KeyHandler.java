@@ -4,23 +4,18 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.KeyBindings;
 
-import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
-import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.ReturnItemsPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.RotateSkillPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.TriggerSkillPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.UnhenshinPacket;
-import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
 import io.netty.handler.logging.LogLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 
@@ -57,60 +52,20 @@ public class KeyHandler {
         }
 
         if (KeyBindings.SKILL_KEY.consumeClick()) {
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("检测到技能键按下");
+            }
             // 蹲下时切换技能，否则触发当前技能
             if (player.isShiftKeyDown()) {
-                rotateSkill(player);
+                if (!HenshinSystem.INSTANCE.isTransformed(player)) return;
+                PacketHandler.sendToServer(new RotateSkillPacket(player.getUUID()));
             } else {
-                triggerCurrentSkill(player);
+                if (!HenshinSystem.INSTANCE.isTransformed(player)) return;
+                PacketHandler.sendToServer(new TriggerSkillPacket(player.getUUID()));
             }
         }
     }
 
 
-    private static void triggerCurrentSkill(Player player) {
-        if (!HenshinSystem.INSTANCE.isTransformed(player)) return;
 
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
-        if (data == null) return;
-
-        FormConfig form = RiderRegistry.getForm(data.formId());
-        if (form == null) return;
-
-        ResourceLocation skillId = form.getCurrentSkillId(player);
-        if (skillId != null) {
-            // 只触发事件，不执行具体逻辑
-            SkillSystem.triggerSkill(player, data.formId(), skillId);
-        }
-    }
-
-    // 切换技能轮盘
-    private static void rotateSkill(Player player) {
-        if (!HenshinSystem.INSTANCE.isTransformed(player)) return;
-
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
-        if (data == null) return;
-
-        FormConfig form = RiderRegistry.getForm(data.formId());
-        if (form == null) return;
-
-        RiderData riderData = player.getData(RiderAttachments.RIDER_DATA);
-        int currentIndex = riderData.getCurrentSkillIndex();
-        int skillCount = form.getSkillIds().size();
-
-        if (skillCount > 0) {
-            // 循环切换技能
-            int newIndex = (currentIndex + 1) % skillCount;
-            riderData.setCurrentSkillIndex(newIndex);
-
-            // 获取新技能的ID
-            ResourceLocation newSkill = form.getSkillIds().get(newIndex);
-            Component displayName = SkillSystem.getDisplayName(newSkill);
-
-            // 显示切换提示
-            player.displayClientMessage(
-                    displayName,
-                    true
-            );
-        }
-    }
 }

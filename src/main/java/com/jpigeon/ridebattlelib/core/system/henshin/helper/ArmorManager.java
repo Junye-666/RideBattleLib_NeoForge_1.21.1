@@ -73,7 +73,7 @@ public class ArmorManager {
             }
         }
 
-        // === 修复：只在驱动器槽位丢失时才补充驱动器 ===
+        // 只在驱动器槽位丢失时才补充驱动器
         EquipmentSlot driverSlot = data.config().getDriverSlot();
         ItemStack currentDriver = player.getItemBySlot(driverSlot);
 

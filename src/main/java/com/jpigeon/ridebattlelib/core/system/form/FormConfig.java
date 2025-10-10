@@ -99,8 +99,7 @@ public class FormConfig {
                                 int amplifier, boolean hideParticles) {
         ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
         effectIds.add(effectId);
-        boolean visible = !hideParticles;
-        effects.add(new MobEffectInstance(effect, duration, amplifier, false, visible));
+        effects.add(new MobEffectInstance(effect, duration, amplifier, false, !hideParticles));
         return this;
     }
     // 添加必要物品（主驱动器）

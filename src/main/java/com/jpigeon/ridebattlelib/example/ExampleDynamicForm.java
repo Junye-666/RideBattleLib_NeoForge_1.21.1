@@ -9,6 +9,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -76,25 +77,23 @@ public class ExampleDynamicForm {
     private static void registerDynamicMappings() {
         // 钻石 -> 钻石头盔 + 跳跃提升 + 伤害吸收
         DynamicArmorRegistry.registerItemArmor(Items.DIAMOND, Items.DIAMOND_HELMET);
-        DynamicEffectRegistry.registerItemEffects(Items.DIAMOND, MobEffects.JUMP);
-        DynamicEffectRegistry.registerItemEffects(Items.DIAMOND, MobEffects.ABSORPTION);
-        DynamicGrantedItem.registerItemGrantedItems(
-                Items.DIAMOND,
-                new ItemStack(Items.DIAMOND_AXE)
+        DynamicEffectRegistry.registerItemEffects(Items.DIAMOND, (MobEffectInstance) MobEffects.JUMP);
+        DynamicEffectRegistry.registerItemEffects(Items.DIAMOND, (MobEffectInstance) MobEffects.ABSORPTION);
+        DynamicGrantedItem.registerItemGrantedItems(Items.DIAMOND, new ItemStack(Items.DIAMOND_AXE)
         );
 
         // 绿宝石 -> 龟头 + 抗性效果
         DynamicArmorRegistry.registerItemArmor(Items.EMERALD, Items.TURTLE_HELMET);
-        DynamicEffectRegistry.registerItemEffects(Items.EMERALD, MobEffects.DAMAGE_RESISTANCE);
+        DynamicEffectRegistry.registerItemEffects(Items.EMERALD, (MobEffectInstance) MobEffects.DAMAGE_RESISTANCE);
         DynamicGrantedItem.registerItemGrantedItems(Items.EMERALD, new ItemStack(Items.GOLDEN_CARROT));
 
         // 红石 -> 铁胸甲 + 伤害提升
         DynamicArmorRegistry.registerItemArmor(Items.REDSTONE, Items.IRON_CHESTPLATE);
-        DynamicEffectRegistry.registerItemEffects(Items.REDSTONE, MobEffects.DAMAGE_BOOST);
+        DynamicEffectRegistry.registerItemEffects(Items.REDSTONE, (MobEffectInstance) MobEffects.DAMAGE_BOOST);
 
         // 萤石粉 -> 金甲 + 速度效果
         DynamicArmorRegistry.registerItemArmor(Items.GLOWSTONE_DUST, Items.GOLDEN_CHESTPLATE);
-        DynamicEffectRegistry.registerItemEffects(Items.GLOWSTONE_DUST, MobEffects.MOVEMENT_SPEED);
+        DynamicEffectRegistry.registerItemEffects(Items.GLOWSTONE_DUST, (MobEffectInstance) MobEffects.MOVEMENT_SPEED);
     }
 
     public static void init() {

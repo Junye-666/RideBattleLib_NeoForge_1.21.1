@@ -8,8 +8,12 @@ import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import io.netty.handler.logging.LogLevel;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -39,6 +43,10 @@ public class RiderConfig {
     private final Set<ResourceLocation> auxRequiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
     private final Map<EquipmentSlot, Item> commonArmorMap = new EnumMap<>(EquipmentSlot.class);
+    private final Map<ResourceLocation, EquipmentSlot> slotArmorMappings = new HashMap<>();
+    private final Map<ResourceLocation, EquipmentSlot> auxSlotArmorMappings = new HashMap<>();
+    private final List<AttributeModifier> baseAttributes = new ArrayList<>();
+    private final List<MobEffectInstance> baseEffects = new ArrayList<>();
     private boolean allowDynamicForms = false;
 
     //====================初始化方法====================
@@ -232,8 +240,36 @@ public class RiderConfig {
         return DynamicFormManager.getDynamicForm(formId);
     }
 
+    //====================动态适配方法====================
+    // 添加共通盔甲（底衣）
     public RiderConfig setCommonArmor(EquipmentSlot slot, Item item) {
         commonArmorMap.put(slot, item);
+        return this;
+    }
+
+    // 添加主驱动器槽位盔甲映射
+    public RiderConfig addSlotArmorMapping(ResourceLocation slotId, EquipmentSlot armorSlot) {
+        slotArmorMappings.put(slotId, armorSlot);
+        return this;
+    }
+
+    // 添加副驱动器槽位盔甲映射
+    public RiderConfig addAuxSlotArmorMapping(ResourceLocation slotId, EquipmentSlot armorSlot) {
+        auxSlotArmorMappings.put(slotId, armorSlot);
+        return this;
+    }
+
+    // 添加基础属性修饰符
+    public RiderConfig addBaseAttribute(ResourceLocation attributeId, double amount,
+                                        AttributeModifier.Operation operation) {
+        baseAttributes.add(new AttributeModifier(attributeId, amount, operation));
+        return this;
+    }
+
+    // 添加基础效果
+    public RiderConfig addBaseEffect(Holder<MobEffect> effect, int duration,
+                                     int amplifier, boolean hideParticles) {
+        baseEffects.add(new MobEffectInstance(effect, duration, amplifier, false, !hideParticles));
         return this;
     }
 
@@ -333,5 +369,20 @@ public class RiderConfig {
 
     public boolean allowsDynamicForms() {
         return allowDynamicForms;
+    }
+
+    public EquipmentSlot getArmorSlotFor(ResourceLocation slotId, boolean isAuxSlot) {
+        if (isAuxSlot) {
+            return auxSlotArmorMappings.getOrDefault(slotId, null);
+        }
+        return slotArmorMappings.getOrDefault(slotId, null);
+    }
+
+    public List<AttributeModifier> getBaseAttributes() {
+        return Collections.unmodifiableList(baseAttributes);
+    }
+
+    public List<MobEffectInstance> getBaseEffects() {
+        return Collections.unmodifiableList(baseEffects);
     }
 }

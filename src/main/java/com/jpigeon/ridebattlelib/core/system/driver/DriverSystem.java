@@ -10,7 +10,6 @@ import com.jpigeon.ridebattlelib.core.system.event.SlotExtractionEvent;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
-import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -243,39 +242,6 @@ public class DriverSystem implements IDriverSystem {
 
         return true;
     }
-
-    //====================检测方法====================
-
-    @Override
-    public boolean validateItems(Player player, ResourceLocation riderId) {
-        RiderConfig config = RiderRegistry.getRider(riderId);
-        if (config == null) return false;
-
-        for (ResourceLocation slotId : config.getRequiredSlots()) {
-            // 如果是辅助槽位且未装备辅助驱动器，则跳过验证
-            if (config.getAuxSlotDefinitions().containsKey(slotId)) {
-                // 辅助槽位仅在装备辅助驱动器时验证
-                if (!config.hasAuxDriverEquipped(player)) {
-                    RideBattleLib.LOGGER.debug("跳过辅助槽位{}验证（未装备驱动器）", slotId);
-                    continue;
-                }
-            }
-
-            ItemStack item = getDriverItems(player).get(slotId);
-            DriverSlotDefinition slot = config.getSlotDefinition(slotId);
-
-            // 详细日志输出
-            RideBattleLib.LOGGER.debug("验证槽位: {} | 物品: {} | 允许物品: {}",
-                    slotId, item.getItem(), slot.allowedItems()
-            );
-
-            if (item.isEmpty() || !slot.allowedItems().contains(item.getItem())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
 
     //====================Getters====================
 

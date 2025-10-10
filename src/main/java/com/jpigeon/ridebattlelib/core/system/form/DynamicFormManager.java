@@ -102,7 +102,7 @@ public class DynamicFormManager {
 
     private static String trimCommonSuffix(String itemId) {
         // 移除常见后缀 (可扩展)
-        String[] suffixes = {"_full_bottle", "_medal", "_core"};
+        String[] suffixes = {"_memory", "_medal", "_switch", "_lock", "_gashat", "_card", "_full_bottle", "_watch", "_fantasy_book", "_buckle"};
         for (String suffix : suffixes) {
             if (itemId.endsWith(suffix)) {
                 return itemId.substring(0, itemId.length() - suffix.length());

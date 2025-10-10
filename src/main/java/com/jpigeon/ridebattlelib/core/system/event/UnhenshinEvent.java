@@ -30,10 +30,9 @@ public class UnhenshinEvent extends Event {
         }
 
         public void setCanceled(boolean canceled) {
-            if (!isCancelable()) {
-                throw new UnsupportedOperationException("Attempted to cancel a non-cancelable event");
+            if (isCancelable()) {
+                this.canceled = canceled;
             }
-            this.canceled = canceled;
         }
     }
 

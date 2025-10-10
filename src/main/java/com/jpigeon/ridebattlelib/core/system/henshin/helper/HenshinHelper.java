@@ -9,7 +9,6 @@ import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
-import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
@@ -46,7 +45,7 @@ public final class HenshinHelper implements IHenshinHelper {
         // 获取形态配置（支持动态形态）
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) {
-            formConfig = DynamicFormManager.getDynamicForm(formId);
+            formConfig = DynamicFormConfig.getDynamicForm(formId);
         }
 
         if (formConfig == null) {
@@ -91,12 +90,12 @@ public final class HenshinHelper implements IHenshinHelper {
         }
         FormConfig oldForm = RiderRegistry.getForm(oldFormId);
         if (oldForm == null) {
-            DynamicFormManager.getDynamicForm(oldFormId);
+            DynamicFormConfig.getDynamicForm(oldFormId);
         }
 
         FormConfig newForm = RiderRegistry.getForm(newFormId);
         if (newForm == null) {
-            newForm = DynamicFormManager.getDynamicForm(newFormId); // 添加动态形态支持
+            newForm = DynamicFormConfig.getDynamicForm(newFormId); // 添加动态形态支持
         }
         Map<ResourceLocation, ItemStack> currentDriver = DriverSystem.INSTANCE.getDriverItems(player);
         boolean needsUpdate = !newFormId.equals(oldFormId);

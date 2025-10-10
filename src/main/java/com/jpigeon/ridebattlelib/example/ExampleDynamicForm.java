@@ -1,9 +1,7 @@
 package com.jpigeon.ridebattlelib.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.form.DynamicArmorRegistry;
-import com.jpigeon.ridebattlelib.core.system.form.DynamicEffectRegistry;
-import com.jpigeon.ridebattlelib.core.system.form.DynamicGrantedItem;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
@@ -76,24 +74,24 @@ public class ExampleDynamicForm {
 
     private static void registerDynamicMappings() {
         // 钻石 -> 钻石头盔 + 跳跃提升 + 伤害吸收
-        DynamicArmorRegistry.registerItemArmor(Items.DIAMOND, Items.DIAMOND_HELMET);
-        DynamicEffectRegistry.registerItemEffects(Items.DIAMOND, (MobEffectInstance) MobEffects.JUMP);
-        DynamicEffectRegistry.registerItemEffects(Items.DIAMOND, (MobEffectInstance) MobEffects.ABSORPTION);
-        DynamicGrantedItem.registerItemGrantedItems(Items.DIAMOND, new ItemStack(Items.DIAMOND_AXE)
+        DynamicFormConfig.registerItemArmor(Items.DIAMOND, Items.DIAMOND_HELMET);
+        DynamicFormConfig.registerItemEffects(Items.DIAMOND, (MobEffectInstance) MobEffects.JUMP);
+        DynamicFormConfig.registerItemEffects(Items.DIAMOND, (MobEffectInstance) MobEffects.ABSORPTION);
+        DynamicFormConfig.registerItemGrantedItems(Items.DIAMOND, new ItemStack(Items.DIAMOND_AXE)
         );
 
         // 绿宝石 -> 龟头 + 抗性效果
-        DynamicArmorRegistry.registerItemArmor(Items.EMERALD, Items.TURTLE_HELMET);
-        DynamicEffectRegistry.registerItemEffects(Items.EMERALD, (MobEffectInstance) MobEffects.DAMAGE_RESISTANCE);
-        DynamicGrantedItem.registerItemGrantedItems(Items.EMERALD, new ItemStack(Items.GOLDEN_CARROT));
+        DynamicFormConfig.registerItemArmor(Items.EMERALD, Items.TURTLE_HELMET);
+        DynamicFormConfig.registerItemEffects(Items.EMERALD, (MobEffectInstance) MobEffects.DAMAGE_RESISTANCE);
+        DynamicFormConfig.registerItemGrantedItems(Items.EMERALD, new ItemStack(Items.GOLDEN_CARROT));
 
         // 红石 -> 铁胸甲 + 伤害提升
-        DynamicArmorRegistry.registerItemArmor(Items.REDSTONE, Items.IRON_CHESTPLATE);
-        DynamicEffectRegistry.registerItemEffects(Items.REDSTONE, (MobEffectInstance) MobEffects.DAMAGE_BOOST);
+        DynamicFormConfig.registerItemArmor(Items.REDSTONE, Items.IRON_CHESTPLATE);
+        DynamicFormConfig.registerItemEffects(Items.REDSTONE, (MobEffectInstance) MobEffects.DAMAGE_BOOST);
 
         // 萤石粉 -> 金甲 + 速度效果
-        DynamicArmorRegistry.registerItemArmor(Items.GLOWSTONE_DUST, Items.GOLDEN_CHESTPLATE);
-        DynamicEffectRegistry.registerItemEffects(Items.GLOWSTONE_DUST, (MobEffectInstance) MobEffects.MOVEMENT_SPEED);
+        DynamicFormConfig.registerItemArmor(Items.GLOWSTONE_DUST, Items.GOLDEN_CHESTPLATE);
+        DynamicFormConfig.registerItemEffects(Items.GLOWSTONE_DUST, (MobEffectInstance) MobEffects.MOVEMENT_SPEED);
     }
 
     public static void init() {

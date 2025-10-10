@@ -5,7 +5,7 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
-import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import io.netty.handler.logging.LogLevel;
 import net.minecraft.core.Holder;
@@ -212,7 +212,7 @@ public class RiderConfig {
                 RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
             }
             try {
-                FormConfig dynamicForm = DynamicFormManager.getOrCreateDynamicForm(player, this, driverItems);
+                FormConfig dynamicForm = DynamicFormConfig.getOrCreateDynamicForm(player, this, driverItems);
                 return dynamicForm.getFormId();
             } catch (Exception e) {
                 RideBattleLib.LOGGER.error("动态形态创建失败", e);
@@ -237,7 +237,7 @@ public class RiderConfig {
         }
 
         // 处理动态形态
-        return DynamicFormManager.getDynamicForm(formId);
+        return DynamicFormConfig.getDynamicForm(formId);
     }
 
     //====================动态适配方法====================

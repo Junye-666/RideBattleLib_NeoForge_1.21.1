@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
+
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -7,13 +8,20 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+/**
+ * 动态变身管理器 - 简化版
+ * 处理动态形态的特殊变身逻辑
+ */
 public class DynamicHenshinManager {
-    public static void applyDynamicArmor(Player player, DynamicFormConfig formConfig) {
-        // 保存原始装备
-        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-        ArmorManager.INSTANCE.saveOriginalGear(player, config);
 
-        // 应用动态盔甲（跳过腿部）
+    /**
+     * 应用动态盔甲（跳过腿部）
+     */
+    public static void applyDynamicArmor(Player player, DynamicFormConfig formConfig) {
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
+
+        // 应用动态盔甲
         if (formConfig.getHelmet() != Items.AIR) {
             player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(formConfig.getHelmet()));
         }

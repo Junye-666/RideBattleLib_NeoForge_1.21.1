@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
-import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import io.netty.handler.logging.LogLevel;
@@ -56,7 +55,7 @@ public class EffectAndAttributeManager {
 
         // 添加动态形态支持
         if (formConfig == null) {
-            formConfig = DynamicFormManager.getDynamicForm(formId);
+            formConfig = DynamicFormConfig.getDynamicForm(formId);
         }
 
         if (formConfig != null) {

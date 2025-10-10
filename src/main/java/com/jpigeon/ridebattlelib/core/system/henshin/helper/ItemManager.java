@@ -1,6 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
-import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import net.minecraft.resources.ResourceLocation;
@@ -14,7 +14,7 @@ public class ItemManager {
     public void grantFormItems(Player player, ResourceLocation formId) {
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) {
-            formConfig = DynamicFormManager.getDynamicForm(formId); // 添加动态形态支持
+            formConfig = DynamicFormConfig.getDynamicForm(formId); // 添加动态形态支持
         }
         if (formConfig != null) {
             for (ItemStack stack : formConfig.getGrantedItems()) {
@@ -29,7 +29,7 @@ public class ItemManager {
     public void removeGrantedItems(Player player, ResourceLocation formId) {
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) {
-            formConfig = DynamicFormManager.getDynamicForm(formId); // 添加动态形态支持
+            formConfig = DynamicFormConfig.getDynamicForm(formId); // 添加动态形态支持
         }
         if (formConfig != null) {
             for (ItemStack grantedItem : formConfig.getGrantedItems()) {

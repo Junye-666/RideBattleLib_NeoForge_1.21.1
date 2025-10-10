@@ -9,7 +9,7 @@ import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentDat
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.event.DriverActivationEvent;
 import com.jpigeon.ridebattlelib.core.system.event.UnhenshinEvent;
-import com.jpigeon.ridebattlelib.core.system.form.DynamicFormManager;
+import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
@@ -113,7 +113,7 @@ public class HenshinSystem implements IHenshinSystem {
             if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
                 RideBattleLib.LOGGER.debug("形态 {} 未注册，尝试作为动态形态处理", formId);
             }
-            formConfig = DynamicFormManager.getOrCreateDynamicForm(
+            formConfig = DynamicFormConfig.getOrCreateDynamicForm(
                     player, config, driverItems
             );
 

@@ -8,7 +8,9 @@ import net.neoforged.bus.api.Event;
 import java.util.Collections;
 import java.util.Map;
 
-// 在变身前匹配形态时强制覆盖匹配的形态(相当于形态琐)
+/**
+ * 在变身前匹配形态时强制修改匹配形态的覆盖(相当于形态琐)
+ */
 public class FormOverrideEvent extends Event {
     private final Player player;
     private final Map<ResourceLocation, ItemStack> driverItems;
@@ -27,6 +29,14 @@ public class FormOverrideEvent extends Event {
         return player;
     }
 
+    /**
+     * 强制覆盖形态
+     * @param overrideForm 变身时强制更改至的形态
+     */
+    public void setOverrideForm(ResourceLocation overrideForm) {
+        this.overrideForm = overrideForm;
+    }
+
     public Map<ResourceLocation, ItemStack> getDriverItems() {
         return driverItems;
     }
@@ -37,10 +47,6 @@ public class FormOverrideEvent extends Event {
 
     public ResourceLocation getOverrideForm() {
         return overrideForm;
-    }
-
-    public void setOverrideForm(ResourceLocation overrideForm) {
-        this.overrideForm = overrideForm;
     }
 
     public boolean isCanceled() {

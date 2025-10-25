@@ -2,6 +2,9 @@ package com.jpigeon.ridebattlelib.core.system.event;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
 
+/**
+ * 吃瘪事件
+ */
 public class PenaltyEvent extends Event {
     private final Player player;
 
@@ -24,6 +27,9 @@ public class PenaltyEvent extends Event {
             return canceled;
         }
 
+        /**
+         * 可取消
+         */
         public void setCanceled(boolean canceled) {
             this.canceled = canceled;
         }

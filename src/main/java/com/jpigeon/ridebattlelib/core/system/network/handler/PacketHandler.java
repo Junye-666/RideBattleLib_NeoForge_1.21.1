@@ -49,7 +49,13 @@ public class PacketHandler {
                         (payload, context) ->
                                 DriverSystem.INSTANCE.returnItems(context.player()))
                 .playToServer(ExtractItemPacket.TYPE, ExtractItemPacket.STREAM_CODEC,
-                        (payload, context) -> DriverSystem.INSTANCE.extractItem(context.player(), payload.slotId()))
+                        (payload, context) -> {
+                            Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
+                            if (targetPlayer != null) {
+                                DriverSystem.INSTANCE.extractItem(context.player(), payload.slotId());
+                            }
+                        })
+
                 .playToClient(DriverDataDiffPacket.TYPE, DriverDataDiffPacket.STREAM_CODEC,
                         (payload, context) -> DriverSystem.INSTANCE.applyDiffPacket(payload)
                 )

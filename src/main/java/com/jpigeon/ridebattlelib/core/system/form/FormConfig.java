@@ -35,6 +35,7 @@ public class FormConfig {
     private @Nullable Item leggings = Items.AIR;
     private Item boots = Items.AIR;
     private TriggerType triggerType = TriggerType.KEY;
+
     private final List<AttributeModifier> attributes = new ArrayList<>();
     private final List<MobEffectInstance> effects = new ArrayList<>();
     private final List<ResourceLocation> attributeIds = new ArrayList<>();
@@ -50,8 +51,15 @@ public class FormConfig {
         this.formId = formId;
     }
 
-    //====================Setter方法====================
+    //====================常用方法====================
 
+    /**
+     * 设置形态对应盔甲
+     * @param helmet 头盔
+     * @param chestplate 胸甲
+     * @param leggings 腿甲（可无）
+     * @param boots （靴子）
+     */
     public FormConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
         this.helmet = helmet;
         this.chestplate = chestplate;
@@ -77,17 +85,21 @@ public class FormConfig {
         this.boots = boots;
     }
 
-    public void setAllowsEmptyDriver(boolean allow) {
-        this.allowsEmptyDriver = allow;
-    }
-
-    // 触发方式
+    /**
+     * 触发变身方式
+     * @param type KEY/ITEM/AUTO
+     */
     public FormConfig setTriggerType(TriggerType type) {
         this.triggerType = type;
         return this;
     }
 
-    // 添加属性修饰符
+    /**
+     * 属性修饰符
+     * @param attributeId 可在Attributes.java中找到相应ResourceLocation
+     * @param amount 修改值
+     * @param operation 修改方式
+     */
     public FormConfig addAttribute(ResourceLocation attributeId, double amount,
                                    AttributeModifier.Operation operation) {
         attributes.add(new AttributeModifier(attributeId, amount, operation));
@@ -95,7 +107,13 @@ public class FormConfig {
         return this;
     }
 
-    // 添加生物效果
+    /**
+     * 状态效果
+     * @param effect MobEffects中获取
+     * @param duration 持续时间
+     * @param amplifier 等级：0为1级
+     * @param hideParticles 是否隐藏粒子效果
+     */
     public FormConfig addEffect(Holder<MobEffect> effect, int duration,
                                 int amplifier, boolean hideParticles) {
         ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
@@ -104,19 +122,25 @@ public class FormConfig {
         return this;
     }
 
-    // 添加必要物品（主驱动器）
+    /**
+     * 添加形态所需主驱动器物品
+     */
     public FormConfig addRequiredItem(ResourceLocation slotId, Item item) {
         requiredItems.put(slotId, item);
         return this;
     }
 
-    // 添加必要物品（副驱动器）
+    /**
+     * 添加形态所需副驱动器物品
+     */
     public FormConfig addAuxRequiredItem(ResourceLocation slotId, Item item) {
         auxRequiredItems.put(slotId, item);
         return this;
     }
 
-    // 给予物品（变身后）
+    /**
+     * 变身后给予玩家的物品
+     */
     public FormConfig addGrantedItem(ItemStack stack) {
         if (!stack.isEmpty()) {
             grantedItems.add(stack.copy());
@@ -124,10 +148,32 @@ public class FormConfig {
         return this;
     }
 
+    /**
+     * 表明此形态变身时是否有缓冲阶段
+     */
     public void setShouldPause(boolean pause) {
         this.shouldPause = pause;
     }
 
+    /**
+     * 为形态赋予技能
+     * @param skillId 你注册的技能ID
+     */
+    public FormConfig addSkill(ResourceLocation skillId) {
+        if (!skillIds.contains(skillId)) {
+            skillIds.add(skillId);
+        }
+        return this;
+    }
+
+    /**
+     * 设定形态是否允许空驱动器
+     */
+    public void setAllowsEmptyDriver(boolean allow) {
+        this.allowsEmptyDriver = allow;
+    }
+
+    //====================内部方法====================
     // 匹配验证
     public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
         // 处理动态形态的情况 - 如果没有特定物品要求，直接返回true
@@ -234,13 +280,6 @@ public class FormConfig {
             RideBattleLib.LOGGER.debug("辅助槽位全部匹配");
         }
         return true;
-    }
-
-    public FormConfig addSkill(ResourceLocation skillId) {
-        if (!skillIds.contains(skillId)) {
-            skillIds.add(skillId);
-        }
-        return this;
     }
 
 

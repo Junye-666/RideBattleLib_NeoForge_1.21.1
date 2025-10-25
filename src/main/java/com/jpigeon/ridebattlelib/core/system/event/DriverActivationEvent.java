@@ -4,6 +4,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
 
+/**
+ * 驱动器激活事件
+ */
 public class DriverActivationEvent extends Event {
     private final Player player;
     private final ItemStack driverItem;

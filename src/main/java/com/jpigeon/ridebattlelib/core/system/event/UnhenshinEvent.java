@@ -3,6 +3,11 @@ package com.jpigeon.ridebattlelib.core.system.event;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
 
+/**
+ * 解除变身事件
+ * <p>
+ * 用于解除变身时播放音效等
+ */
 public class UnhenshinEvent extends Event {
     private final Player player;
 

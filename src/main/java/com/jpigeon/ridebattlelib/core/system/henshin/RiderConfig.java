@@ -26,8 +26,10 @@ import java.util.*;
 
 /**
  * 假面骑士配置类。
+ * <p>
  * 用于定义骑士的驱动器、槽位、形态、触发物品等。
- * 可通过 RiderRegistry.registerRider() 注册。
+ * <p>
+ * 需通过 RiderRegistry.registerRider() 注册。
  */
 public class RiderConfig {
     private final ResourceLocation riderId;
@@ -45,43 +47,70 @@ public class RiderConfig {
     private final List<AttributeModifier> baseAttributes = new ArrayList<>();
     private final List<MobEffectInstance> baseEffects = new ArrayList<>();
     private boolean allowDynamicForms = false;
-    //====================初始化方法====================
 
-    // 骑士Id初始化
+    /**
+     * 初始化时需要传入骑士Id
+     * @param riderId ResourceLocation
+     */
     public RiderConfig(ResourceLocation riderId) {
         this.riderId = riderId;
     }
 
-    //====================Setter方法====================
+    //====================常用方法====================
 
-    // 指定驱动器物品
+    /**
+     * 指定驱动器物品
+     */
     public RiderConfig setDriverItem(Item item, EquipmentSlot slot) {
         this.driverItem = item;
         this.driverSlot = slot;
         return this;
     }
 
-    // 指定触发用物品
-    public RiderConfig setTriggerItem(@Nullable Item item) {
-        this.triggerItem = item != null ? item : Items.AIR;
+    /**
+     * 设置辅助驱动器物品和装备槽位(可选)
+     */
+    public RiderConfig setAuxDriverItem(Item item, EquipmentSlot slot) {
+        this.auxDriverItem = item;
+        this.auxDriverSlot = slot;
         return this;
     }
 
-    // 添加驱动器槽位
-    public RiderConfig addDriverSlot(ResourceLocation slotId,
-                                     List<Item> allowedItems,
-                                     boolean isRequired,
-                                     boolean allowReplace) {
-
+    /**
+     * 添加主驱动器槽位
+     */
+    public RiderConfig addMainDriverSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired, boolean allowReplace) {
         slotDefinitions.put(slotId,
                 new DriverSlotDefinition(allowedItems, null, allowReplace, false, isRequired));
-
         if (isRequired) {
             requiredSlots.add(slotId);
         }
         return this;
     }
 
+    /**
+     * 添加辅助驱动器上的槽位
+     */
+    public RiderConfig addAuxDriverSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired, boolean allowReplace) {
+        auxSlotDefinitions.put(slotId, new DriverSlotDefinition(allowedItems, null, allowReplace, true, isRequired));
+        if (isRequired) {
+            auxRequiredSlots.add(slotId);
+        }
+        return this;
+    }
+
+    /**
+     * 指定触发变身用物品（同时需要FormConfig中TriggerType为Item）
+     */
+    public RiderConfig setTriggerItem(@Nullable Item item) {
+        this.triggerItem = item != null ? item : Items.AIR;
+        return this;
+    }
+
+    /**
+     * 为骑士添加形态
+     * @param form 你注册的形态Config
+     */
     public RiderConfig addForm(FormConfig form) {
         forms.put(form.getFormId(), form);
         if (baseFormId == null) {
@@ -90,28 +119,44 @@ public class RiderConfig {
         return this;
     }
 
-    // 设置基础形态
+    /**
+     * 设置基础形态
+     * @param formId 你注册形态Config中的形态ID
+     */
     public void setBaseForm(ResourceLocation formId) {
         if (forms.containsKey(formId)) {
             baseFormId = formId;
         }
     }
 
-    public RiderConfig addAuxSlot(ResourceLocation slotId, List<Item> allowedItems, boolean isRequired, boolean allowReplace) {
-        auxSlotDefinitions.put(slotId, new DriverSlotDefinition(allowedItems, null, allowReplace, true, isRequired));
-        if (isRequired) {
-            auxRequiredSlots.add(slotId);
-        }
+    //====================动态适配方法====================
+    /**
+     * 添加骑士基础属性修饰符（动态形态时的统一修饰符）
+      */
+    public RiderConfig addBaseAttribute(ResourceLocation attributeId, double amount,
+                                        AttributeModifier.Operation operation) {
+        baseAttributes.add(new AttributeModifier(attributeId, amount, operation));
         return this;
     }
 
-    // 设置辅助驱动器物品和装备槽位
-    public RiderConfig setAuxDriverItem(Item item, EquipmentSlot slot) {
-        this.auxDriverItem = item;
-        this.auxDriverSlot = slot;
+    /**
+     * 添加基础效果（动态形态时的统一效果）
+     */
+    public RiderConfig addBaseEffect(Holder<MobEffect> effect, int duration,
+                                     int amplifier, boolean hideParticles) {
+        baseEffects.add(new MobEffectInstance(effect, duration, amplifier, false, !hideParticles));
         return this;
     }
 
+    /**
+     * 设置此骑士是否允许动态形态
+     */
+    public RiderConfig setAllowDynamicForms(boolean allow) {
+        this.allowDynamicForms = allow;
+        return this;
+    }
+
+    //====================内部方法====================
     // 形态匹配
     public ResourceLocation matchForm(Player player, Map<ResourceLocation, ItemStack> driverItems) {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
@@ -222,67 +267,11 @@ public class RiderConfig {
         return null;
     }
 
-    // 快捷获取FormConfig
-    public FormConfig getActiveFormConfig(Player player) {
-        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
-        ResourceLocation formId = matchForm(player, driverItems);
-
-        // 优先检查预设形态
-        if (forms.containsKey(formId)) {
-            return forms.get(formId);
-        }
-
-        // 处理动态形态
-        return DynamicFormConfig.getDynamicForm(formId);
-    }
-
-    //====================动态适配方法====================
-    // 添加基础属性修饰符
-    public RiderConfig addBaseAttribute(ResourceLocation attributeId, double amount,
-                                        AttributeModifier.Operation operation) {
-        baseAttributes.add(new AttributeModifier(attributeId, amount, operation));
-        return this;
-    }
-
-    // 添加基础效果
-    public RiderConfig addBaseEffect(Holder<MobEffect> effect, int duration,
-                                     int amplifier, boolean hideParticles) {
-        baseEffects.add(new MobEffectInstance(effect, duration, amplifier, false, !hideParticles));
-        return this;
-    }
-
-    public RiderConfig setAllowDynamicForms(boolean allow) {
-        this.allowDynamicForms = allow;
-        return this;
-    }
-
     //====================Getter方法====================
 
-    //获取骑士Id
-    public ResourceLocation getRiderId() {
-        return riderId;
-    }
-
-    //获取驱动器物品
-    public Item getDriverItem() {
-        return driverItem;
-    }
-
-    public Item getAuxDriverItem() {
-        return auxDriverItem;
-    }
-
-    //获取驱动器位置
-    public EquipmentSlot getDriverSlot() {
-        return driverSlot;
-    }
-
-    //获取必须物品
-    public @Nullable Item getTriggerItem() {
-        return triggerItem;
-    }
-
-    //通过玩家变身状态和装备查找激活的驱动器配置
+    /**
+     * 通过玩家变身状态和装备查找激活的驱动器配置
+     */
     public static RiderConfig findActiveDriverConfig(Player player) {
         // 方法1：首先检查玩家是否处于变身状态，从变身数据中获取配置
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
@@ -317,19 +306,44 @@ public class RiderConfig {
     }
 
     /**
-     * 专门用于变身状态下获取驱动器配置的方法
+     * 快捷获取FormConfig
      */
-    public static RiderConfig findTransformedRiderConfig(Player player) {
-        if (!HenshinSystem.INSTANCE.isTransformed(player)) {
-            return null;
+    public FormConfig getActiveFormConfig(Player player) {
+        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
+        ResourceLocation formId = matchForm(player, driverItems);
+
+        // 优先检查预设形态
+        if (forms.containsKey(formId)) {
+            return forms.get(formId);
         }
 
-        HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
-        if (transformedData != null) {
-            return transformedData.config();
-        }
+        // 处理动态形态
+        return DynamicFormConfig.getDynamicForm(formId);
+    }
 
-        return null;
+
+    //获取骑士Id
+    public ResourceLocation getRiderId() {
+        return riderId;
+    }
+
+    //获取驱动器物品
+    public Item getDriverItem() {
+        return driverItem;
+    }
+
+    public Item getAuxDriverItem() {
+        return auxDriverItem;
+    }
+
+    //获取驱动器位置
+    public EquipmentSlot getDriverSlot() {
+        return driverSlot;
+    }
+
+    //获取必须物品
+    public @Nullable Item getTriggerItem() {
+        return triggerItem;
     }
 
     //获取必要槽位列表

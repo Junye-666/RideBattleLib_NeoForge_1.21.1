@@ -8,6 +8,7 @@ import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.event.DriverActivationEvent;
+import com.jpigeon.ridebattlelib.core.system.event.HenshinPauseEvent;
 import com.jpigeon.ridebattlelib.core.system.event.UnhenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
@@ -33,10 +34,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * 故事从此开始!
- * 假面骑士的变身系统
- */
 public class HenshinSystem implements IHenshinSystem {
     public static final HenshinSystem INSTANCE = new HenshinSystem();
     public static final Map<UUID, Boolean> CLIENT_TRANSFORMED_CACHE = new ConcurrentHashMap<>();
@@ -84,7 +81,14 @@ public class HenshinSystem implements IHenshinSystem {
         // 处理变身逻辑
         if (formConfig.shouldPause()) {
             // 需要暂停的变身流程
+            HenshinPauseEvent.Pre prePause = new HenshinPauseEvent.Pre(player, config.getRiderId(), formId);
+            NeoForge.EVENT_BUS.post(prePause);
+            if (prePause.isCanceled()) DriverActionManager.INSTANCE.completeTransformation(player);
+
             DriverActionManager.INSTANCE.prepareHenshin(player, formId);
+
+            HenshinPauseEvent.Post postPause = new HenshinPauseEvent.Post(player, config.getRiderId(), formId);
+            NeoForge.EVENT_BUS.post(postPause);
         } else {
             DriverActionManager.INSTANCE.completeTransformation(player);
         }

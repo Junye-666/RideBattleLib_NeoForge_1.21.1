@@ -42,13 +42,13 @@ public class ExampleBasic {
     public static final RiderConfig riderAlpha = new RiderConfig(TEST_RIDER_ALPHA)
             .setDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁护腿(穿戴在腿部)
             .setAuxDriverItem(Items.BRICK, EquipmentSlot.OFFHAND) // 辅助驱动器: 砖块(穿戴在副手)
-            .addDriverSlot(
+            .addMainDriverSlot(
                     TEST_CORE_SLOT,
                     List.of(Items.IRON_INGOT, Items.GOLD_INGOT, Items.DIAMOND),
                     true,
                     true
             ) // 驱动器中的核心槽位: 接受铁锭或金锭(必要槽位)
-            .addAuxSlot(
+            .addAuxDriverSlot(
                     TEST_ENERGY_SLOT,
                     List.of(Items.REDSTONE, Items.GLOWSTONE_DUST, Items.APPLE),
                     true,

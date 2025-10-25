@@ -13,9 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public record DriverDataSyncPacket(UUID playerId,
-                                   Map<ResourceLocation, ItemStack> mainItems,
-                                   Map<ResourceLocation, ItemStack> auxItems
+public record DriverDataSyncPacket(
+        UUID playerId,
+        Map<ResourceLocation, ItemStack> mainItems,
+        Map<ResourceLocation, ItemStack> auxItems
 ) implements CustomPacketPayload {
 
     public static final ResourceLocation ID =

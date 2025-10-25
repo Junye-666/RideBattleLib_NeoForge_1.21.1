@@ -17,7 +17,7 @@ public class PenaltyHandler {
 
         // 是否需要触发吃瘪
         if (PenaltySystem.shouldTriggerPenalty(player)) {
-            PenaltySystem.PENALTY_SYSTEM.forceUnhenshin(player);
+            PenaltySystem.PENALTY_SYSTEM.penaltyUnhenshin(player);
 
             // 设生命值为安全值
             player.setHealth(6.0f);

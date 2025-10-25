@@ -10,15 +10,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-/**
- * 动态变身管理器 - 简化版
- * 处理动态形态的特殊变身逻辑
- */
+// 动态变身管理器 - 简化版
 public class DynamicHenshinManager {
 
-    /**
-     * 应用动态盔甲
-     */
+     // 应用动态盔甲
     public static void applyDynamicArmor(Player player, DynamicFormConfig formConfig) {
         if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
             RideBattleLib.LOGGER.debug("应用动态形态盔甲 - 头盔: {}, 胸甲: {}, 护腿: {}, 靴子: {}",

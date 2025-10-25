@@ -5,9 +5,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinPacket;
-import com.jpigeon.ridebattlelib.core.system.network.packet.SwitchFormPacket;
-import com.jpigeon.ridebattlelib.core.system.network.packet.UnhenshinPacket;
+import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
 import net.minecraft.resources.ResourceLocation;
@@ -93,20 +91,20 @@ public final class RiderManager {
     }
 
     // 将单个物品从驱动器中取出
-    public static ItemStack extractSingleItem(Player player, ResourceLocation slotId) {
-        return DriverSystem.INSTANCE.extractItem(player, slotId);
+    public static void extractSingleItem(Player player, ResourceLocation slotId) {
+        PacketHandler.sendToServer(new ExtractItemPacket(player.getUUID(), slotId));
     }
 
     // 返还所有驱动器物品
     public static void returnDriverItems(Player player) {
-        DriverSystem.INSTANCE.returnItems(player);
+        PacketHandler.sendToServer(new ReturnItemsPacket());
     }
 
     // ================ 吃瘪系统快捷方法 ================
     // 强制取消变身
-    public static void forceUntransform(Player player) {
+    public static void penaltyUntransform(Player player) {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
-            PenaltySystem.PENALTY_SYSTEM.forceUnhenshin(player);
+            PenaltySystem.PENALTY_SYSTEM.penaltyUnhenshin(player);
         }
     }
 

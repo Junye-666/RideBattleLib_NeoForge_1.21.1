@@ -4,6 +4,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
 
+/**
+ * 技能触发事件
+ */
 public class SkillEvent extends Event {
     private final Player player;
     private final ResourceLocation formId;

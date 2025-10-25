@@ -30,12 +30,12 @@ public class ExampleDynamicForm {
 
     public static final RiderConfig riderBeta = new RiderConfig(TEST_RIDER_BETA)
             .setDriverItem(Items.NETHERITE_LEGGINGS, EquipmentSlot.LEGS)
-            .addDriverSlot(
+            .addMainDriverSlot(
                     BETA_SLOT_1,
                     List.of(Items.EMERALD, Items.DIAMOND),
                     true,
                     true)
-            .addDriverSlot(
+            .addMainDriverSlot(
                     BETA_SLOT_2,
                     List.of(Items.REDSTONE, Items.GLOWSTONE_DUST),
                     true,

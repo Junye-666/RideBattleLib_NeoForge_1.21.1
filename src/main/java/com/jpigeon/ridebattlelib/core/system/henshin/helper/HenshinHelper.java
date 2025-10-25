@@ -23,13 +23,8 @@ import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.*;
 
-/*
- * 变身辅助方法
- * performHenshin 执行变身过程
- * performFormSwitch 执行形态切换过程
- * restoreTransformedState (重连时)恢复变身后的状态
- * setTransformed 设置变身状态
- */
+
+// 变身辅助方法
 public final class HenshinHelper implements IHenshinHelper {
     public static final HenshinHelper INSTANCE = new HenshinHelper();
     public static final ArmorManager ARMOR = new ArmorManager();

@@ -57,7 +57,7 @@ public class PenaltySystem implements IPenaltySystem {
     }
 
     @Override
-    public void forceUnhenshin(Player player) {
+    public void penaltyUnhenshin(Player player) {
         if (player.level().isClientSide()) return;
 
         // 强制解除变身

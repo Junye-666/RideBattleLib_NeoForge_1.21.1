@@ -25,13 +25,6 @@ import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.*;
 
-/*
- * 驱动器系统
- * 管理驱动器内部物品的存储和操作
- * insertItem 存入物品
- * extractItem 提取物品
- * returnItems 退回所有物品
- */
 public class DriverSystem implements IDriverSystem {
     public static final DriverSystem INSTANCE = new DriverSystem();
 
@@ -229,10 +222,8 @@ public class DriverSystem implements IDriverSystem {
         }
     }
 
-    /**
-     * 内部提取方法，包含提取物品的核心逻辑
-     * @return 如果成功提取并返还给玩家，返回 true；如果事件被取消，返回 false
-     */
+
+     //内部提取方法，包含提取物品的核心逻辑
     private boolean extractItemInternal(Player player, ResourceLocation slotId,
                                         Map<ResourceLocation, ItemStack> targetMap,
                                         RiderConfig config, boolean isAuxSlot) {

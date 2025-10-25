@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 动态形态配置类 - 重构版
+ * 动态形态配置类
  * 整合了所有动态形态相关功能，支持自定义物品-盔甲槽位映射
  */
 public class DynamicFormConfig extends FormConfig {
@@ -65,7 +65,7 @@ public class DynamicFormConfig extends FormConfig {
         SLOT_PATTERN_ARMOR_MAPPINGS.put("shoes", EquipmentSlot.FEET);
     }
 
-    // 新增：默认底衣配置
+    // 默认底衣配置
     private static final Map<EquipmentSlot, Item> DEFAULT_UNDERSUIT = new EnumMap<>(EquipmentSlot.class);
     static {
         DEFAULT_UNDERSUIT.put(EquipmentSlot.HEAD, Items.AIR);

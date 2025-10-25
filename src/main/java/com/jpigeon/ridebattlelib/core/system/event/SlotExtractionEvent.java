@@ -6,6 +6,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
 
+/**
+ * 从槽位取出物品事件
+ */
 public class SlotExtractionEvent extends Event {
     private final Player player;
     private final ResourceLocation slotId;
@@ -19,6 +22,13 @@ public class SlotExtractionEvent extends Event {
         this.config = config;
     }
 
+    /**
+     * 强制修改提取出来的物品（比如拔出来后道具能量/本身消失）
+     */
+    public void setExtractedStack(ItemStack extractedStack) {
+        this.extractedStack = extractedStack;
+    }
+
     public Player getPlayer() {
         return player;
     }
@@ -29,10 +39,6 @@ public class SlotExtractionEvent extends Event {
 
     public ItemStack getExtractedStack() {
         return extractedStack;
-    }
-
-    public void setExtractedStack(ItemStack extractedStack) {
-        this.extractedStack = extractedStack;
     }
 
     public RiderConfig getConfig() {
@@ -50,6 +56,9 @@ public class SlotExtractionEvent extends Event {
             return canceled;
         }
 
+        /**
+         * 可取消取出（卡里面拔不出来了）
+         */
         public void setCanceled(boolean canceled) {
             this.canceled = canceled;
         }

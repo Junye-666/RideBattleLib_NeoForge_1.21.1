@@ -4,6 +4,9 @@ import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
 
+/**
+ * 返还物品事件
+ */
 public class ReturnItemsEvent extends Event {
     private final Player player;
     private final RiderConfig config;
@@ -26,6 +29,9 @@ public class ReturnItemsEvent extends Event {
         return canceled;
     }
 
+    /**
+     * 可取消返还
+     */
     public void setCanceled(boolean canceled) {
         this.canceled = canceled;
     }

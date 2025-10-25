@@ -37,9 +37,6 @@ public class DynamicFormConfig extends FormConfig {
     // 槽位到盔甲槽位的自动映射
     private static final Map<String, EquipmentSlot> SLOT_PATTERN_ARMOR_MAPPINGS = new HashMap<>();
 
-    // 物品类型到默认盔甲槽位的映射
-    private static final Map<Class<? extends Item>, EquipmentSlot> ITEM_TYPE_DEFAULT_SLOT = new HashMap<>();
-
     private static final Map<ResourceLocation, Map<EquipmentSlot, Item>> UNDERSUIT_REGISTRY = new HashMap<>();
 
     // 动态形态专用注册表
@@ -66,10 +63,6 @@ public class DynamicFormConfig extends FormConfig {
         SLOT_PATTERN_ARMOR_MAPPINGS.put("feet", EquipmentSlot.FEET);
         SLOT_PATTERN_ARMOR_MAPPINGS.put("boots", EquipmentSlot.FEET);
         SLOT_PATTERN_ARMOR_MAPPINGS.put("shoes", EquipmentSlot.FEET);
-
-        // 设置物品类型到默认盔甲槽位的映射
-        ITEM_TYPE_DEFAULT_SLOT.put(ArmorItem.class, null); // 盔甲物品由其自身决定槽位
-        // 可以添加其他物品类型的默认映射
     }
 
     // 新增：默认底衣配置

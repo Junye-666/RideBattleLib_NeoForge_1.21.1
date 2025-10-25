@@ -42,13 +42,9 @@ public class RiderConfig {
     private final Set<ResourceLocation> requiredSlots = new HashSet<>();
     private final Set<ResourceLocation> auxRequiredSlots = new HashSet<>();
     final Map<ResourceLocation, FormConfig> forms = new HashMap<>();
-    private final Map<EquipmentSlot, Item> commonArmorMap = new EnumMap<>(EquipmentSlot.class);
-    private final Map<ResourceLocation, EquipmentSlot> slotArmorMappings = new HashMap<>();
-    private final Map<ResourceLocation, EquipmentSlot> auxSlotArmorMappings = new HashMap<>();
     private final List<AttributeModifier> baseAttributes = new ArrayList<>();
     private final List<MobEffectInstance> baseEffects = new ArrayList<>();
     private boolean allowDynamicForms = false;
-
     //====================初始化方法====================
 
     // 骑士Id初始化
@@ -241,24 +237,6 @@ public class RiderConfig {
     }
 
     //====================动态适配方法====================
-    // 添加共通盔甲（底衣）
-    public RiderConfig setCommonArmor(EquipmentSlot slot, Item item) {
-        commonArmorMap.put(slot, item);
-        return this;
-    }
-
-    // 添加主驱动器槽位盔甲映射
-    public RiderConfig addSlotArmorMapping(ResourceLocation slotId, EquipmentSlot armorSlot) {
-        slotArmorMappings.put(slotId, armorSlot);
-        return this;
-    }
-
-    // 添加副驱动器槽位盔甲映射
-    public RiderConfig addAuxSlotArmorMapping(ResourceLocation slotId, EquipmentSlot armorSlot) {
-        auxSlotArmorMappings.put(slotId, armorSlot);
-        return this;
-    }
-
     // 添加基础属性修饰符
     public RiderConfig addBaseAttribute(ResourceLocation attributeId, double amount,
                                         AttributeModifier.Operation operation) {
@@ -304,15 +282,53 @@ public class RiderConfig {
         return triggerItem;
     }
 
-    //通过玩家装备查找激活的驱动器配置
+    //通过玩家变身状态和装备查找激活的驱动器配置
     public static RiderConfig findActiveDriverConfig(Player player) {
+        // 方法1：首先检查玩家是否处于变身状态，从变身数据中获取配置
+        if (HenshinSystem.INSTANCE.isTransformed(player)) {
+            HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
+            if (transformedData != null) {
+                RiderConfig config = transformedData.config();
+                if (config != null) {
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("从变身数据获取驱动器配置: {}", config.getRiderId());
+                    }
+                    return config;
+                }
+            }
+        }
+
+        // 方法2：如果不在变身状态或变身数据无效，回退到原有的装备检查
         for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
             // 精确匹配驱动器槽位和物品
             ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
             if (driverStack.is(config.getDriverItem())) {
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("从装备槽位获取驱动器配置: {}", config.getRiderId());
+                }
                 return config;
             }
         }
+
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("未找到激活的驱动器配置");
+        }
+        return null;
+    }
+
+    /**
+     * 专门用于变身状态下获取驱动器配置的方法
+     */
+    public static RiderConfig findTransformedRiderConfig(Player player) {
+        if (!HenshinSystem.INSTANCE.isTransformed(player)) {
+            return null;
+        }
+
+        HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
+        if (transformedData != null) {
+            return transformedData.config();
+        }
+
         return null;
     }
 
@@ -350,6 +366,21 @@ public class RiderConfig {
     }
 
     public boolean hasAuxDriverEquipped(Player player) {
+        // 如果在变身状态，从变身数据中检查辅助驱动器
+        if (HenshinSystem.INSTANCE.isTransformed(player)) {
+            HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
+            if (transformedData != null && transformedData.config().getRiderId().equals(this.getRiderId())) {
+                // 检查变身时的驱动器快照中是否有辅助槽位物品
+                Map<ResourceLocation, ItemStack> driverSnapshot = transformedData.driverSnapshot();
+                for (ResourceLocation auxSlotId : getAuxSlotDefinitions().keySet()) {
+                    if (driverSnapshot.containsKey(auxSlotId) && !driverSnapshot.get(auxSlotId).isEmpty()) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // 不在变身状态，使用原有的装备检查
         ItemStack auxStack = player.getItemBySlot(auxDriverSlot);
         return !auxStack.isEmpty() && auxStack.is(auxDriverItem);
     }
@@ -363,19 +394,8 @@ public class RiderConfig {
         return Collections.unmodifiableMap(auxSlotDefinitions);
     }
 
-    public Map<EquipmentSlot, Item> getCommonArmorMap() {
-        return Collections.unmodifiableMap(commonArmorMap);
-    }
-
     public boolean allowsDynamicForms() {
         return allowDynamicForms;
-    }
-
-    public EquipmentSlot getArmorSlotFor(ResourceLocation slotId, boolean isAuxSlot) {
-        if (isAuxSlot) {
-            return auxSlotArmorMappings.getOrDefault(slotId, null);
-        }
-        return slotArmorMappings.getOrDefault(slotId, null);
     }
 
     public List<AttributeModifier> getBaseAttributes() {

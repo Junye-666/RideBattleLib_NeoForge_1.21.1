@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
@@ -13,6 +14,7 @@ import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -58,10 +60,14 @@ public final class HenshinHelper implements IHenshinHelper {
 
         // 动态形态特殊处理
         if (formConfig instanceof DynamicFormConfig) {
-            // 应用动态盔甲
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("应用动态形态盔甲");
+            }
             DynamicHenshinManager.applyDynamicArmor(player, (DynamicFormConfig) formConfig);
         } else {
-            // 普通形态处理
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("应用普通形态盔甲");
+            }
             ARMOR.equipArmor(player, formConfig);
         }
 
@@ -151,7 +157,13 @@ public final class HenshinHelper implements IHenshinHelper {
 
     @Override
     public void setTransformed(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> driverSnapshot) {
+        if (config == null) return;
         RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("保存变身数据 - 骑士: {}, 形态: {}",
+                    config.getRiderId(), formId);
+        }
+
         TransformedAttachmentData transformedData = new TransformedAttachmentData(
                 config.getRiderId(),
                 formId,

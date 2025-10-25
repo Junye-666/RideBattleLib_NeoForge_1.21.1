@@ -1,16 +1,21 @@
 package com.jpigeon.ridebattlelib.core.system.driver;
 
+import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IDriverSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
+import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.event.ItemInsertionEvent;
 import com.jpigeon.ridebattlelib.core.system.event.ReturnItemsEvent;
 import com.jpigeon.ridebattlelib.core.system.event.SlotExtractionEvent;
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
+import io.netty.handler.logging.LogLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,6 +42,12 @@ public class DriverSystem implements IDriverSystem {
         if (stack.isEmpty() || stack.getCount() <= 0) {
             RideBattleLib.LOGGER.error("无法插入无效物品");
             return false;
+        }
+
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("尝试插入物品 - 玩家: {}, 槽位: {}, 物品: {}, 变身状态: {}",
+                    player.getName().getString(), slotId, stack.getItem(),
+                    HenshinSystem.INSTANCE.isTransformed(player));
         }
 
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
@@ -141,9 +152,38 @@ public class DriverSystem implements IDriverSystem {
 
     @Override
     public void returnItems(Player player) {
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("开始返还物品 - 玩家: {}", player.getName().getString());
+        }
+
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-        if (config == null) return;
+
+        // 方法1：优先从变身数据中获取骑士配置
+        RiderConfig config = null;
+        TransformedAttachmentData transformedData = data.getTransformedData();
+
+        if (transformedData != null) {
+            // 从变身数据中获取骑士ID，然后查找配置
+            config = RiderRegistry.getRider(transformedData.riderId());
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("从变身数据获取骑士配置: {}", transformedData.riderId());
+            }
+        }
+
+        // 方法2：如果变身数据中没有，尝试查找当前激活的驱动器
+        if (config == null) {
+            config = RiderConfig.findActiveDriverConfig(player);
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("从当前装备获取骑士配置: {}", config != null ? config.getRiderId() : "null");
+            }
+        }
+
+        if (config == null) {
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("无法找到骑士配置，无法返还物品");
+            }
+            return;
+        }
 
         // 创建事件用于检查是否应该取消返还
         ReturnItemsEvent.Pre preReturn = new ReturnItemsEvent.Pre(player, config);
@@ -153,6 +193,11 @@ public class DriverSystem implements IDriverSystem {
         if (preReturn.isCanceled()) {
             RideBattleLib.LOGGER.debug("返还所有物品事件被取消");
             return;
+        }
+
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("主驱动器物品: {}", data.getDriverItems(config.getRiderId()));
+            RideBattleLib.LOGGER.debug("辅助驱动器物品: {}", data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>()));
         }
 
         // 返还主驱动器物品
@@ -195,11 +240,18 @@ public class DriverSystem implements IDriverSystem {
 
         // 先检查物品是否存在
         if (!targetMap.containsKey(slotId) || targetMap.get(slotId).isEmpty()) {
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("槽位 {} 没有物品可提取", slotId);
+            }
             return false;
         }
 
         // 获取物品副本用于事件
         ItemStack extracted = targetMap.get(slotId).copy();
+
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("尝试提取槽位 {} 的物品: {}", slotId, extracted);
+        }
 
         // 创建事件并发布
         SlotExtractionEvent.Pre preExtraction = new SlotExtractionEvent.Pre(player, slotId, extracted.copy(), config);

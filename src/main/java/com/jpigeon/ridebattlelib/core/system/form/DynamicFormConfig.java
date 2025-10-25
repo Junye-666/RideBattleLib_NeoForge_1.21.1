@@ -19,6 +19,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,11 +33,53 @@ public class DynamicFormConfig extends FormConfig {
 
     // 动态形态专用注册表
     private static final Map<Item, Map<EquipmentSlot, Item>> ITEM_ARMOR_MAP = new HashMap<>();
+
+    // 槽位到盔甲槽位的自动映射
+    private static final Map<String, EquipmentSlot> SLOT_PATTERN_ARMOR_MAPPINGS = new HashMap<>();
+
+    // 物品类型到默认盔甲槽位的映射
+    private static final Map<Class<? extends Item>, EquipmentSlot> ITEM_TYPE_DEFAULT_SLOT = new HashMap<>();
+
+    private static final Map<ResourceLocation, Map<EquipmentSlot, Item>> UNDERSUIT_REGISTRY = new HashMap<>();
+
+    // 动态形态专用注册表
     private static final Map<Item, List<MobEffectInstance>> ITEM_EFFECT_MAP = new HashMap<>();
     private static final Map<Item, List<ItemStack>> ITEM_GRANTED_ITEMS = new HashMap<>();
     private static final Map<ResourceLocation, FormConfig> DYNAMIC_FORMS = new HashMap<>();
     private static final Map<ResourceLocation, Long> LAST_USED = new HashMap<>();
     private static final long UNLOAD_DELAY = 10 * 60 * 1000; // 10分钟未使用则卸载
+
+    static {
+        // 设置槽位名称模式到盔甲槽位的映射
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("head", EquipmentSlot.HEAD);
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("helmet", EquipmentSlot.HEAD);
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("hat", EquipmentSlot.HEAD);
+
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("chest", EquipmentSlot.CHEST);
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("body", EquipmentSlot.CHEST);
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("torso", EquipmentSlot.CHEST);
+
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("legs", EquipmentSlot.LEGS);
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("leggings", EquipmentSlot.LEGS);
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("pants", EquipmentSlot.LEGS);
+
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("feet", EquipmentSlot.FEET);
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("boots", EquipmentSlot.FEET);
+        SLOT_PATTERN_ARMOR_MAPPINGS.put("shoes", EquipmentSlot.FEET);
+
+        // 设置物品类型到默认盔甲槽位的映射
+        ITEM_TYPE_DEFAULT_SLOT.put(ArmorItem.class, null); // 盔甲物品由其自身决定槽位
+        // 可以添加其他物品类型的默认映射
+    }
+
+    // 新增：默认底衣配置
+    private static final Map<EquipmentSlot, Item> DEFAULT_UNDERSUIT = new EnumMap<>(EquipmentSlot.class);
+    static {
+        DEFAULT_UNDERSUIT.put(EquipmentSlot.HEAD, Items.AIR);
+        DEFAULT_UNDERSUIT.put(EquipmentSlot.CHEST, Items.AIR);
+        DEFAULT_UNDERSUIT.put(EquipmentSlot.LEGS, Items.AIR);
+        DEFAULT_UNDERSUIT.put(EquipmentSlot.FEET, Items.AIR);
+    }
 
     public DynamicFormConfig(ResourceLocation formId, Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
         super(formId);
@@ -68,15 +111,35 @@ public class DynamicFormConfig extends FormConfig {
             if (!stack.isEmpty()) {
                 Item item = stack.getItem();
 
-                // 获取配置的盔甲槽位
-                boolean isAuxSlot = config.getAuxSlotDefinitions().containsKey(slotId);
-                EquipmentSlot armorSlot = config.getArmorSlotFor(slotId, isAuxSlot);
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("处理槽位 {} 的物品: {}", slotId, item);
+                }
+
+                // 自动确定盔甲槽位
+                EquipmentSlot armorSlot = determineArmorSlot(slotId, item);
 
                 if (armorSlot != null) {
                     usedSlots.add(armorSlot);
                     Item armorItem = getArmorForItem(item, armorSlot);
+
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("槽位 {} 自动映射到盔甲槽位: {}, 盔甲物品: {}",
+                                slotId, armorSlot, armorItem);
+                    }
+
                     if (armorItem != Items.AIR) {
                         setArmorForSlot(armorSlot, armorItem);
+                        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                            RideBattleLib.LOGGER.debug("已设置盔甲槽位 {} 为 {}", armorSlot, armorItem);
+                        }
+                    } else {
+                        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                            RideBattleLib.LOGGER.debug("未找到物品 {} 在槽位 {} 的盔甲映射", item, armorSlot);
+                        }
+                    }
+                } else {
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("无法为槽位 {} 的物品 {} 确定盔甲槽位", slotId, item);
                     }
                 }
 
@@ -95,6 +158,45 @@ public class DynamicFormConfig extends FormConfig {
 
         // 填充未使用的槽位与底衣
         fillUnusedSlots(config, usedSlots);
+
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("动态形态配置完成 - 头盔: {}, 胸甲: {}, 护腿: {}, 靴子: {}",
+                    getHelmet(), getChestplate(), getLeggings(), getBoots());
+        }
+    }
+
+    /**
+     * 自动确定盔甲槽位
+     */
+    private EquipmentSlot determineArmorSlot(ResourceLocation slotId, Item item) {
+        // 1. 首先检查槽位名称是否包含模式关键词
+        String slotPath = slotId.getPath().toLowerCase();
+        for (Map.Entry<String, EquipmentSlot> entry : SLOT_PATTERN_ARMOR_MAPPINGS.entrySet()) {
+            if (slotPath.contains(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+
+        // 2. 检查物品是否有特定槽位的盔甲映射
+        Map<EquipmentSlot, Item> slotMap = ITEM_ARMOR_MAP.get(item);
+        if (slotMap != null && !slotMap.isEmpty()) {
+            // 返回第一个定义的槽位
+            return slotMap.keySet().iterator().next();
+        }
+
+        // 3. 根据物品类型推断
+        if (item instanceof ArmorItem armorItem) {
+            return armorItem.getEquipmentSlot();
+        }
+
+        // 4. 根据物品ID推断
+        String itemId = BuiltInRegistries.ITEM.getKey(item).getPath().toLowerCase();
+        if (itemId.contains("helmet") || itemId.contains("head")) return EquipmentSlot.HEAD;
+        if (itemId.contains("chestplate") || itemId.contains("chest")) return EquipmentSlot.CHEST;
+        if (itemId.contains("leggings") || itemId.contains("legs")) return EquipmentSlot.LEGS;
+        if (itemId.contains("boots") || itemId.contains("feet")) return EquipmentSlot.FEET;
+
+        return null;
     }
 
     /**
@@ -113,15 +215,36 @@ public class DynamicFormConfig extends FormConfig {
      * 填充未使用的盔甲槽位
      */
     private void fillUnusedSlots(RiderConfig config, Set<EquipmentSlot> usedSlots) {
+        // 获取该骑士的底衣配置
+        Map<EquipmentSlot, Item> undersuit = getUndersuitForRider(config.getRiderId());
+
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR && !usedSlots.contains(slot)) {
-                Item commonArmor = config.getCommonArmorMap().get(slot);
-                if (commonArmor != null && commonArmor != Items.AIR) {
-                    setArmorForSlot(slot, commonArmor);
+                Item undersuitItem = undersuit.get(slot);
+                if (undersuitItem != null && undersuitItem != Items.AIR) {
+                    setArmorForSlot(slot, undersuitItem); // 这里填充底衣
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("为未使用槽位 {} 填充底衣: {}", slot, undersuitItem);
+                    }
                 }
             }
         }
     }
+
+    /**
+     * 获取骑士的底衣配置
+     */
+    private Map<EquipmentSlot, Item> getUndersuitForRider(ResourceLocation riderId) {
+        // 优先返回特定骑士的底衣配置
+        Map<EquipmentSlot, Item> customUndersuit = UNDERSUIT_REGISTRY.get(riderId);
+        if (customUndersuit != null) {
+            return customUndersuit;
+        }
+
+        // 返回默认底衣
+        return new EnumMap<>(DEFAULT_UNDERSUIT);
+    }
+
 
     // ==================== 静态注册方法 ====================
 
@@ -155,7 +278,7 @@ public class DynamicFormConfig extends FormConfig {
             return armor.getEquipmentSlot();
         }
         // 根据物品ID推断（备选方案）
-        String itemId = BuiltInRegistries.ITEM.getKey(armorItem).getPath();
+        String itemId = BuiltInRegistries.ITEM.getKey(armorItem).getPath().toLowerCase();
         if (itemId.contains("helmet") || itemId.contains("head")) return EquipmentSlot.HEAD;
         if (itemId.contains("chestplate") || itemId.contains("chest")) return EquipmentSlot.CHEST;
         if (itemId.contains("leggings") || itemId.contains("legs")) return EquipmentSlot.LEGS;
@@ -164,16 +287,27 @@ public class DynamicFormConfig extends FormConfig {
     }
 
     /**
+     * 注册槽位模式映射
+     */
+    public static void registerSlotPattern(String pattern, EquipmentSlot armorSlot) {
+        SLOT_PATTERN_ARMOR_MAPPINGS.put(pattern.toLowerCase(), armorSlot);
+    }
+
+    /**
      * 注册物品效果
      */
-    public static void registerItemEffects(Item item, MobEffectInstance... effectInstances) {
+    private static void registerItemEffects(Item item, MobEffectInstance... effectInstances) {
         ITEM_EFFECT_MAP.computeIfAbsent(item, k -> new ArrayList<>())
                 .addAll(Arrays.asList(effectInstances));
     }
 
     public static void registerItemEffect(Item item, Holder<MobEffect> effect,
                                           int duration, int amplifier, boolean ambient) {
-        registerItemEffects(item, new MobEffectInstance(effect, duration, amplifier, false, !ambient));
+        registerItemEffects(item, new MobEffectInstance(effect, duration, amplifier, false, ambient));
+    }
+
+    public static void registerItemEffect(Item item, Holder<MobEffect> effectHolder) {
+        registerItemEffect(item, effectHolder, 114514, 1, false);
     }
 
     /**
@@ -182,6 +316,48 @@ public class DynamicFormConfig extends FormConfig {
     public static void registerItemGrantedItems(Item item, ItemStack... grantedItems) {
         ITEM_GRANTED_ITEMS.put(item, Arrays.asList(grantedItems));
     }
+
+    // ==================== 底衣注册方法 ====================
+
+    /**
+     * 注册骑士的底衣配置
+     */
+    public static void registerRiderUndersuit(ResourceLocation riderId,
+                                              Item helmet, Item chestplate,
+                                              @Nullable Item leggings, Item boots) {
+        Map<EquipmentSlot, Item> undersuit = new EnumMap<>(EquipmentSlot.class);
+        undersuit.put(EquipmentSlot.HEAD, helmet != null ? helmet : Items.AIR);
+        undersuit.put(EquipmentSlot.CHEST, chestplate != null ? chestplate : Items.AIR);
+        undersuit.put(EquipmentSlot.LEGS, leggings != null ? leggings : Items.AIR);
+        undersuit.put(EquipmentSlot.FEET, boots != null ? boots : Items.AIR);
+
+        UNDERSUIT_REGISTRY.put(riderId, undersuit);
+    }
+
+    /**
+     * 注册骑士的底衣配置（使用EnumMap）
+     */
+    public static void registerRiderUndersuit(ResourceLocation riderId, Map<EquipmentSlot, Item> undersuit) {
+        UNDERSUIT_REGISTRY.put(riderId, new EnumMap<>(undersuit));
+    }
+
+    /**
+     * 设置默认底衣配置
+     */
+    public static void setDefaultUndersuit(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
+        DEFAULT_UNDERSUIT.put(EquipmentSlot.HEAD, helmet != null ? helmet : Items.AIR);
+        DEFAULT_UNDERSUIT.put(EquipmentSlot.CHEST, chestplate != null ? chestplate : Items.AIR);
+        DEFAULT_UNDERSUIT.put(EquipmentSlot.LEGS, leggings != null ? leggings : Items.AIR);
+        DEFAULT_UNDERSUIT.put(EquipmentSlot.FEET, boots != null ? boots : Items.AIR);
+    }
+
+    /**
+     * 移除骑士的底衣配置
+     */
+    public static void removeRiderUndersuit(ResourceLocation riderId) {
+        UNDERSUIT_REGISTRY.remove(riderId);
+    }
+
 
     // ==================== 查询方法 ====================
 
@@ -199,6 +375,24 @@ public class DynamicFormConfig extends FormConfig {
 
     public static List<ItemStack> getGrantedItemsForItem(Item item) {
         return ITEM_GRANTED_ITEMS.getOrDefault(item, Collections.emptyList());
+    }
+
+    /**
+     * 获取骑士的底衣配置
+     */
+    public static Map<EquipmentSlot, Item> getRiderUndersuit(ResourceLocation riderId) {
+        Map<EquipmentSlot, Item> undersuit = UNDERSUIT_REGISTRY.get(riderId);
+        if (undersuit != null) {
+            return new EnumMap<>(undersuit);
+        }
+        return new EnumMap<>(DEFAULT_UNDERSUIT);
+    }
+
+    /**
+     * 检查骑士是否注册了底衣配置
+     */
+    public static boolean hasRiderUndersuit(ResourceLocation riderId) {
+        return UNDERSUIT_REGISTRY.containsKey(riderId);
     }
 
     // ==================== 动态形态管理 ====================

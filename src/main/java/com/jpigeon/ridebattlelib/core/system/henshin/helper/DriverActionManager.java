@@ -23,7 +23,7 @@ public class DriverActionManager {
 
     public void prepareHenshin(Player player, ResourceLocation formId) {
         if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
-            RideBattleLib.LOGGER.debug("玩家 {} 进入变身缓冲阶段", player.getName());
+            RideBattleLib.LOGGER.debug("玩家 {} 进入变身缓冲阶段", player.getDisplayName().getString());
         }
 
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
@@ -45,7 +45,7 @@ public class DriverActionManager {
 
     public void proceedHenshin(Player player, RiderConfig config) {
         if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
-            RideBattleLib.LOGGER.debug("使玩家 {} 继续变身 {}", player.getName(), config.getRiderId());
+            RideBattleLib.LOGGER.debug("使玩家 {} 继续变身 {}", player.getName().getString(), config.getRiderId());
         }
         if (HenshinSystem.INSTANCE.isTransformed(player)) return;
         PacketHandler.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));

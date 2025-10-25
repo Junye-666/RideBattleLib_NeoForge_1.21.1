@@ -94,6 +94,7 @@ public class FormConfig {
         attributeIds.add(attributeId);
         return this;
     }
+
     // 添加生物效果
     public FormConfig addEffect(Holder<MobEffect> effect, int duration,
                                 int amplifier, boolean hideParticles) {
@@ -102,16 +103,19 @@ public class FormConfig {
         effects.add(new MobEffectInstance(effect, duration, amplifier, false, !hideParticles));
         return this;
     }
+
     // 添加必要物品（主驱动器）
     public FormConfig addRequiredItem(ResourceLocation slotId, Item item) {
         requiredItems.put(slotId, item);
         return this;
     }
+
     // 添加必要物品（副驱动器）
     public FormConfig addAuxRequiredItem(ResourceLocation slotId, Item item) {
         auxRequiredItems.put(slotId, item);
         return this;
     }
+
     // 给予物品（变身后）
     public FormConfig addGrantedItem(ItemStack stack) {
         if (!stack.isEmpty()) {
@@ -126,19 +130,25 @@ public class FormConfig {
 
     // 匹配验证
     public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
-        for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
-
-            if (requiredItems.isEmpty() && !allowsEmptyDriver) {
-                // 检查驱动器是否为空（跳过辅助槽位）
-                for (ResourceLocation slotId : config.getSlotDefinitions().keySet()) {
-                    ItemStack stack = driverItems.get(slotId);
-                    if (stack != null && !stack.isEmpty()) {
-                        return true; // 非空即匹配
-                    }
+        // 处理动态形态的情况 - 如果没有特定物品要求，直接返回true
+        if (requiredItems.isEmpty() && !allowsEmptyDriver) {
+            // 检查驱动器是否为空（跳过辅助槽位）
+            boolean hasMainItems = false;
+            for (ResourceLocation slotId : config.getSlotDefinitions().keySet()) {
+                ItemStack stack = driverItems.get(slotId);
+                if (stack != null && !stack.isEmpty()) {
+                    hasMainItems = true;
+                    break;
                 }
-                return false; // 所有主槽位都为空
             }
 
+            // 对于动态形态，只要有物品就应该匹配成功
+            // 实际的盔甲映射会在DynamicFormConfig.configureFromItems中处理
+            return hasMainItems;
+        }
+
+        // 原有的精确匹配逻辑
+        for (Map.Entry<ResourceLocation, Item> entry : requiredItems.entrySet()) {
             ResourceLocation slotId = entry.getKey();
             Item requiredItem = entry.getValue();
 
@@ -162,6 +172,7 @@ public class FormConfig {
                 }
                 return false;
             }
+
             if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
                 RideBattleLib.LOGGER.debug("槽位 {} 匹配成功 {}", slotId, stack);
             }
@@ -170,9 +181,25 @@ public class FormConfig {
     }
 
     public boolean matchesAuxSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
             RideBattleLib.LOGGER.debug("开始匹配辅助槽位...");
         }
+
+        // 处理动态形态的情况 - 如果没有特定辅助物品要求，直接返回true
+        if (auxRequiredItems.isEmpty()) {
+            // 对于动态形态，只要有辅助物品就应该匹配成功
+            boolean hasAuxItems = false;
+            for (ResourceLocation slotId : config.getAuxSlotDefinitions().keySet()) {
+                ItemStack stack = driverItems.get(slotId);
+                if (stack != null && !stack.isEmpty()) {
+                    hasAuxItems = true;
+                    break;
+                }
+            }
+            return hasAuxItems;
+        }
+
+        // 原有的精确匹配逻辑
         for (Map.Entry<ResourceLocation, Item> entry : auxRequiredItems.entrySet()) {
             ResourceLocation slotId = entry.getKey();
             Item requiredItem = entry.getValue();
@@ -202,6 +229,7 @@ public class FormConfig {
                 RideBattleLib.LOGGER.debug("辅助槽位 {} 匹配成功", slotId);
             }
         }
+
         if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
             RideBattleLib.LOGGER.debug("辅助槽位全部匹配");
         }

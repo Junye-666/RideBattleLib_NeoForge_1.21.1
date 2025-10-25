@@ -25,8 +25,16 @@ public class DriverHandler {
         ItemStack heldItem = event.getItemStack();
         if (heldItem.isEmpty()) return;
 
+        // 使用修改后的查找方法，兼容变身状态
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
+
+        boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
+
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("右键插入物品 - 玩家: {}, 变身状态: {}, 骑士: {}",
+                    player.getName().getString(), isTransformed, config.getRiderId());
+        }
 
         boolean inserted = false;
         // 先尝试主驱动器槽位

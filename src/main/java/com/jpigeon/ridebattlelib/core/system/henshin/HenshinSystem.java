@@ -146,6 +146,9 @@ public class HenshinSystem implements IHenshinSystem {
             if (preUnHenshin.isCanceled()) return;
             boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
 
+            // 先返还物品，再清除效果和装备
+            DriverSystem.INSTANCE.returnItems(player);
+
             // 清除效果
             EffectAndAttributeManager.INSTANCE.removeAttributesAndEffects(player, data.formId());
 
@@ -155,9 +158,8 @@ public class HenshinSystem implements IHenshinSystem {
             // 同步状态
             ArmorManager.INSTANCE.syncEquipment(player);
 
-            // 数据清理
+            // 数据清理（在返还物品之后）
             HenshinHelper.INSTANCE.removeTransformed(player);
-            DriverSystem.INSTANCE.returnItems(player);
 
             if (isPenalty) {
                 // 播放特殊解除音效

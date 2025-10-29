@@ -14,7 +14,7 @@ public class ItemManager {
     public void grantFormItems(Player player, ResourceLocation formId) {
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) {
-            formConfig = DynamicFormConfig.getDynamicForm(formId); // 添加动态形态支持
+            formConfig = DynamicFormConfig.getDynamicForm(formId);
         }
         if (formConfig != null) {
             for (ItemStack stack : formConfig.getGrantedItems()) {
@@ -29,7 +29,7 @@ public class ItemManager {
     public void removeGrantedItems(Player player, ResourceLocation formId) {
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) {
-            formConfig = DynamicFormConfig.getDynamicForm(formId); // 添加动态形态支持
+            formConfig = DynamicFormConfig.getDynamicForm(formId);
         }
         if (formConfig != null) {
             for (ItemStack grantedItem : formConfig.getGrantedItems()) {

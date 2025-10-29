@@ -46,6 +46,10 @@ public class DynamicFormConfig extends FormConfig {
     private static final Map<ResourceLocation, Long> LAST_USED = new HashMap<>();
     private static final long UNLOAD_DELAY = 10 * 60 * 1000; // 10分钟未使用则卸载
 
+    private final List<AttributeModifier> dynamicAttributes = new ArrayList<>();
+    private final List<MobEffectInstance> dynamicEffects = new ArrayList<>();
+    private final List<ItemStack> dynamicGrantedItems = new ArrayList<>();
+
     static {
         // 设置槽位名称模式到盔甲槽位的映射
         SLOT_PATTERN_ARMOR_MAPPINGS.put("head", EquipmentSlot.HEAD);
@@ -86,14 +90,18 @@ public class DynamicFormConfig extends FormConfig {
     private void configureFromItems(RiderConfig config) {
         Set<EquipmentSlot> usedSlots = new HashSet<>();
 
-        // 应用基础属性和效果
+        // 清空动态数据
+        dynamicAttributes.clear();
+        dynamicEffects.clear();
+        dynamicGrantedItems.clear();
+
+        // 应用基础属性和效果到动态存储
         for (AttributeModifier attr : config.getBaseAttributes()) {
-            super.addAttribute(attr.id(), attr.amount(), attr.operation());
+            dynamicAttributes.add(new AttributeModifier(attr.id(), attr.amount(), attr.operation()));
         }
 
         for (MobEffectInstance effect : config.getBaseEffects()) {
-            super.addEffect(effect.getEffect(), effect.getDuration(),
-                    effect.getAmplifier(), !effect.isVisible());
+            dynamicEffects.add(new MobEffectInstance(effect));
         }
 
         // 处理槽位物品
@@ -136,15 +144,14 @@ public class DynamicFormConfig extends FormConfig {
                     }
                 }
 
-                // 添加物品效果
+                // 添加物品效果到动态存储
                 for (MobEffectInstance effect : getEffectsForItem(item)) {
-                    addEffect(effect.getEffect(), effect.getDuration(),
-                            effect.getAmplifier(), !effect.isVisible());
+                    dynamicEffects.add(new MobEffectInstance(effect));
                 }
 
-                // 添加授予物品
+                // 添加授予物品到动态存储
                 for (ItemStack granted : getGrantedItemsForItem(item)) {
-                    super.addGrantedItem(granted.copy());
+                    dynamicGrantedItems.add(granted.copy());
                 }
             }
         }
@@ -155,6 +162,8 @@ public class DynamicFormConfig extends FormConfig {
         if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
             RideBattleLib.LOGGER.debug("动态形态配置完成 - 头盔: {}, 胸甲: {}, 护腿: {}, 靴子: {}",
                     getHelmet(), getChestplate(), getLeggings(), getBoots());
+            RideBattleLib.LOGGER.debug("动态属性数量: {}, 动态效果数量: {}, 动态授予物品数量: {}",
+                    dynamicAttributes.size(), dynamicEffects.size(), dynamicGrantedItems.size());
         }
     }
 
@@ -493,6 +502,39 @@ public class DynamicFormConfig extends FormConfig {
     }
 
     // ==================== 覆盖方法 ====================
+
+    /**
+     * 重写获取属性的方法，返回动态属性
+     */
+    @Override
+    public List<AttributeModifier> getAttributes() {
+        // 合并父类属性和动态属性
+        List<AttributeModifier> allAttributes = new ArrayList<>(super.getAttributes());
+        allAttributes.addAll(dynamicAttributes);
+        return Collections.unmodifiableList(allAttributes);
+    }
+
+    /**
+     * 重写获取效果的方法，返回动态效果
+     */
+    @Override
+    public List<MobEffectInstance> getEffects() {
+        // 合并父类效果和动态效果
+        List<MobEffectInstance> allEffects = new ArrayList<>(super.getEffects());
+        allEffects.addAll(dynamicEffects);
+        return Collections.unmodifiableList(allEffects);
+    }
+
+    /**
+     * 重写获取授予物品的方法，返回动态授予物品
+     */
+    @Override
+    public List<ItemStack> getGrantedItems() {
+        // 合并父类授予物品和动态授予物品
+        List<ItemStack> allGrantedItems = new ArrayList<>(super.getGrantedItems());
+        allGrantedItems.addAll(dynamicGrantedItems);
+        return Collections.unmodifiableList(allGrantedItems);
+    }
 
     @Override
     public void setShouldPause(boolean pause) {

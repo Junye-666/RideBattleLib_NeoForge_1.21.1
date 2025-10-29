@@ -96,9 +96,24 @@ public class EffectAndAttributeManager {
 
     // 属性移除
     private void removeAttributes(Player player, ResourceLocation formId) {
-
         FormConfig formConfig = RiderRegistry.getForm(formId);
-        if (formConfig == null) return;
+
+        // 添加动态形态支持
+        if (formConfig == null) {
+            formConfig = DynamicFormConfig.getDynamicForm(formId);
+        }
+
+        if (formConfig == null) {
+            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("无法找到形态配置，无法移除属性: {}", formId);
+            }
+            return;
+        }
+
+        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            RideBattleLib.LOGGER.debug("移除形态属性 - 形态: {}, 属性数量: {}",
+                    formId, formConfig.getAttributes().size());
+        }
 
         // 移除属性修饰符
         Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
@@ -111,9 +126,13 @@ public class EffectAndAttributeManager {
                 AttributeInstance instance = player.getAttribute(holder);
                 if (instance != null) {
                     instance.removeModifier(modifier.id());
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("移除属性修饰符: {} -> {}", modifier.id(), holder.unwrapKey().map(ResourceKey::location).orElse(null));
+                    }
                 }
             }
         }
+
         // 记录并报告任何残留效果
         if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
             for (Holder<MobEffect> activeEffect : player.getActiveEffectsMap().keySet()) {

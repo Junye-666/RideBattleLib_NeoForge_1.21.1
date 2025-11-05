@@ -6,10 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum HenshinState {
-    IDLE("idle"),
-    TRANSFORMING("transforming"),
-    TRANSFORMED("transformed"),
-    PENALTY_COOLDOWN("penalty_cooldown");
+    IDLE("idle"),           // 空闲状态
+    TRANSFORMING("transforming"), // 变身中（仅用于有暂停的变身）
+    TRANSFORMED("transformed");   // 已变身
 
     private final String id;
     private static final Map<String, HenshinState> BY_ID = new HashMap<>();

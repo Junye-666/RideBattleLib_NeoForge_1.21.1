@@ -31,14 +31,15 @@ public class DynamicFormConfig extends FormConfig {
     private final Map<ResourceLocation, ItemStack> driverSnapshot;
     private boolean shouldPause = false;
 
+    private static final Map<ResourceLocation, FormConfig> DYNAMIC_FORMS = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<ResourceLocation, Long> LAST_USED = new HashMap<>();
+    private static final long UNLOAD_DELAY = 10 * 60 * 1000; // 10分钟未使用则卸载
+
     private static final Map<Item, Map<EquipmentSlot, Item>> ITEM_ARMOR_MAP = new HashMap<>();
     private static final Map<String, EquipmentSlot> SLOT_PATTERN_ARMOR_MAPPINGS = new HashMap<>();
     private static final Map<ResourceLocation, Map<EquipmentSlot, Item>> UNDERSUIT_REGISTRY = new HashMap<>();
     private static final Map<Item, List<MobEffectInstance>> ITEM_EFFECT_MAP = new HashMap<>();
     private static final Map<Item, List<ItemStack>> ITEM_GRANTED_ITEMS = new HashMap<>();
-    private static final Map<ResourceLocation, FormConfig> DYNAMIC_FORMS = new HashMap<>();
-    private static final Map<ResourceLocation, Long> LAST_USED = new HashMap<>();
-    private static final long UNLOAD_DELAY = 10 * 60 * 1000; // 10分钟未使用则卸载
     private final List<AttributeModifier> dynamicAttributes = new ArrayList<>();
     private final List<MobEffectInstance> dynamicEffects = new ArrayList<>();
     private final List<ItemStack> dynamicGrantedItems = new ArrayList<>();
@@ -243,33 +244,39 @@ public class DynamicFormConfig extends FormConfig {
                     .collect(Collectors.joining(", ")));
         }
 
-        // 检查缓存
-        if (DYNAMIC_FORMS.containsKey(formId)) {
+        // 检查缓存，使用同步块确保线程安全
+        synchronized (DYNAMIC_FORMS) {
+            if (DYNAMIC_FORMS.containsKey(formId)) {
+                LAST_USED.put(formId, System.currentTimeMillis());
+                return DYNAMIC_FORMS.get(formId);
+            }
+
+            // 创建新形态
+            FormConfig form = new DynamicFormConfig(formId, driverItems, config);
+            FormConfig baseForm = config.getForms(config.getBaseFormId());
+
+            if (baseForm != null) {
+                form.setTriggerType(baseForm.getTriggerType());
+                form.setShouldPause(baseForm.shouldPause());
+            } else {
+                form.setTriggerType(TriggerType.KEY);
+            }
+
+            DYNAMIC_FORMS.put(formId, form);
             LAST_USED.put(formId, System.currentTimeMillis());
-            return DYNAMIC_FORMS.get(formId);
+
+            // 触发清理任务
+            scheduleCleanupIfNeeded(player);
+
+            return form;
         }
+    }
 
-        // 创建新形态
-        FormConfig form = new DynamicFormConfig(formId, driverItems, config);
-        FormConfig baseForm = config.getForms(config.getBaseFormId());
-
-        if (baseForm != null) {
-            form.setTriggerType(baseForm.getTriggerType());
-            form.setShouldPause(baseForm.shouldPause());
-        } else {
-            form.setTriggerType(TriggerType.KEY);
-        }
-
-        DYNAMIC_FORMS.put(formId, form);
-        LAST_USED.put(formId, System.currentTimeMillis());
-
-        // 自动清理任务
+    private static void scheduleCleanupIfNeeded(Player player) {
         MinecraftServer server = player.getServer();
-        if (server != null && server.getTickCount() % 6000 == 0) {
+        if (server != null && server.getTickCount() % 6000 == 0) { // 每5分钟检查一次
             server.execute(DynamicFormConfig::cleanupUnusedForms);
         }
-
-        return form;
     }
 
     /**
@@ -308,18 +315,26 @@ public class DynamicFormConfig extends FormConfig {
      */
     public static void cleanupUnusedForms() {
         long now = System.currentTimeMillis();
-        Iterator<Map.Entry<ResourceLocation, FormConfig>> it = DYNAMIC_FORMS.entrySet().iterator();
+        synchronized (DYNAMIC_FORMS) {
+            Iterator<Map.Entry<ResourceLocation, FormConfig>> it = DYNAMIC_FORMS.entrySet().iterator();
+            int removedCount = 0;
 
-        while (it.hasNext()) {
-            Map.Entry<ResourceLocation, FormConfig> entry = it.next();
-            long lastUsed = LAST_USED.getOrDefault(entry.getKey(), 0L);
+            while (it.hasNext()) {
+                Map.Entry<ResourceLocation, FormConfig> entry = it.next();
+                long lastUsed = LAST_USED.getOrDefault(entry.getKey(), 0L);
 
-            if (now - lastUsed > UNLOAD_DELAY) {
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
-                    RideBattleLib.LOGGER.debug("卸载动态形态: {}", entry.getKey());
+                if (now - lastUsed > UNLOAD_DELAY) {
+                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                        RideBattleLib.LOGGER.debug("卸载动态形态: {}", entry.getKey());
+                    }
+                    it.remove();
+                    LAST_USED.remove(entry.getKey());
+                    removedCount++;
                 }
-                it.remove();
-                LAST_USED.remove(entry.getKey());
+            }
+
+            if (removedCount > 0 && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                RideBattleLib.LOGGER.debug("清理了 {} 个未使用的动态形态", removedCount);
             }
         }
     }

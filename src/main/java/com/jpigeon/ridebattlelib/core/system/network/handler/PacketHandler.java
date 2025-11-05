@@ -5,6 +5,7 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -65,7 +66,7 @@ public class PacketHandler {
                         (payload, context) ->
                         {
                             if (context.player() instanceof ServerPlayer serverPlayer) {
-                                HenshinSystem.syncTransformedState(serverPlayer);
+                                SyncManager.INSTANCE.syncTransformedState(serverPlayer);
                             }
                         })
                 .playToServer(
@@ -87,7 +88,7 @@ public class PacketHandler {
                             }
                             // 同步给所有客户端
                             if (context.player() instanceof ServerPlayer serverPlayer) {
-                                HenshinSystem.syncHenshinState(serverPlayer);
+                                SyncManager.INSTANCE.syncHenshinState(serverPlayer);
                             } else if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
                                 RideBattleLib.LOGGER.debug("玩家未连接: {}", player.getName().getString());
                             }

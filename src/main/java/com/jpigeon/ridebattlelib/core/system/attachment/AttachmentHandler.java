@@ -2,10 +2,10 @@ package com.jpigeon.ridebattlelib.core.system.attachment;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import io.netty.handler.logging.LogLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -13,7 +13,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import java.util.HashMap;
-import java.util.Objects;
 
 public class AttachmentHandler {
     @SubscribeEvent
@@ -36,9 +35,12 @@ public class AttachmentHandler {
             HenshinSystem.INSTANCE.transitionToState(player, HenshinState.TRANSFORMED, null);
 
             // 恢复变身状态
-            HenshinHelper.INSTANCE.restoreTransformedState(player, Objects.requireNonNull(data.getTransformedData()));
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
-                RideBattleLib.LOGGER.debug("已恢复玩家 {} 的变身状态", player.getName().getString());
+            HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
+            if (transformedData != null) {
+                HenshinHelper.INSTANCE.restoreTransformedState(player, transformedData);
+                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    RideBattleLib.LOGGER.debug("已恢复玩家 {} 的变身状态", player.getName().getString());
+                }
             }
         }
 
@@ -55,11 +57,9 @@ public class AttachmentHandler {
             }
         }
 
-
         if (player instanceof ServerPlayer serverPlayer) {
-            // 确保驱动器数据和变身状态都同步
-            DriverSystem.INSTANCE.syncDriverData(serverPlayer);
-            HenshinSystem.syncHenshinState(serverPlayer);
+            // 使用统一的同步管理器
+            SyncManager.INSTANCE.syncAllPlayerData(serverPlayer);
         }
     }
 
@@ -88,5 +88,18 @@ public class AttachmentHandler {
 
         // 添加重生标记
         newPlayer.addTag("just_respawned");
+    }
+
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        Player player = event.getEntity();
+
+        player.removeTag("just_respawned");
+
+        player.removeTag("penalty_cooldown");
+
+        if (HenshinSystem.INSTANCE.isTransformed(player)) {
+            HenshinSystem.INSTANCE.unHenshin(player);
+        }
     }
 }

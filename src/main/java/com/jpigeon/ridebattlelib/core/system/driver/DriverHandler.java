@@ -4,9 +4,11 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import io.netty.handler.logging.LogLevel;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -58,7 +60,9 @@ public class DriverHandler {
         }
 
         if (inserted) {
-            DriverSystem.INSTANCE.syncDriverData(player);
+            if (player instanceof ServerPlayer serverPlayer) {
+                SyncManager.INSTANCE.syncDriverData(serverPlayer);
+            }
             FormConfig formConfig = config.getActiveFormConfig(player);
             if (formConfig != null && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
                 RideBattleLib.LOGGER.debug("形态触发类型: {}", formConfig.getTriggerType());

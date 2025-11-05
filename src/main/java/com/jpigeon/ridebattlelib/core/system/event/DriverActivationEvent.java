@@ -5,7 +5,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
 
 /**
- * 驱动器激活事件
+ * 驱动器激活事件，在变身/形态切换暂停之前
  */
 public class DriverActivationEvent extends Event {
     private final Player player;

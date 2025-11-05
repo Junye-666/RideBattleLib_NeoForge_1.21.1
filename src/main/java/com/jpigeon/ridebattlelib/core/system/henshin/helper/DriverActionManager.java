@@ -91,7 +91,7 @@ public class DriverActionManager {
 
         // 同步状态
         if (player instanceof ServerPlayer serverPlayer) {
-            HenshinSystem.syncHenshinState(serverPlayer);
+            SyncManager.INSTANCE.syncHenshinState(serverPlayer);
         }
     }
 
@@ -102,7 +102,7 @@ public class DriverActionManager {
             data.setPendingFormId(null);
 
             if (player instanceof ServerPlayer serverPlayer) {
-                HenshinSystem.syncHenshinState(serverPlayer);
+                SyncManager.INSTANCE.syncHenshinState(serverPlayer);
             }
         }
     }

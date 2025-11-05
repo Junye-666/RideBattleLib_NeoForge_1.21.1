@@ -12,31 +12,42 @@ import javax.annotation.Nullable;
  */
 public interface IHenshinSystem {
     /**
-     * 玩家触发驱动器
+     * 玩家触发驱动器，仅能被玩家触发
      */
     void driverAction(Player player);
+
     /**
      * 变身
-     * @param player 玩家
+     * @param player  玩家
      * @param riderId 骑士ID
      * @return 是否成功
      */
     boolean henshin(Player player, ResourceLocation riderId);
+
     /**
      * 解除玩家变身
      */
     void unHenshin(Player player);
+
     /**
      * 切换形态
      * @param newFormId 切换至的形态ID
      */
     void switchForm(Player player, ResourceLocation newFormId);
+
     /**
      * @return 玩家是否处于变身状态
      */
     boolean isTransformed(Player player);
+
     /**
-     * 获取玩家变身数
+     * 获取玩家变身数据
+     * @return
+     * <p>RiderConfig config
+     * <p>ResourceLocation formId
+     * <p>Map<EquipmentSlot, ItemStack> originalGear
+     * <p>Map<ResourceLocation, ItemStack> driverSnapshot
      */
-    @Nullable HenshinSystem.TransformedData getTransformedData(Player player);
+    @Nullable
+    HenshinSystem.TransformedData getTransformedData(Player player);
 }

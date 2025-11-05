@@ -1,16 +1,18 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
+import com.jpigeon.ridebattlelib.core.system.event.ItemGrantEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.NeoForge;
 
 public class ItemManager {
     public static final ItemManager INSTANCE = new ItemManager();
 
-    // 给予形态物品 - 修复：添加动态形态支持
+    // 给予形态物品
     public void grantFormItems(Player player, ResourceLocation formId) {
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) {
@@ -18,14 +20,21 @@ public class ItemManager {
         }
         if (formConfig != null) {
             for (ItemStack stack : formConfig.getGrantedItems()) {
-                if (!player.addItem(stack.copy())) {
-                    player.drop(stack.copy(), false);
+                ItemGrantEvent.Pre preGrant = new ItemGrantEvent.Pre(player, stack, formConfig);
+                NeoForge.EVENT_BUS.post(preGrant);
+                if (preGrant.isCanceled()) return;
+
+                if (!player.addItem(preGrant.getStack().copy())) {
+                    player.drop(preGrant.getStack().copy(), false);
+
+                    ItemGrantEvent.Post postGrant = new ItemGrantEvent.Post(player, preGrant.getStack().copy(), formConfig);
+                    NeoForge.EVENT_BUS.post(postGrant);
                 }
             }
         }
     }
 
-    // 移除给予的物品 - 修复：添加动态形态支持
+    // 移除给予的物品
     public void removeGrantedItems(Player player, ResourceLocation formId) {
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) {

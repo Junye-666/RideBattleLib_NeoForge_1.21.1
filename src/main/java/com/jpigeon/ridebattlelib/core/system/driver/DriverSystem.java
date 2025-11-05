@@ -5,14 +5,12 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IDriverSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
-import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.event.ItemInsertionEvent;
 import com.jpigeon.ridebattlelib.core.system.event.ReturnItemsEvent;
 import com.jpigeon.ridebattlelib.core.system.event.SlotExtractionEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
-import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataDiffPacket;
-import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import io.netty.handler.logging.LogLevel;
@@ -95,7 +93,9 @@ public class DriverSystem implements IDriverSystem {
                     data.setDriverItems(config.getRiderId(), mainItems);
                     data.setAuxDriverItems(config.getRiderId(), auxItems);
 
-                    syncDriverData(player);
+                    if (player instanceof ServerPlayer serverPlayer) {
+                        SyncManager.INSTANCE.syncDriverData(serverPlayer);
+                    }
                     stack.shrink(1);
                     return true;
                 }
@@ -110,7 +110,9 @@ public class DriverSystem implements IDriverSystem {
         data.setDriverItems(config.getRiderId(), mainItems);
         data.setAuxDriverItems(config.getRiderId(), auxItems);
 
-        syncDriverData(player);
+        if (player instanceof ServerPlayer serverPlayer) {
+            SyncManager.INSTANCE.syncDriverData(serverPlayer);
+        }
 
         ItemInsertionEvent.Post postEvent = new ItemInsertionEvent.Post(player, slotId, stack, config);
         NeoForge.EVENT_BUS.post(postEvent);
@@ -129,15 +131,11 @@ public class DriverSystem implements IDriverSystem {
                 new HashMap<>(data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>())) :
                 new HashMap<>(data.getDriverItems(config.getRiderId()));
 
-        // 先检查物品是否存在
         if (!targetMap.containsKey(slotId) || targetMap.get(slotId).isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        // 获取物品副本用于返回
         ItemStack extracted = targetMap.get(slotId).copy();
-
-        // 使用内部方法执行提取
         boolean success = extractItemInternal(player, slotId, targetMap, config, isAuxSlot);
 
         return success ? extracted : ItemStack.EMPTY;
@@ -150,26 +148,7 @@ public class DriverSystem implements IDriverSystem {
         }
 
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-
-        // 方法1：优先从变身数据中获取骑士配置
-        RiderConfig config = null;
-        TransformedAttachmentData transformedData = data.getTransformedData();
-
-        if (transformedData != null) {
-            // 从变身数据中获取骑士ID，然后查找配置
-            config = RiderRegistry.getRider(transformedData.riderId());
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
-                RideBattleLib.LOGGER.debug("从变身数据获取骑士配置: {}", transformedData.riderId());
-            }
-        }
-
-        // 方法2：如果变身数据中没有，尝试查找当前激活的驱动器
-        if (config == null) {
-            config = RiderConfig.findActiveDriverConfig(player);
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
-                RideBattleLib.LOGGER.debug("从当前装备获取骑士配置: {}", config != null ? config.getRiderId() : "null");
-            }
-        }
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
 
         if (config == null) {
             if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
@@ -182,7 +161,6 @@ public class DriverSystem implements IDriverSystem {
         ReturnItemsEvent.Pre preReturn = new ReturnItemsEvent.Pre(player, config);
         NeoForge.EVENT_BUS.post(preReturn);
 
-        // 如果事件被取消，直接返回
         if (preReturn.isCanceled()) {
             RideBattleLib.LOGGER.debug("返还所有物品事件被取消");
             return;
@@ -193,22 +171,12 @@ public class DriverSystem implements IDriverSystem {
             RideBattleLib.LOGGER.debug("辅助驱动器物品: {}", data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>()));
         }
 
-        // 返还主驱动器物品
-        Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getDriverItems(config.getRiderId()));
-        // 创建副本用于迭代，避免并发修改异常
-        List<ResourceLocation> mainSlots = new ArrayList<>(mainItems.keySet());
+        // 使用extractItem逐个提取所有物品，复用现有逻辑
+        Map<ResourceLocation, ItemStack> allItems = getDriverItems(player);
+        List<ResourceLocation> slotsToExtract = new ArrayList<>(allItems.keySet());
 
-        for (ResourceLocation slotId : mainSlots) {
-            extractItemInternal(player, slotId, mainItems, config, false);
-        }
-
-        // 返还辅助驱动器物品
-        Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>()));
-        // 创建副本用于迭代，避免并发修改异常
-        List<ResourceLocation> auxSlots = new ArrayList<>(auxItems.keySet());
-
-        for (ResourceLocation slotId : auxSlots) {
-            extractItemInternal(player, slotId, auxItems, config, true);
+        for (ResourceLocation slotId : slotsToExtract) {
+            extractItem(player, slotId);
         }
 
         // 触发返还完成事件
@@ -222,14 +190,12 @@ public class DriverSystem implements IDriverSystem {
         }
     }
 
-
-     //内部提取方法，包含提取物品的核心逻辑
+    //内部提取方法，包含提取物品的核心逻辑
     private boolean extractItemInternal(Player player, ResourceLocation slotId,
                                         Map<ResourceLocation, ItemStack> targetMap,
                                         RiderConfig config, boolean isAuxSlot) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
-        // 先检查物品是否存在
         if (!targetMap.containsKey(slotId) || targetMap.get(slotId).isEmpty()) {
             if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
                 RideBattleLib.LOGGER.debug("槽位 {} 没有物品可提取", slotId);
@@ -237,24 +203,20 @@ public class DriverSystem implements IDriverSystem {
             return false;
         }
 
-        // 获取物品副本用于事件
         ItemStack extracted = targetMap.get(slotId).copy();
 
         if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
             RideBattleLib.LOGGER.debug("尝试提取槽位 {} 的物品: {}", slotId, extracted);
         }
 
-        // 创建事件并发布
         SlotExtractionEvent.Pre preExtraction = new SlotExtractionEvent.Pre(player, slotId, extracted.copy(), config);
         NeoForge.EVENT_BUS.post(preExtraction);
 
-        // 如果事件被取消，直接返回 false，不执行任何操作
         if (preExtraction.isCanceled()) {
             RideBattleLib.LOGGER.debug("提取事件被取消，物品保留在驱动器中");
             return false;
         }
 
-        // 从驱动器中移除物品
         targetMap.remove(slotId);
         extracted = preExtraction.getExtractedStack();
 
@@ -265,10 +227,13 @@ public class DriverSystem implements IDriverSystem {
             } else {
                 data.setDriverItems(config.getRiderId(), targetMap);
             }
-            syncDriverData(player);
+            if (player instanceof ServerPlayer serverPlayer) {
+                SyncManager.INSTANCE.syncDriverData(serverPlayer);
+            }
             return false;
         }
 
+        // 根据参数决定是否返还给玩家
         returnItemToPlayer(player, extracted);
 
         // 更新数据
@@ -278,13 +243,16 @@ public class DriverSystem implements IDriverSystem {
             data.setDriverItems(config.getRiderId(), targetMap);
         }
 
-        syncDriverData(player);
+        if (player instanceof ServerPlayer serverPlayer) {
+            SyncManager.INSTANCE.syncDriverData(serverPlayer);
+        }
 
         SlotExtractionEvent.Post postEvent = new SlotExtractionEvent.Post(player, slotId, extracted, config);
         NeoForge.EVENT_BUS.post(postEvent);
 
         return true;
     }
+
 
     //====================Getters====================
 
@@ -311,24 +279,6 @@ public class DriverSystem implements IDriverSystem {
     }
 
     //====================网络通信方法====================
-
-    public void syncDriverData(Player player) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-            RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-            if (config == null) return;
-
-            // 分别发送主/辅助驱动器数据
-            Map<ResourceLocation, ItemStack> mainItems = data.getDriverItems(config.getRiderId());
-            Map<ResourceLocation, ItemStack> auxItems = data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>());
-
-            PacketHandler.sendToClient(serverPlayer, new DriverDataSyncPacket(
-                    player.getUUID(),
-                    new HashMap<>(mainItems),
-                    new HashMap<>(auxItems)
-            ));
-        }
-    }
 
     // 客户端应用同步包
     public void applySyncPacket(DriverDataSyncPacket packet) {

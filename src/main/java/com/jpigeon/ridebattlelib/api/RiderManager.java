@@ -4,6 +4,7 @@ import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
@@ -18,7 +19,9 @@ import java.util.Map;
 
 /**
  * 假面骑士系统快捷方法管理器。
+ * <p>
  * 提供静态方法供其他模组调用，如变身、形态切换、物品管理等。
+ * <p>
  * 所有方法均线程安全，可在客户端或服务端调用。
  */
 public final class RiderManager {
@@ -131,7 +134,7 @@ public final class RiderManager {
         return RiderConfig.findActiveDriverConfig(player);
     }
 
-    // 获取当前形态ID
+    // 获取当前变身数据
     @Nullable
     public static ResourceLocation getCurrentForm(Player player) {
         HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
@@ -146,7 +149,20 @@ public final class RiderManager {
 
     // 强制刷新客户端状态
     public static void syncClientState(ServerPlayer player) {
-        HenshinSystem.syncTransformedState(player);
-        DriverSystem.INSTANCE.syncDriverData(player);
+        SyncManager.INSTANCE.syncAllPlayerData(player);
+    }
+
+    /**
+     * 同步驱动器数据
+     */
+    public static void syncDriverData(ServerPlayer player) {
+        SyncManager.INSTANCE.syncDriverData(player);
+    }
+
+    /**
+     * 同步变身状态
+     */
+    public static void syncHenshinState(ServerPlayer player) {
+        SyncManager.INSTANCE.syncHenshinState(player);
     }
 }

@@ -10,7 +10,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-// 动态变身管理器 - 简化版
 public class DynamicHenshinManager {
 
      // 应用动态盔甲

@@ -84,7 +84,7 @@ public class ExampleBasic {
                     TEST_CORE_SLOT,
                     Items.IRON_INGOT
             )
-            .addGrantedItem(Items.IRON_SWORD.getDefaultInstance());
+            .addGrantedItem(Items.IRON_SWORD.getDefaultInstance()); // 变身时给予物品
 
     // 创建强化形态配置
     public static final FormConfig alphaPoweredForm = new FormConfig(TEST_FORM_POWERED)

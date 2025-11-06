@@ -8,7 +8,6 @@ import com.jpigeon.ridebattlelib.core.system.event.SkillEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,7 +33,7 @@ public class SkillSystem {
     }
     
     public static void triggerCurrentSkill(Player player) {
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("尝试触发当前技能");
         }
         if (!HenshinSystem.INSTANCE.isTransformed(player)) return;
@@ -54,7 +53,7 @@ public class SkillSystem {
 
     // 触发技能（只负责事件分发）
     public static boolean triggerSkillEvent(Player player, ResourceLocation formId, ResourceLocation skillId) {
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("触发技能事件");
         }
         // 触发Pre事件（可取消）
@@ -70,7 +69,7 @@ public class SkillSystem {
     public static void rotateSkill(Player player) {
         if (!HenshinSystem.INSTANCE.isTransformed(player)) return;
 
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("尝试轮转技能");
         }
 
@@ -101,7 +100,7 @@ public class SkillSystem {
 
             if (player instanceof ServerPlayer serverPlayer) {
                 // 显示切换提示
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("显示轮转技能");
                 }
                 serverPlayer.displayClientMessage(displayName, true);

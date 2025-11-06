@@ -11,7 +11,6 @@ import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,6 +21,13 @@ public class PacketHandler {
     public static void register(final RegisterPayloadHandlersEvent event) {
         event.registrar(RideBattleLib.MODID)
                 .versioned("0.9.9.3")
+                .playToServer(DriverActionPacket.TYPE, DriverActionPacket.STREAM_CODEC,
+                        (payload, context) -> {
+                            Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
+                            if (targetPlayer != null) {
+                                HenshinSystem.INSTANCE.driverAction(targetPlayer);
+                            }
+                        })
                 .playToServer(HenshinPacket.TYPE, HenshinPacket.STREAM_CODEC,
                         (payload, context) -> {
                             Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
@@ -80,7 +86,7 @@ public class PacketHandler {
                             data.setHenshinState(packet.state());
                             data.setPendingFormId(packet.pendingFormId());
 
-                            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                            if (Config.DEBUG_MODE.get()) {
                                 RideBattleLib.LOGGER.debug("收到状态同步包: player={}, state={}, form={}",
                                         player.getName().getString(),
                                         packet.state(),
@@ -89,7 +95,7 @@ public class PacketHandler {
                             // 同步给所有客户端
                             if (context.player() instanceof ServerPlayer serverPlayer) {
                                 SyncManager.INSTANCE.syncHenshinState(serverPlayer);
-                            } else if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+                            } else if (Config.DEBUG_MODE.get()){
                                 RideBattleLib.LOGGER.debug("玩家未连接: {}", player.getName().getString());
                             }
                         }
@@ -99,7 +105,7 @@ public class PacketHandler {
                         RotateSkillPacket.STREAM_CODEC,
                         (payload, context) -> {
                             // 验证发送者身份
-                            if (!payload.playerId().equals(context.player().getUUID()) && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                            if (!payload.playerId().equals(context.player().getUUID()) && Config.DEBUG_MODE.get()) {
                                 RideBattleLib.LOGGER.debug("RotateSkillPacket发送者身份不匹配: 预期={}, 实际={}",
                                         payload.playerId(), context.player().getUUID());
                             }
@@ -116,7 +122,7 @@ public class PacketHandler {
                         TriggerSkillPacket.STREAM_CODEC,
                         (payload, context) -> {
                             // 验证发送者身份
-                            if (!payload.playerId().equals(context.player().getUUID()) && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                            if (!payload.playerId().equals(context.player().getUUID()) && Config.DEBUG_MODE.get()) {
                                 RideBattleLib.LOGGER.debug("TriggerSkillPacket发送者身份不匹配: 预期={}, 实际={}",
                                         payload.playerId(), context.player().getUUID());
                             }
@@ -138,7 +144,7 @@ public class PacketHandler {
     }
 
     public static void sendToClient(ServerPlayer player, CustomPacketPayload packet) {
-        if (packet instanceof HenshinStateSyncPacket && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+        if (packet instanceof HenshinStateSyncPacket && Config.DEBUG_MODE.get()){
             RideBattleLib.LOGGER.debug("发送状态同步包");
         }
         player.connection.send(packet);

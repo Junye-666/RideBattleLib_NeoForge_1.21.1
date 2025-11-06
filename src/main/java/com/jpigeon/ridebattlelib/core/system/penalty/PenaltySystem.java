@@ -7,7 +7,6 @@ import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.PenaltyEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -141,7 +140,7 @@ public class PenaltySystem implements IPenaltySystem {
                     true
             );
         }
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("玩家 {} 触发吃瘪系统", player.getName().getString());
         }
     }

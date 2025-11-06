@@ -7,7 +7,6 @@ import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
@@ -185,7 +184,7 @@ public class RiderConfig {
                 return null;
             }
         }
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("开始匹配形态，玩家: {}", player.getName().getString());
             RideBattleLib.LOGGER.debug("当前驱动器内容: {}", driverItems);
         }
@@ -198,7 +197,7 @@ public class RiderConfig {
 
             ItemStack stack = driverItems.get(slotId);
             if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("必需槽位 {} 为空", slotId);
                 }
                 return null; // 必需槽位不能为空
@@ -212,7 +211,7 @@ public class RiderConfig {
 
             ItemStack stack = driverItems.get(slotId);
             if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("辅助必需槽位 {} 为空", slotId);
                 }
                 return null; // 辅助必需槽位不能为空
@@ -233,7 +232,7 @@ public class RiderConfig {
                     auxMatches = formConfig.matchesAuxSlots(driverItems, config);
                 } else {
                     auxMatches = false; // 未装备辅助驱动器但形态要求→不匹配
-                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    if (Config.DEBUG_MODE.get()) {
                         RideBattleLib.LOGGER.debug("形态{}需要辅助驱动器，但玩家未装备", formConfig.getFormId());
                     }
                 }
@@ -241,7 +240,7 @@ public class RiderConfig {
 
             if (mainMatches && auxMatches) {
                 ResourceLocation formId = formConfig.getFormId();
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("匹配到的形态ID: {}", formId);
                 }
                 return formId;
@@ -249,7 +248,7 @@ public class RiderConfig {
         }
 
         if (this.allowsDynamicForms()) {
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
             }
             try {
@@ -259,7 +258,7 @@ public class RiderConfig {
                 RideBattleLib.LOGGER.error("动态形态创建失败", e);
             }
         } else {
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("该骑士不支持动态形态，跳过动态形态生成");
             }
         }
@@ -279,7 +278,7 @@ public class RiderConfig {
             if (transformedData != null) {
                 RiderConfig config = transformedData.config();
                 if (config != null) {
-                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    if (Config.DEBUG_MODE.get()) {
                         RideBattleLib.LOGGER.debug("从变身数据获取驱动器配置: {}", config.getRiderId());
                     }
                     return config;
@@ -292,14 +291,14 @@ public class RiderConfig {
             // 精确匹配驱动器槽位和物品
             ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
             if (driverStack.is(config.getDriverItem())) {
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("从装备槽位获取驱动器配置: {}", config.getRiderId());
                 }
                 return config;
             }
         }
 
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("未找到激活的驱动器配置");
         }
         return null;

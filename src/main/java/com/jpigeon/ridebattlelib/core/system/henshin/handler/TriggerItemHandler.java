@@ -9,7 +9,8 @@ import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
-import io.netty.handler.logging.LogLevel;
+import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.packet.DriverActionPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -39,12 +40,12 @@ public class TriggerItemHandler {
 
             // 触发变身逻辑
             if (formConfig != null && formConfig.getTriggerType() == TriggerType.ITEM) {
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+                if (Config.DEBUG_MODE.get()){
                     RideBattleLib.LOGGER.debug("检测到ITEM驱动方式");
                     // 触发驱动器
                     RideBattleLib.LOGGER.debug("物品触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
                 }
-             HenshinSystem.INSTANCE.driverAction(player);
+                PacketHandler.sendToServer(new DriverActionPacket(player.getUUID()));
             }
 
             // 强制恢复物品数量（防止NBT修改）

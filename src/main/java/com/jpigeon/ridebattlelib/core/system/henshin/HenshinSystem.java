@@ -17,7 +17,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.SyncHenshinStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -47,6 +46,10 @@ public class HenshinSystem implements IHenshinSystem {
 
     @Override
     public void driverAction(Player player) {
+        if (player.level().isClientSide) {
+            RideBattleLib.LOGGER.warn("driverAction 在客户端调用，应该通过数据包触发");
+            return;
+        }
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
         Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
@@ -113,7 +116,7 @@ public class HenshinSystem implements IHenshinSystem {
 
         // 如果是动态形态（不在预设注册表中）
         if (formConfig == null) {
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("形态 {} 未注册，尝试作为动态形态处理", formId);
             }
             formConfig = DynamicFormConfig.getOrCreateDynamicForm(
@@ -252,7 +255,7 @@ public class HenshinSystem implements IHenshinSystem {
             SyncManager.INSTANCE.syncHenshinState(serverPlayer);
         }
 
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("状态变更: {} -> {} (形态: {})",
                     oldData.getHenshinState(), state, formId);
         }

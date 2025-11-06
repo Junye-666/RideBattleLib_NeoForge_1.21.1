@@ -1,0 +1,25 @@
+package com.jpigeon.ridebattlelib.core.system.network.packet;
+
+import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.network.handler.UUIDStreamCodec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
+
+public record DriverActionPacket(UUID playerId) implements CustomPacketPayload {
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_action");
+    public static final Type<DriverActionPacket> TYPE = new Type<>(ID);
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, DriverActionPacket> STREAM_CODEC = StreamCodec.composite(
+            UUIDStreamCodec.INSTANCE,
+            DriverActionPacket::playerId,
+            DriverActionPacket::new
+    );
+
+    @Override
+    public @NotNull Type<?> type() { return TYPE; }
+}

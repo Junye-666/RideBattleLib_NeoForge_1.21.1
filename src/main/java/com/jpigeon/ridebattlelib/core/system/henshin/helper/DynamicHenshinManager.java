@@ -4,7 +4,6 @@ package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -14,7 +13,7 @@ public class DynamicHenshinManager {
 
      // 应用动态盔甲
     public static void applyDynamicArmor(Player player, DynamicFormConfig formConfig) {
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("应用动态形态盔甲 - 头盔: {}, 胸甲: {}, 护腿: {}, 靴子: {}",
                     formConfig.getHelmet(), formConfig.getChestplate(), formConfig.getLeggings(), formConfig.getBoots());
         }

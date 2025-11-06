@@ -9,11 +9,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
-import com.jpigeon.ridebattlelib.core.system.network.packet.ReturnItemsPacket;
-import com.jpigeon.ridebattlelib.core.system.network.packet.RotateSkillPacket;
-import com.jpigeon.ridebattlelib.core.system.network.packet.TriggerSkillPacket;
-import com.jpigeon.ridebattlelib.core.system.network.packet.UnhenshinPacket;
-import io.netty.handler.logging.LogLevel;
+import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -33,14 +29,14 @@ public class KeyHandler {
 
             FormConfig formConfig = config.getActiveFormConfig(player);
             if (formConfig != null && formConfig.getTriggerType() == TriggerType.KEY) {
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("按键触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
                 }
-                HenshinSystem.INSTANCE.driverAction(player);
+                PacketHandler.sendToServer(new DriverActionPacket(player.getUUID()));
             }
         }
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("发送解除变身数据包");
             }
             PacketHandler.sendToServer(new UnhenshinPacket(player.getUUID()));
@@ -52,7 +48,7 @@ public class KeyHandler {
         }
 
         if (KeyBindings.SKILL_KEY.consumeClick()) {
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("检测到技能键按下");
             }
             // 蹲下时切换技能，否则触发当前技能

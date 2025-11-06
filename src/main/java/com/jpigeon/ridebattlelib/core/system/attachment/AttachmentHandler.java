@@ -6,7 +6,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -20,7 +19,7 @@ public class AttachmentHandler {
         Player player = event.getEntity();
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("玩家登录: {} | 当前状态: {} | 变身数据: {}",
                     player.getName().getString(),
                     data.getHenshinState(),
@@ -38,7 +37,7 @@ public class AttachmentHandler {
             HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
             if (transformedData != null) {
                 HenshinHelper.INSTANCE.restoreTransformedState(player, transformedData);
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("已恢复玩家 {} 的变身状态", player.getName().getString());
                 }
             }
@@ -51,7 +50,7 @@ public class AttachmentHandler {
         if (data.getHenshinState() == HenshinState.TRANSFORMING) {
             data.setHenshinState(HenshinState.IDLE);
             data.setPendingFormId(null);
-            if(Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+            if(Config.DEBUG_MODE.get()){
                 RideBattleLib.LOGGER.debug("重置玩家 {} 的状态为IDLE，因为登录时处于TRANSFORMING状态",
                         player.getName().getString());
             }

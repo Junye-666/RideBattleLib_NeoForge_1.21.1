@@ -11,6 +11,8 @@ import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -83,71 +85,95 @@ public final class RiderManager {
     }
 
     // ================驱动器系统快捷方法 ================
-    // 获取玩家驱动器物品
+    /**
+     * 快捷获取玩家驱动器内物品
+     */
     public static Map<ResourceLocation, ItemStack> getDriverItems(Player player) {
         return DriverSystem.INSTANCE.getDriverItems(player);
     }
 
-    // 插入物品至驱动器
+    /**
+     * 插入物品至驱动器
+     */
     public static boolean insertDriverItem(Player player, ResourceLocation slotId, ItemStack stack) {
         return DriverSystem.INSTANCE.insertItem(player, slotId, stack);
     }
 
-    // 将单个物品从驱动器中取出
+    /**
+     * 将单个物品从驱动器中取出
+     */
     public static void extractSingleItem(Player player, ResourceLocation slotId) {
         PacketHandler.sendToServer(new ExtractItemPacket(player.getUUID(), slotId));
     }
 
-    // 返还所有驱动器物品
+    /**
+     * 为玩家返还所有驱动器物品
+     */
     public static void returnDriverItems(Player player) {
         PacketHandler.sendToServer(new ReturnItemsPacket());
     }
 
     // ================ 吃瘪系统快捷方法 ================
-    // 强制取消变身
+    /**
+     * 强制解除变身
+     */
     public static void penaltyUntransform(Player player) {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             PenaltySystem.PENALTY_SYSTEM.penaltyUnhenshin(player);
         }
     }
 
-    // 开始冷却
+    /**
+     * 开始变身冷却
+     */
     public static void applyCooldown(Player player, int seconds) {
         PenaltySystem.PENALTY_SYSTEM.startCooldown(player, seconds);
     }
 
-    // 检查是否在冷却中
+    /**
+     * 检查是否在冷却中
+     */
     public static boolean isInCooldown(Player player) {
         return PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
     }
 
     // ================ 技能系统快捷方法 ================
-    // 触发技能
+    /**
+     * 触发技能
+     */
     public static boolean triggerSkill(Player player, ResourceLocation formId, ResourceLocation skillId){
         return SkillSystem.triggerSkillEvent(player, formId, skillId);
     }
 
     // ================ 快速获取 ================
-    // 获取当前骑士配置
+    /**
+     * 获取玩家当前骑士配置
+     */
     @Nullable
     public static RiderConfig getActiveRiderConfig(Player player) {
         return RiderConfig.findActiveDriverConfig(player);
     }
 
-    // 获取当前变身数据
+    /**
+     * 获取当前变身数据
+     */
     @Nullable
     public static ResourceLocation getCurrentForm(Player player) {
         HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
         return data != null ? data.formId() : null;
     }
 
-    // 检查是否特定骑士
+    /**
+     * 检查玩家是否为特定骑士
+     */
     public static boolean isSpecificRider(Player player, ResourceLocation riderId) {
         RiderConfig config = getActiveRiderConfig(player);
         return config != null && config.getRiderId().equals(riderId);
     }
 
-    // 强制刷新客户端状态
+    /**
+     * 强制刷新所有状态同步
+     */
     public static void syncClientState(ServerPlayer player) {
         SyncManager.INSTANCE.syncAllPlayerData(player);
     }
@@ -164,5 +190,21 @@ public final class RiderManager {
      */
     public static void syncHenshinState(ServerPlayer player) {
         SyncManager.INSTANCE.syncHenshinState(player);
+    }
+
+    // ================ 开发便捷方法 ================
+    /**
+     * 播放公共音效 - 所有附近玩家都能听到
+     * 现在只在服务端调用，因为所有逻辑都在服务端执行
+     */
+    public static void playPublicSound(Player player, SoundEvent sound, SoundSource category, float volume, float pitch) {
+        if (!player.level().isClientSide) {
+            // 服务端：广播给所有玩家
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(), sound, category, volume, pitch);
+        }
+    }
+
+    public static void playPublicSound(Player player, SoundEvent sound) {
+        playPublicSound(player, sound, SoundSource.PLAYERS, 1.0F, 1.0F);
     }
 }

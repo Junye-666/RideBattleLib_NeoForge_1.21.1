@@ -1,7 +1,6 @@
 package com.jpigeon.ridebattlelib;
 
 
-import io.netty.handler.logging.LogLevel;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
@@ -13,18 +12,14 @@ public class Config
 {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    public static final ModConfigSpec.EnumValue<LogLevel> LOG_LEVEL;
     public static final ModConfigSpec.BooleanValue PENALTY_ENABLED;
     public static final ModConfigSpec.IntValue PENALTY_THRESHOLD;
     public static final ModConfigSpec.IntValue COOLDOWN_DURATION;
     public static final ModConfigSpec.IntValue EXPLOSION_POWER;
     public static final ModConfigSpec.IntValue KNOCKBACK_STRENGTH;
-
+    public static final ModConfigSpec.BooleanValue DEBUG_MODE;
 
     static {
-        LOG_LEVEL = BUILDER
-                .defineEnum("logLevel", LogLevel.INFO);
-
         PENALTY_ENABLED = BUILDER
                 .define("penaltyEnabled", true);
 
@@ -47,6 +42,9 @@ public class Config
                 .comment("吃瘪触发时击退强度")
                 .defineInRange("knockbackStrength", (int) 1.5, 0, 20);
 
+        DEBUG_MODE = BUILDER
+                .define("logLevel", false);
+
         BUILDER.build();
     }
 
@@ -55,12 +53,14 @@ public class Config
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
     {
-        RideBattleLib.LOGGER.debug("Loaded config: logLevel={}, penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}",
-                LOG_LEVEL.get(),
-                PENALTY_ENABLED.get(),
-                PENALTY_THRESHOLD.get(),
-                COOLDOWN_DURATION.get(),
-                EXPLOSION_POWER.get(),
-                KNOCKBACK_STRENGTH.get());
+        if (Config.DEBUG_MODE.get()){
+            RideBattleLib.LOGGER.debug("Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}, logLevel={}",
+                    PENALTY_ENABLED.get(),
+                    PENALTY_THRESHOLD.get(),
+                    COOLDOWN_DURATION.get(),
+                    EXPLOSION_POWER.get(),
+                    KNOCKBACK_STRENGTH.get(),
+                    DEBUG_MODE.get());
+        }
     }
 }

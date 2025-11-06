@@ -6,7 +6,8 @@ import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
-import io.netty.handler.logging.LogLevel;
+import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.packet.DriverActionPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -33,7 +34,7 @@ public class DriverHandler {
 
         boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
 
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("右键插入物品 - 玩家: {}, 变身状态: {}, 骑士: {}",
                     player.getName().getString(), isTransformed, config.getRiderId());
         }
@@ -64,15 +65,15 @@ public class DriverHandler {
                 SyncManager.INSTANCE.syncDriverData(serverPlayer);
             }
             FormConfig formConfig = config.getActiveFormConfig(player);
-            if (formConfig != null && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            if (formConfig != null && Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("形态触发类型: {}", formConfig.getTriggerType());
             }
             // 添加 null 检查
             if (formConfig != null && formConfig.getTriggerType() == TriggerType.AUTO) {
-                if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)){
+                if (Config.DEBUG_MODE.get()){
                     RideBattleLib.LOGGER.debug("自动触发 - 玩家状态: 变身={}, 驱动器={}", HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
                 }
-                HenshinSystem.INSTANCE.driverAction(player);
+                PacketHandler.sendToServer(new DriverActionPacket(player.getUUID()));
             }
 
             event.setCanceled(true);

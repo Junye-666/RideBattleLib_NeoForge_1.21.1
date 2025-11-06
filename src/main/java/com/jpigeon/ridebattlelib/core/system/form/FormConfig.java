@@ -7,7 +7,6 @@ import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -213,13 +212,13 @@ public class FormConfig {
 
             // 如果形态明确要求某物品，即使槽位非必需，也必须匹配
             if (requiredItem != null && (stack == null || !stack.is(requiredItem))) {
-                if (stack != null && Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                if (stack != null && Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
                 }
                 return false;
             }
 
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("槽位 {} 匹配成功 {}", slotId, stack);
             }
         }
@@ -227,7 +226,7 @@ public class FormConfig {
     }
 
     public boolean matchesAuxSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("开始匹配辅助槽位...");
         }
 
@@ -265,18 +264,18 @@ public class FormConfig {
             // 如果形态明确要求某物品，即使非必需，也必须匹配
             if (requiredItem != null && (stack == null || !stack.is(requiredItem))) {
                 if (stack != null) {
-                    if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+                    if (Config.DEBUG_MODE.get()) {
                         RideBattleLib.LOGGER.debug("辅助槽位 {} 要求物品 {}, 实际为 {}", slotId, requiredItem, stack.getItem());
                     }
                 }
                 return false;
             }
-            if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+            if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("辅助槽位 {} 匹配成功", slotId);
             }
         }
 
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("辅助槽位全部匹配");
         }
         return true;

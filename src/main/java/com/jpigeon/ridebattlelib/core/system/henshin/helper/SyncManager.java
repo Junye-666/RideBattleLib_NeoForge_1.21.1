@@ -10,7 +10,6 @@ import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinStateSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
-import io.netty.handler.logging.LogLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -36,7 +35,7 @@ public class SyncManager {
     public void syncHenshinState(ServerPlayer player) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
-        if (Config.LOG_LEVEL.get().equals(LogLevel.DEBUG)) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("同步变身状态: player={}, state={}, pendingForm={}",
                     player.getName().getString(), data.getHenshinState(), data.getPendingFormId());
         }

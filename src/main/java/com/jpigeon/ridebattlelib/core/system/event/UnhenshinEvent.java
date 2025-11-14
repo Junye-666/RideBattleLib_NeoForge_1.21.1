@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.event;
 
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * 解除变身事件
@@ -19,25 +20,9 @@ public class UnhenshinEvent extends Event {
         return player;
     }
 
-    public static class Pre extends UnhenshinEvent {
-        private boolean canceled = false;
-
+    public static class Pre extends UnhenshinEvent implements ICancellableEvent {
         public Pre(Player player) {
             super(player);
-        }
-
-        public boolean isCancelable() {
-            return true;
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-
-        public void setCanceled(boolean canceled) {
-            if (isCancelable()) {
-                this.canceled = canceled;
-            }
         }
     }
 

@@ -63,7 +63,7 @@ public class PenaltySystem implements IPenaltySystem {
         HenshinSystem.INSTANCE.unHenshin(player);
 
         // 爆炸
-        PenaltyEvent.Particle explosion = new PenaltyEvent.Particle(player);
+        PenaltyEvent.Explosion explosion = new PenaltyEvent.Explosion(player);
         NeoForge.EVENT_BUS.post(explosion);
         if (!explosion.isCanceled()) {
             player.level().explode(player,

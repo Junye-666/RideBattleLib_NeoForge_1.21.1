@@ -5,12 +5,10 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
+import com.jpigeon.ridebattlelib.core.system.event.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
-import com.jpigeon.ridebattlelib.core.system.event.DriverActivationEvent;
-import com.jpigeon.ridebattlelib.core.system.event.HenshinPauseEvent;
-import com.jpigeon.ridebattlelib.core.system.event.UnhenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
@@ -114,7 +112,7 @@ public class HenshinSystem implements IHenshinSystem {
 
         FormConfig formConfig = RiderRegistry.getForm(formId);
 
-        // 如果是动态形态（不在预设注册表中）
+        // 如果是动态形态
         if (formConfig == null) {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("形态 {} 未注册，尝试作为动态形态处理", formId);
@@ -131,6 +129,14 @@ public class HenshinSystem implements IHenshinSystem {
             }
         }
 
+        // 触发变身事件
+        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, riderId, formId);
+        NeoForge.EVENT_BUS.post(preHenshin);
+        if (preHenshin.isCanceled()) {
+            DriverActionManager.INSTANCE.cancelHenshin(player);
+            return false;
+        }
+
         // 执行变身
         HenshinHelper.INSTANCE.performHenshin(player, config, formId);
 
@@ -139,6 +145,10 @@ public class HenshinSystem implements IHenshinSystem {
         if (player instanceof ServerPlayer serverPlayer) {
             SyncManager.INSTANCE.syncTransformedState(serverPlayer);
         }
+
+        // 触发变身回调事件
+        HenshinEvent.Post postHenshin = new HenshinEvent.Post(player, riderId, formId);
+        NeoForge.EVENT_BUS.post(postHenshin);
 
         return true;
     }
@@ -207,7 +217,31 @@ public class HenshinSystem implements IHenshinSystem {
             driverItems.keySet().removeAll(config.getAuxSlotDefinitions().keySet());
         }
 
+        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
+        if (data == null) {
+            RideBattleLib.LOGGER.error("无法获取变身数据");
+            return;
+        }
+        ResourceLocation oldFormId = data.formId();
+
+        // 触发形态切换事件
+        if (!newFormId.equals(oldFormId)) {
+            FormSwitchEvent.Pre preFormSwitch = new FormSwitchEvent.Pre(player, oldFormId, newFormId);
+            NeoForge.EVENT_BUS.post(preFormSwitch);
+            if (preFormSwitch.isCanceled()) {
+                DriverActionManager.INSTANCE.cancelHenshin(player);
+                return;
+            }
+        }
+
         HenshinHelper.INSTANCE.performFormSwitch(player, newFormId);
+
+        // 触发形态切换事件
+        if (!newFormId.equals(oldFormId)) {
+            FormSwitchEvent.Post postFormSwitch = new FormSwitchEvent.Post(player, oldFormId, newFormId);
+            NeoForge.EVENT_BUS.post(postFormSwitch);
+        }
+
         if (player instanceof ServerPlayer serverPlayer) {
             SyncManager.INSTANCE.syncTransformedState(serverPlayer);
         }

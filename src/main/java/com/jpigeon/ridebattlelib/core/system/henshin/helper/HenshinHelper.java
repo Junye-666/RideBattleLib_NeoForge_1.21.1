@@ -7,7 +7,6 @@ import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
-import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
@@ -83,15 +82,10 @@ public final class HenshinHelper implements IHenshinHelper {
             return;
         }
         ResourceLocation oldFormId = data.formId();
-        if (!newFormId.equals(oldFormId)) {
-            FormSwitchEvent.Pre preFormSwitch = new FormSwitchEvent.Pre(player, oldFormId, newFormId);
-            NeoForge.EVENT_BUS.post(preFormSwitch);
-        }
         FormConfig oldForm = RiderRegistry.getForm(oldFormId);
         if (oldForm == null) {
             DynamicFormConfig.getDynamicForm(oldFormId);
         }
-
         FormConfig newForm = RiderRegistry.getForm(newFormId);
         if (newForm == null) {
             newForm = DynamicFormConfig.getDynamicForm(newFormId); // 添加动态形态支持
@@ -113,12 +107,6 @@ public final class HenshinHelper implements IHenshinHelper {
             // 更新数据
             setTransformed(player, data.config(), newFormId,
                     data.originalGear(), currentDriver);
-        }
-
-        // 触发形态切换事件
-        if (!newFormId.equals(oldFormId)) {
-            FormSwitchEvent.Post postFormSwitch = new FormSwitchEvent.Post(player, oldFormId, newFormId);
-            NeoForge.EVENT_BUS.post(postFormSwitch);
         }
     }
 

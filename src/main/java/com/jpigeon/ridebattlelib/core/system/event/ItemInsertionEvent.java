@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * 存入物品事件
@@ -22,19 +23,9 @@ public class ItemInsertionEvent extends Event {
         this.config = config;
     }
 
-    public static class Pre extends ItemInsertionEvent {
-        private boolean canceled = false;
-
+    public static class Pre extends ItemInsertionEvent implements ICancellableEvent {
         public Pre(Player player, ResourceLocation slotId, ItemStack stack, RiderConfig config) {
             super(player, slotId, stack, config);
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-
-        public void setCanceled(boolean canceled) {
-            this.canceled = canceled;
         }
     }
 

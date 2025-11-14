@@ -4,6 +4,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 import java.util.Collections;
 import java.util.Map;
@@ -11,12 +12,11 @@ import java.util.Map;
 /**
  * 在变身前匹配形态时强制修改匹配形态的覆盖(相当于形态琐)
  */
-public class FormOverrideEvent extends Event {
+public class FormOverrideEvent extends Event implements ICancellableEvent {
     private final Player player;
     private final Map<ResourceLocation, ItemStack> driverItems;
     private final ResourceLocation currentForm;
     private ResourceLocation overrideForm;
-    private boolean canceled = false;
 
     public FormOverrideEvent(Player player, Map<ResourceLocation, ItemStack> driverItems, ResourceLocation currentForm) {
         this.player = player;
@@ -47,13 +47,5 @@ public class FormOverrideEvent extends Event {
 
     public ResourceLocation getOverrideForm() {
         return overrideForm;
-    }
-
-    public boolean isCanceled() {
-        return canceled;
-    }
-
-    public void setCanceled(boolean canceled) {
-        this.canceled = canceled;
     }
 }

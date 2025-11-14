@@ -3,11 +3,12 @@ package com.jpigeon.ridebattlelib.core.system.event;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * 驱动器激活事件，在变身/形态切换暂停之前
  */
-public class DriverActivationEvent extends Event {
+public class DriverActivationEvent extends Event implements ICancellableEvent {
     private final Player player;
     private final ItemStack driverItem;
     private boolean activated = true;
@@ -15,14 +16,6 @@ public class DriverActivationEvent extends Event {
     public DriverActivationEvent(Player player, ItemStack driverItem) {
         this.player = player;
         this.driverItem = driverItem;
-    }
-
-    public boolean isCanceled() {
-        return !activated;
-    }
-
-    public void setCanceled(boolean canceled) {
-        this.activated = canceled;
     }
 
     public void setActivated(boolean activated) {

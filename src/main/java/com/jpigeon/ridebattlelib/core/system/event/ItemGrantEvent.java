@@ -4,6 +4,7 @@ import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 public class ItemGrantEvent extends Event {
     private final Player player;
@@ -16,19 +17,9 @@ public class ItemGrantEvent extends Event {
         this.config = config;
     }
 
-    public static class Pre extends ItemGrantEvent {
-        private boolean canceled = false;
-
+    public static class Pre extends ItemGrantEvent implements ICancellableEvent {
         public Pre(Player player, ItemStack stack, FormConfig config) {
             super(player, stack, config);
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-
-        public void setCanceled(boolean canceled) {
-            this.canceled = canceled;
         }
     }
 

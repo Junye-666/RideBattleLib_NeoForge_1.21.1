@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.example;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
+import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
@@ -11,6 +12,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -165,6 +167,13 @@ public class ExampleBasic {
                     if (data.getHenshinState() == HenshinState.TRANSFORMING) {
                         DriverActionManager.INSTANCE.completeTransformation(player);
                     }
+                }
+            }
+
+            @SubscribeEvent
+            public void onSwitchForm(FormSwitchEvent.Pre event){
+                if (event.getOldFormId().equals(TEST_FORM_POWERED)){
+                    event.getPlayer().displayClientMessage(Component.literal(event.getOldFormId().toString()), false);
                 }
             }
         });

@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.event;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * 形态切换事件
@@ -18,23 +19,9 @@ public class FormSwitchEvent extends Event {
         this.newFormId = newFormId;
     }
 
-    public static class Pre extends FormSwitchEvent {
-        private boolean canceled = false;
-
+    public static class Pre extends FormSwitchEvent implements ICancellableEvent {
         public Pre(Player player, ResourceLocation oldFormId, ResourceLocation newFormId) {
             super(player, oldFormId, newFormId);
-        }
-
-        public boolean isCancelable() {
-            return true;
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-
-        public void setCanceled(boolean canceled) {
-            this.canceled = canceled;
         }
     }
 

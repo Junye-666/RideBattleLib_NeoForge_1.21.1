@@ -4,7 +4,7 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
-import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
+import com.jpigeon.ridebattlelib.core.system.event.PrepareHenshinSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
@@ -21,22 +21,19 @@ public class DriverActionManager {
     public static final DriverActionManager INSTANCE = new DriverActionManager();
 
     public void prepareHenshin(Player player, ResourceLocation formId) {
-        if (Config.DEBUG_MODE.get()) {
-            RideBattleLib.LOGGER.debug("玩家 {} 进入变身缓冲阶段", player.getDisplayName().getString());
-        }
-
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
         if (Config.DEBUG_MODE.get()) {
+            RideBattleLib.LOGGER.debug("玩家 {} 进入变身缓冲阶段", player.getDisplayName().getString());
             RideBattleLib.LOGGER.debug("设置待处理形态: player={}, form={}", player.getName().getString(), formId);
         }
 
-        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId);
-        NeoForge.EVENT_BUS.post(preHenshin);
-        if (preHenshin.isCanceled()) {
+        PrepareHenshinSwitchEvent prepareEvent = new PrepareHenshinSwitchEvent(player);
+        NeoForge.EVENT_BUS.post(prepareEvent);
+        if (prepareEvent.isCanceled()) {
             if (Config.DEBUG_MODE.get()) {
-                RideBattleLib.LOGGER.debug("取消变身");
+                RideBattleLib.LOGGER.debug("提前取消变身");
             }
             cancelHenshin(player);
         }
@@ -45,12 +42,9 @@ public class DriverActionManager {
     public void proceedHenshin(Player player, RiderConfig config) {
         if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("使玩家 {} 继续变身 {}", player.getName().getString(), config.getRiderId());
-        }
-        if (HenshinSystem.INSTANCE.isTransformed(player)) return;
-        PacketHandler.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));
-        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("发送变身包: {}", config.getRiderId());
         }
+        PacketHandler.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));
     }
 
     public void proceedFormSwitch(Player player, ResourceLocation newFormId) {

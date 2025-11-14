@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.event;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 public class HenshinPauseEvent extends Event {
     private final Player player;
@@ -15,25 +16,12 @@ public class HenshinPauseEvent extends Event {
         this.formId = formId;
     }
 
-    public static class Pre extends HenshinEvent {
-        private boolean canceled = false;
-
+    /**
+     * 取消暂停以直接进行变身
+     */
+    public static class Pre extends HenshinEvent implements ICancellableEvent {
         public Pre(Player player, ResourceLocation riderId, ResourceLocation formId) {
             super(player, riderId, formId);
-        }
-
-        public boolean isCancelable() {
-            return true;
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-        /**
-         * 取消暂停以直接进行变身
-         */
-        public void setCanceled(boolean canceled) {
-            this.canceled = canceled;
         }
     }
 

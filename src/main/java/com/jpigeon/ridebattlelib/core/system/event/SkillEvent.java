@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.event;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * 技能触发事件
@@ -19,15 +20,10 @@ public class SkillEvent extends Event {
     }
 
     // 预触发事件（可取消）
-    public static class Pre extends SkillEvent {
-        private boolean canceled = false;
-
+    public static class Pre extends SkillEvent implements ICancellableEvent {
         public Pre(Player player, ResourceLocation formId, ResourceLocation skillId) {
             super(player, formId, skillId);
         }
-
-        public boolean isCanceled() { return canceled; }
-        public void setCanceled(boolean canceled) { this.canceled = canceled; }
     }
 
     // 技能触发后事件

@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.event;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * 吃瘪事件
@@ -12,64 +13,21 @@ public class PenaltyEvent extends Event {
         this.player = player;
     }
 
-    public static class Sound extends PenaltyEvent {
-        private boolean canceled = false;
-
+    public static class Sound extends PenaltyEvent implements ICancellableEvent {
         public Sound(Player player) {
             super(player);
         }
-
-        public boolean isCancelable() {
-            return true;
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-
-        /**
-         * 可取消
-         */
-        public void setCanceled(boolean canceled) {
-            this.canceled = canceled;
-        }
     }
 
-    public static class Explosion extends PenaltyEvent {
-        private boolean canceled = false;
-
+    public static class Explosion extends PenaltyEvent implements ICancellableEvent{
         public Explosion(Player player) {
             super(player);
         }
-        public boolean isCancelable() {
-            return true;
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-
-        public void setCanceled(boolean canceled) {
-            this.canceled = canceled;
-        }
     }
 
-    public static class Particle extends PenaltyEvent {
-        private boolean canceled = false;
-
+    public static class Particle extends PenaltyEvent implements ICancellableEvent{
         public Particle(Player player) {
             super(player);
-        }
-        public boolean isCancelable() {
-            return true;
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-
-        public void setCanceled(boolean canceled) {
-            this.canceled = canceled;
         }
     }
 

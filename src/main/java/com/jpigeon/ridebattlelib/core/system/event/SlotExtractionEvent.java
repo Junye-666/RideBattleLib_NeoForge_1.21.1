@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * 从槽位取出物品事件
@@ -44,23 +45,12 @@ public class SlotExtractionEvent extends Event {
     public RiderConfig getConfig() {
         return config;
     }
-
-    public static class Pre extends SlotExtractionEvent {
-        private boolean canceled = false;
-
+    /**
+     * 可取消取出（卡里面拔不出来了）
+     */
+    public static class Pre extends SlotExtractionEvent implements ICancellableEvent {
         public Pre(Player player, ResourceLocation slotId, ItemStack extractedStack, RiderConfig config) {
             super(player, slotId, extractedStack, config);
-        }
-
-        public boolean isCanceled() {
-            return canceled;
-        }
-
-        /**
-         * 可取消取出（卡里面拔不出来了）
-         */
-        public void setCanceled(boolean canceled) {
-            this.canceled = canceled;
         }
     }
 

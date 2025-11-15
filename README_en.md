@@ -80,9 +80,9 @@ FormConfig baseForm = new FormConfig(
 MY_RIDER.addForm(baseForm);
 ```
 ### 🚀 4. Dynamic Form System
-Too many possible form combinations to register manually? (Looking at you, Build and OOO!)
+- Too many possible form combinations to register manually? (Looking at you, Build and OOO!)
 
-Automatically generate forms based on driver items!
+- Automatically generate forms based on driver items!
 ```java
 // Register dynamic form mappings
 private static void registerDynamicMappings() {
@@ -113,9 +113,9 @@ private static void registerDynamicMappings() {
 }
 ```
 ### 💥 5. Penalty System
-Forcefully cancel transformation when health is too low + Cooldown mechanism
+- Forcefully cancel transformation when health is too low + Cooldown mechanism
 🎭 6. Event System
-Complete transformation lifecycle events
+- Complete transformation lifecycle events
 ```java
 // Transformation events
 @SubscribeEvent
@@ -145,7 +145,7 @@ public static void onFormSwitch(FormSwitchEvent.Post event) {
 }
 ```
 ### ⚡ 7. Skill System
-Multiple skill rotation support
+- Multiple skill rotation support
 ```java
 // Register skills
 SkillSystem.registerSkillName(
@@ -175,7 +175,7 @@ private static void performRiderKick(Player player) {
 }
 ```
 ### 🌐 8. Network Synchronization
-Complete client-server synchronization
+- Complete client-server synchronization
 ```java
 // Manual state synchronization (if needed)
 if (player instanceof ServerPlayer serverPlayer) {

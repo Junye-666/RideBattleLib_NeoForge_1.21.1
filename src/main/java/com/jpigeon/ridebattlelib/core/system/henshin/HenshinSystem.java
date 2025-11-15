@@ -51,6 +51,9 @@ public class HenshinSystem implements IHenshinSystem {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
         Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
+        TransformedData oldData = getTransformedData(player);
+        if (oldData == null) return;
+        ResourceLocation oldFormId = oldData.formId();
         ResourceLocation formId = config.matchForm(player, driverItems);
         if (formId == null) return;
         FormConfig formConfig = config.getActiveFormConfig(player);
@@ -83,15 +86,36 @@ public class HenshinSystem implements IHenshinSystem {
             // 需要暂停的变身流程
             HenshinPauseEvent.Pre prePause = new HenshinPauseEvent.Pre(player, config.getRiderId(), formId);
             NeoForge.EVENT_BUS.post(prePause);
-            if (prePause.isCanceled()) DriverActionManager.INSTANCE.completeTransformation(player);
+            if (prePause.isCanceled()) completeAndSendEvents(player, config, formId, oldFormId);
 
-            DriverActionManager.INSTANCE.prepareHenshin(player, formId);
+            if (!isTransformed(player)) {
+                DriverActionManager.INSTANCE.prepareHenshin(player, formId);
+            } else {
+                DriverActionManager.INSTANCE.prepareFormSwitch(player, oldFormId, formId);
+            }
 
             HenshinPauseEvent.Post postPause = new HenshinPauseEvent.Post(player, config.getRiderId(), formId);
             NeoForge.EVENT_BUS.post(postPause);
         } else {
-            DriverActionManager.INSTANCE.completeTransformation(player);
+            completeAndSendEvents(player, config, formId, oldFormId);
         }
+    }
+
+    private void completeAndSendEvents(Player player, RiderConfig config, ResourceLocation formId, ResourceLocation oldFormId) {
+        if (!isTransformed(player)) {
+            HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId);
+            NeoForge.EVENT_BUS.post(preHenshin);
+            if (preHenshin.isCanceled()) {
+                DriverActionManager.INSTANCE.cancelHenshin(player);
+            }
+        } else {
+            FormSwitchEvent.Pre preSwitch = new FormSwitchEvent.Pre(player, oldFormId, formId);
+            NeoForge.EVENT_BUS.post(preSwitch);
+            if (preSwitch.isCanceled()) {
+                DriverActionManager.INSTANCE.cancelHenshin(player);
+            }
+        }
+        DriverActionManager.INSTANCE.completeTransformation(player);
     }
 
     @Override
@@ -127,14 +151,6 @@ public class HenshinSystem implements IHenshinSystem {
                         formId, formConfig.getFormId());
                 formId = formConfig.getFormId();
             }
-        }
-
-        // 触发变身事件
-        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, riderId, formId);
-        NeoForge.EVENT_BUS.post(preHenshin);
-        if (preHenshin.isCanceled()) {
-            DriverActionManager.INSTANCE.cancelHenshin(player);
-            return false;
         }
 
         // 执行变身
@@ -217,7 +233,7 @@ public class HenshinSystem implements IHenshinSystem {
             driverItems.keySet().removeAll(config.getAuxSlotDefinitions().keySet());
         }
 
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
+        TransformedData data = getTransformedData(player);
         if (data == null) {
             RideBattleLib.LOGGER.error("无法获取变身数据");
             return;

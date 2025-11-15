@@ -4,7 +4,7 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
-import com.jpigeon.ridebattlelib.core.system.event.PrepareHenshinSwitchEvent;
+import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
@@ -25,16 +25,31 @@ public class DriverActionManager {
         if (config == null) return;
 
         if (Config.DEBUG_MODE.get()) {
-            RideBattleLib.LOGGER.debug("玩家 {} 进入变身缓冲阶段", player.getDisplayName().getString());
+            RideBattleLib.LOGGER.debug("玩家 {} 进入变身缓冲阶段", player.getName().getString());
             RideBattleLib.LOGGER.debug("设置待处理形态: player={}, form={}", player.getName().getString(), formId);
         }
 
-        PrepareHenshinSwitchEvent prepareEvent = new PrepareHenshinSwitchEvent(player);
-        NeoForge.EVENT_BUS.post(prepareEvent);
-        if (prepareEvent.isCanceled()) {
-            if (Config.DEBUG_MODE.get()) {
-                RideBattleLib.LOGGER.debug("提前取消变身");
-            }
+        // 触发变身事件
+        HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId);
+        NeoForge.EVENT_BUS.post(preHenshin);
+        if (preHenshin.isCanceled()) {
+            cancelHenshin(player);
+        }
+    }
+
+    public void prepareFormSwitch(Player player, ResourceLocation oldFormId, ResourceLocation newFormId){
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
+
+        if (Config.DEBUG_MODE.get()) {
+            RideBattleLib.LOGGER.debug("玩家 {} 进入形态缓冲阶段", player.getName().getString());
+            RideBattleLib.LOGGER.debug("设置待处理形态: player={}, oldForm={}, form={}", player.getName().getString(), oldFormId, newFormId);
+        }
+
+        // 触发切换事件
+        FormSwitchEvent.Pre preSwitch = new FormSwitchEvent.Pre(player, oldFormId, newFormId);
+        NeoForge.EVENT_BUS.post(preSwitch);
+        if (preSwitch.isCanceled()) {
             cancelHenshin(player);
         }
     }
@@ -91,6 +106,9 @@ public class DriverActionManager {
     public void cancelHenshin(Player player) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         if (data.getHenshinState() == HenshinState.TRANSFORMING) {
+            if (Config.DEBUG_MODE.get()) {
+                RideBattleLib.LOGGER.debug("取消玩家{}变身", player.getName());
+            }
             data.setHenshinState(HenshinState.IDLE);
             data.setPendingFormId(null);
 

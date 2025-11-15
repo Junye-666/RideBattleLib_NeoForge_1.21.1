@@ -29,7 +29,7 @@ public class ExampleDynamicForm {
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "beta_slot_2");
 
     public static final RiderConfig riderBeta = new RiderConfig(TEST_RIDER_BETA)
-            .setDriverItem(Items.NETHERITE_LEGGINGS, EquipmentSlot.LEGS)
+            .setMainDriverItem(Items.NETHERITE_LEGGINGS, EquipmentSlot.LEGS)
             .addMainDriverSlot(
                     BETA_SLOT_1,
                     List.of(Items.EMERALD, Items.DIAMOND),

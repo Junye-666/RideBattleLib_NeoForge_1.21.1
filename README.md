@@ -2,270 +2,264 @@
 **简体中文** | [English](README_en.md)
 
 "Cyclone! Joker! さあ、お前の罪を数えろ！"
+
 现在，在Minecraft中喊出你的变身台词吧！
 
-🎯 概述
-欢迎来到 RideBattleLib - 一个为MC高版本（1.21.1，NeoForge）打造的假面骑士变身系统库！想象一下：
-在Minecraft中插入道具，转动驱动器，喊出"Henshin！" - 这一切都成为可能！
-无论你是想重现Build的满装瓶系统，还是创造 ☆全☆新☆的☆骑☆士☆系☆统 ，RideBattleLib都能让你轻松实现！
+## 🎯 概述
+欢迎来到 RideBattleLib - 一个为MC高版本（1.21.1/1.21.8，NeoForge）打造的假面骑士变身系统库！
+
+在Minecraft中插入道具，激活驱动器，喊出"Henshin！" ！
+
+无论你是想重现Build的满装瓶系统，还是创造 **☆全☆新☆的☆骑☆士☆系☆统** ，RideBattleLib都能让你轻松实现！
 
 此页为1.21.1, [1.21.8在这](https://github.com/Junye-666/RideBattleLib_NeoForge_1.21.8)
 
 ## ✨ 核心功能
 ### 🧩 1. 骑士变身系统
-定义驱动器物品（腰带）
-
-创建变身槽位系统
-
-多种变身触发方式：按键、物品、自动
-
-完整变身状态管理（待机→变身中→变身完成）
+- **完整变身状态管理** - 待机→变身中→变身完成
 
 ```java
-// 创建骑士驱动器 (当然得你自己先注册一个盔甲物品啦)
-RiderConfig myRider = new RiderConfig(MY_RIDER_ID)
-.setDriverItem(ModItems.ANY_DRIVER.get(), EquipmentSlot.LEGS) //戴在腿部的驱动器 
-.setAuxDriverItem(ModItems.ANY_AUX_DRIVER.get(), EquipmentSlot.OFFHAND) // 拿在副手的辅助驱动器(如剑的融合进化器)
-        ; // 务必注意冒号的位置, 别写早了导致错误
+// 创建骑士配置
+public static final ResourceLocation MY_RIDER_ID =
+        ResourceLocation.fromNamespaceAndPath(MODID, "kamen_rider_demo");
+
+public static final RiderConfig MY_RIDER = new RiderConfig(MY_RIDER_ID)
+        .setMainDriverItem(ModItems.DRIVER_ITEM.get(), EquipmentSlot.LEGS)
+        .setAuxDriverItem(ModItems.AUX_DRIVER.get(), EquipmentSlot.OFFHAND)
+        .setTriggerItem(ModItems.TRIGGER_ITEM.get())
+        .setAllowDynamicForms(true);
 ```
 
 ### ⚡ 2. 驱动器系统
-物品插入/取出机制
-
-槽位验证系统
-
-主驱动器+辅助驱动器双系统
-
-物品返还功能（一键清空驱动器）
+- **双驱动器系统** - 主驱动器 + 辅助驱动器
 
 ```java
 // 以以上骑士为例, 规定其驱动器接受的物品
-RiderConfig myRider = new RiderConfig(MY_RIDER_ID)
-        .addDriverSlot( // 添加一个主驱动器上的槽位
-                SOME_SLOT, // 槽位的ResourceLocation(这里默认在前面定义过, 这里直接调用)
-                List.of( // 一个槽位可以接纳多个不同的物品
-                        ModItems.ITEM_1.get(), // 可以是1
-                        ModItems.ITEM_2.get(),  // 可以是2
-                        ModItems.ITEM_3.get() // 可以是3
-                        // 理论上无限
-                ),
-                true, // 是否必要 (没了就匹配不到形态了, 比如加布, 你不放东西进去当然没法变身)
-                true) // 是否可被直接替换 (手感问题: 槽位装了东西后右键是否自动把物品替换了, false时就是得先手动按X键)
-        
-        .addDriverSlot( // 再来一个驱动器上槽位
-                ANOTHER_SLOT,
-                List.of(
-                        //这里省略
+RiderConfig MY_RIDER = new RiderConfig(MY_RIDER_ID)
+                // 添加主驱动器槽位
+                .addMainDriverSlot(
+                        ResourceLocation.fromNamespaceAndPath(MODID, "core_slot"),
+                        List.of(
+                                ModItems.CORE_ITEM_1.get(),
+                                ModItems.CORE_ITEM_2.get(),
+                                ModItems.CORE_ITEM_3.get()
                         ),
-                false,
-                false)
-                
-        .addAuxDriverSlot( // 添加一个辅助驱动器槽位
-                // 与驱动器槽位一致, 所以省略
-                        )
-        ;
+                        true,  // 是否必要
+                        true   // 内容是否可被直接替换
+                )
+                // 添加辅助驱动器槽位  
+                .addAuxDriverSlot(
+                        ResourceLocation.fromNamespaceAndPath(MODID, "aux_slot"),
+                        List.of(ModItems.AUX_ITEM.get()),
+                        false,
+                        false
+                );
 ```
 ### 🔮 3. 形态系统
-预设形态配置（基础形态，强化形态等）
-
-动态形态生成（根据驱动器物品自动创建新形态！）
-
-形态专属属性/效果加成
-
-形态切换功能
+**预设形态** + **动态形态生成**
 
 ```java
-// 为某个骑士创建形态
-FormConfig anyForm = new FormConfig(ANY_FORM_ID)
-.setArmor( // 为这个形态绑定盔甲 (当然也得你自己注册盔甲物品啦)
-        ModItems.RIDER_HELMET.get(),
-        ModItems.RIDER_CHESTPLATE.get(),
-        null, // 这里为null, 如果我们不希望驱动器被替换...
-        ModItems.RIDER_BOOTS.get())
-                
-        .addRequiredItem( // 要求核心槽位有铁锭
-                TEST_CORE_SLOT,
-                Items.IRON_INGOT
+// 创建预设形态
+FormConfig baseForm = new FormConfig(
+                ResourceLocation.fromNamespaceAndPath(MODID, "base_form")
+        )
+                .setArmor(
+                        ModItems.RIDER_HELMET.get(),
+                        ModItems.RIDER_CHESTPLATE.get(),
+                        null,  // 保持驱动器不被替换
+                        ModItems.RIDER_BOOTS.get()
                 )
-.addEffect(MobEffects.DAMAGE_BOOST, 0, 0, false);
+                .addRequiredItem(
+                        ResourceLocation.fromNamespaceAndPath(MODID, "core_slot"),
+                        ModItems.CORE_ITEM_1.get()
+                )
+                .addEffect(MobEffects.DAMAGE_BOOST, 0)
+                .addSkill(ResourceLocation.fromNamespaceAndPath(MODID, "rider_kick"));
+
+// 注册到骑士
+MY_RIDER.addForm(baseForm);
 ```
-
-### 💥 4. 吃瘪系统
-生命值过低时强制解除变身 (我的身体已经菠萝菠萝哒！)
-
-变身冷却机制
-
-### 🎭 5. 事件系统
-丰富的变身事件监听
-
-物品插入/取出事件
-
-形态切换事件
-
-自定义动画支持
-
-```java
-// 监听变身事件
-@SubscribeEvent
-public void onHenshin(HenshinEvent.Post event) {
-Player player = event.getPlayer();
-player.level().playSound(null, player, ModSounds.HENSHIN_SOUND, // 播放变身音效
-SoundSource.PLAYERS, 1.0F, 1.0F);
-}
-```
-### 🌐 6. 网络同步
-实时同步变身状态
-
-腰带数据同步
-
-客户端/服务端数据一致性
-
-主要是方便整合包作者吧 :)
-
-### 🚀 动态生成形态(不稳定)
+### 🚀 4. 动态形态系统
 可能的形态组合数量太多, 注册不过来怎么办? (就针对Build和OOO来的)
 
-我们甚至有半自动化的生成!
+自动根据驱动器物品生成形态！
 ```java
-// 假设根本没手动注册任何形态, 仅注册了riderConfig+驱动器槽位
-private static void registerDynamicMappings() { // 一个动态映射注册方法
-    DynamicArmorRegistry.registerItemArmor(BuildItems.RABBIT_BOTTLE, ModItems.RABBIT_ELEMENT.get()); // 为物品绑定对应盔甲
-    DynamicEffectRegistry.registerItemEffects(BuildItems.RABBIT_BOTTLE, MobEffects.JUMP); // 为物品绑定对应效果
-
-    DynamicArmorRegistry.registerItemArmor(BuildItems.TANK_BOTTLE, ModItems.TANK_ELEMENT.get()); 
-    DynamicEffectRegistry.registerItemEffects(BuildItems.TANK_BOTTLE, MobEffects.DAMAGE_RESISTANCE);
+// 注册动态形态映射
+private static void registerDynamicMappings() {
+    // 物品到盔甲的映射
+    DynamicFormConfig.registerItemArmor(
+        ModItems.RABBIT_BOTTLE.get(), 
+        EquipmentSlot.HEAD, 
+        ModItems.RABBIT_ARMOR.get()
+    );
     
-    // 然后叠就完了
+    // 物品到效果的映射
+    DynamicFormConfig.registerItemEffect(
+        ModItems.RABBIT_BOTTLE.get(),
+        MobEffects.JUMP,
+        114514,  // 持续时间
+        1,       // 等级
+        false    // 是否隐藏粒子
+    );
+    
+    // 注册底衣配置
+    DynamicFormConfig.registerRiderUndersuit(
+        MY_RIDER_ID,
+        ModItems.UNDERSUIT_HELMET.get(),
+        ModItems.UNDERSUIT_CHESTPLATE.get(),
+        ModItems.UNDERSUIT_LEGGINGS.get(), 
+        ModItems.UNDERSUIT_BOOTS.get()
+    );
+}
+```
+### 💥 5. 吃瘪系统
+生命值过低时强制解除变身 + 冷却机制
+### 🎭 6. 事件系统
+完整的变身生命周期事件
+```java
+// 变身事件
+@SubscribeEvent
+public static void onHenshin(HenshinEvent.Pre event) {
+    // 变身前的逻辑（动画、音效等）
+    Player player = event.getPlayer();
+    player.level().playSound(null, player, 
+        SoundEvents.LIGHTNING_BOLT_THUNDER, 
+        SoundSource.PLAYERS, 1.0F, 1.0F
+    );
 }
 
-// 当玩家插入"兔子满装瓶"和"坦克满装瓶"时
-// 自动生成RabbitTank形态！
-// 可以与手动注册的形态同时工作, 不过手动注册了形态并且被匹配到后动态的效果/盔甲映射就不管用了哦
+@SubscribeEvent  
+public static void onHenshin(HenshinEvent.Post event) {
+    // 变身完成后的逻辑
+    RiderManager.playPublicSound(event.getPlayer(), SoundEvents.PLAYER_LEVELUP);
+}
+
+// 形态切换事件
+@SubscribeEvent
+public static void onFormSwitch(FormSwitchEvent.Post event) {
+    Player player = event.getPlayer();
+    player.displayClientMessage(
+        Component.literal("形态切换: " + event.getNewFormId()),
+        true
+    );
+}
 ```
-## 🎮 玩家体验
-装备驱动器
+### ⚡ 7. 技能系统
+多技能轮转支持
+```java
+// 注册技能
+SkillSystem.registerSkillName(
+    ResourceLocation.fromNamespaceAndPath(MODID, "rider_kick"), // 技能辨识用ID
+    Component.translatable("skill.mymod.rider_kick") // 支持多语言
+);
 
-插入道具到驱动器槽位
+// 监听技能触发
+@SubscribeEvent  
+public static void onSkillTrigger(SkillEvent.Post event) {
+    if (event.getSkillId().getPath().equals("rider_kick")) {
+        Player player = event.getPlayer();
+        // 执行骑士踢逻辑
+        performRiderKick(player);
+    }
+}
 
-触发变身（按键/使用道具）
+private static void performRiderKick(Player player) {
+    // 实现骑士踢技能
+    Vec3 lookVec = player.getLookAngle();
+    player.setDeltaMovement(lookVec.x * 2, 1.0, lookVec.z * 2);
+    player.hurtMarked = true;
+    
+    // 对周围敌人造成伤害
+    AABB area = player.getBoundingBox().inflate(3);
+    // ... 伤害逻辑
+}
+```
+### 🌐 8. 网络同步
+完善的客户端-服务端同步
+```java
+// 手动同步状态（如需要）
+if (player instanceof ServerPlayer serverPlayer) {
+    RiderManager.syncClientState(serverPlayer);
+    RiderManager.syncDriverData(serverPlayer); 
+    RiderManager.syncHenshinState(serverPlayer);
+}
+```
+## 🎮 玩家操作指南
+### 基本操作流程：
 
-切换形态（更换驱动器物品）
+装备驱动器 - 将驱动器物品装备到指定槽位
 
-解除变身（手动/吃瘪强制解除）
+插入道具 - 右键物品插入驱动器槽位
+
+触发变身 - 按 G 键或使用触发物品
+
+切换形态 - 更换驱动器中的物品
+
+使用技能 - 按 R 键触发当前技能，Shift + R 切换技能
+
+解除变身 - 按 V 键手动解除，或生命值过低时自动吃瘪
+
+### 默认按键绑定：
+
+**G** - 触发驱动器
+
+**V** - 解除变身
+
+**R** - 使用技能 / Shift + R 切换技能
+
+**X** - 返还所有驱动器物品
 
 ## ⚙️ 进阶功能
 ### 变身流程控制
 ```java
-// 在FormConfig中设置
-anyForm.setShouldPause(true); // 这样在变身时候会进入缓冲窗口
+FormConfig advancedForm = new FormConfig(FORM_ID)
+        .setShouldPause(true)  // 启用变身暂停（等待动画完成）
+        .setTriggerType(TriggerType.ITEM);  // 触发类型：KEY/ITEM/AUTO
 ```
-然后通过监听HenshinEvent
+然后通过监听HenshinEvent/FormSwitchEvent：
 ```java
 @SubscribeEvent
 public static void onHenshin(HenshinEvent.Pre event) {
-    // 有啥变身动画, 特效, 音效, 特殊逻辑啥的都往这塞
-
-    // 在动画完成后继续变身
-    DriverActionManager.INSTANCE.completeTransformation(player); // 反正调用这个方法就好了
+    // 变身动画, 特效, 音效, 特殊逻辑
 }
 
-```
-### 形态覆盖事件
-```java
-// 强制锁定特定形态
 @SubscribeEvent
-public void onFormOverride(FormOverrideEvent event) { // 通过监听FormOverrideEvent, 在系统匹配形态结束时触发
-if (
-        // 这里写你的判断条件
-) {
-    // 强制覆盖形态 (也就是条件满足时怎么变都只能变你规定的形态)
-    event.setOverrideForm(ANY_FORM); 
-    // 就可以实现一些邪恶的操作了(bushi
-    }
+public static void onFormSwitch(FormSwitchEvent.Pre event) {
+    // 形态切换动画, 特效, 音效, 特殊逻辑
 }
+
+// 在动画完成后继续变身
+    // 调用方法
+    RiderManager.completeHenshin(player);
 ```
-### 技能接口
-
-简易, 但灵活的技能系统
+### 形态覆盖
 ```java
-// 1. 创建技能ID
-ResourceLocation FIRE_ATTACK = new ResourceLocation("yourmodid", "fire_attack");
-ResourceLocation ICE_BREATH = new ResourceLocation("yourmodid", "ice_breath");
-
-// 2. 注册技能显示名称（支持多语言翻译）
-SkillSystem.registerSkillName(
-    FIRE_ATTACK,
-    Component.translatable("skill.yourmodid.fire_attack") // "火焰攻击"
-);
-
-SkillSystem.registerSkillName(
-    ICE_BREATH,
-    Component.translatable("skill.yourmodid.ice_breath") // "寒冰吐息"
-);
-
-// 3. 将技能添加到形态配置
-FormConfig dragonForm = new FormConfig(DRAGON_FORM_ID)
-    .addSkill(FIRE_ATTACK)
-    .addSkill(ICE_BREATH);
-```
-
-然后通过事件监听实现技能逻辑
-
-```java
-// 监听技能事件
 @SubscribeEvent
-public static void onSkillTrigger(SkillEvent.Pre event) {
-ResourceLocation skillId = event.getSkillId();
-
-if (skillId.equals(FIRE_ATTACK)) {
-        handleFireAttack(event.getPlayer());
-} 
-    else if (skillId.equals(ICE_BREATH)) {
-        handleIceBreath(event.getPlayer());
+public static void onFormOverride(FormOverrideEvent event) {
+    // 强制锁定特定形态
+    if (event.getPlayer().getHealth() < 10.0f) {
+        event.setOverrideForm(ResourceLocation.fromNamespaceAndPath(MODID, "emergency_form"));
     }
 }
-    
-private static void handleFireAttack(Player player) {
-    // 发射火球
-    player.level().addFreshEntity(new Fireball(player.level(), player, 0, 0, 0));
-    player.playSound(SoundEvents.BLAZE_SHOOT, 1.0f, 1.0f);
-}
-    
-private static void handleIceBreath(Player player) {
-    // 冻结前方区域
-    AABB area = new AABB(player.position())
-        .inflate(5, 2, 5)
-        .move(player.getLookAngle().scale(3));
-        
-    // 冻结区域内的水和实体
-    // ...
-    player.playSound(SoundEvents.GLASS_BREAK, 1.0f, 1.0f);
-    }
-
+```
+### 快捷API使用
+```java
+// 使用 RiderManager 快捷方法
+RiderManager.transform(player);                    // 尝试变身
+RiderManager.unTransform(player);                  // 解除变身
+RiderManager.switchForm(player, newFormId);        // 切换形态
+RiderManager.isTransformed(player);                // 检查变身状态
+RiderManager.getDriverItems(player);               // 获取驱动器物品
+RiderManager.penaltyUntransform(player);           // 强制吃瘪解除
 ```
 ## 🧪 示例
-我们提供了两个完整示例(不含技能方面)：
-
-ExampleBasic：基础骑士变身系统
-
-ExampleDynamicForm：动态形态生成系统
-
-``` java
+```java
 // 在模组初始化中调用
-ExampleBasic.init();
-ExampleDynamicForm.init();
-// 就可以感受, 体验一下了
+ExampleBasic.init();        // 基础骑士系统
+ExampleDynamicForm.init();  // 动态形态系统
 ```
 # 📦 安装与使用
-添加RideBattleLib到你的build.gradle
-
-快速启动:看看RiderManager这个管理层吧, 里面有方便快捷的方法
-
-创建你的骑士配置！
-
-编译并享受变身吧！
-
-🌟 为什么选择RideBattleLib
+## 🌟 为什么选择RideBattleLib
 
 ✅ 专门为假面骑士玩法设计
 
@@ -275,13 +269,29 @@ ExampleDynamicForm.init();
 
 ✅ 丰富的扩展事件
 
-✅ 吃瘪系统(bushi
+✅ 吃瘪系统 (bushi
 
 ✅ 持续更新维护
+
+### 对于模组开发者：
+- 🚀 快速上手 - 10分钟创建第一个骑士
+- 🎨 高度可定制 - 从驱动器到技能全可配置
+- 🔧 稳定可靠 - 完整的错误处理和网络同步
+
+### 对于玩家：
+- 🎮 沉浸体验 - 完整的变身流程和特效
+- ⚡ 流畅操作 - 优化的性能和响应速度
+
+### 🐛 问题排查
+常见问题：
+- 变身不生效 - 检查驱动器槽位配置和必需物品
+- 形态不匹配 - 验证物品映射和槽位定义
+- 网络不同步 - 确保正确调用同步方法
+- 启用调试模式：在Config页面中打开Debug Mode
 
 "变身！" - 现在就在你的模组中实现这句经典台词吧！
 
 RideBattleLib © 2025 JPigeon
-在MIT许可证下开源 - 自由地创造你的骑士世界!
+在 MIT 许可证 下开源 - 自由地创造你的骑士世界！
 
 注: 在DeepSeek帮助下写的README.md

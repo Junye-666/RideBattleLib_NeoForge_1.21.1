@@ -42,7 +42,7 @@ public class ExampleBasic {
 
     // 定义RiderConfig
     public static final RiderConfig riderAlpha = new RiderConfig(TEST_RIDER_ALPHA)
-            .setDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁护腿(穿戴在腿部)
+            .setMainDriverItem(Items.IRON_LEGGINGS, EquipmentSlot.LEGS) // 驱动器: 铁护腿(穿戴在腿部)
             .setAuxDriverItem(Items.BRICK, EquipmentSlot.OFFHAND) // 辅助驱动器: 砖块(穿戴在副手)
             .addMainDriverSlot(
                     TEST_CORE_SLOT,

@@ -59,29 +59,29 @@ public class FormConfig {
      * @param leggings 腿甲（可无）
      * @param boots （靴子）
      */
-    public FormConfig setArmor(Item helmet, Item chestplate, @Nullable Item leggings, Item boots) {
-        this.helmet = helmet;
-        this.chestplate = chestplate;
+    public FormConfig setArmor(@Nullable Item helmet, @Nullable Item chestplate, @Nullable Item leggings, @Nullable Item boots) {
+        this.helmet = helmet != null ? helmet : Items.AIR;
+        this.chestplate = chestplate != null ? chestplate : Items.AIR;
         this.leggings = leggings != null ? leggings : Items.AIR;
-        this.boots = boots;
+        this.boots = boots != null ? boots : Items.AIR;
         return this;
     }
 
     //单独设置
-    public void setHelmet(Item helmet) {
-        this.helmet = helmet;
+    public void setHelmet(@Nullable Item helmet) {
+        this.helmet = helmet != null ? helmet : Items.AIR;
     }
 
-    public void setChestplate(Item chestplate) {
-        this.chestplate = chestplate;
+    public void setChestplate(@Nullable Item chestplate) {
+        this.chestplate = chestplate != null ? chestplate : Items.AIR;
     }
 
     public void setLeggings(@Nullable Item leggings) {
-        this.leggings = leggings;
+        this.leggings = leggings != null ? leggings : Items.AIR;
     }
 
-    public void setBoots(Item boots) {
-        this.boots = boots;
+    public void setBoots(@Nullable Item boots) {
+        this.boots = boots != null ? boots : Items.AIR;
     }
 
     /**
@@ -119,6 +119,15 @@ public class FormConfig {
         effectIds.add(effectId);
         effects.add(new MobEffectInstance(effect, duration, amplifier, false, !hideParticles));
         return this;
+    }
+
+    /**
+     * 快速方法
+     * @param effect MobEffects中获取
+     * @param amplifier 等级：0为1级
+     */
+    public FormConfig addEffect(Holder<MobEffect> effect, int amplifier){
+        return addEffect(effect, 114514, amplifier, true);
     }
 
     /**

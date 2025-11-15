@@ -60,7 +60,7 @@ public class RiderConfig {
     /**
      * 指定驱动器物品
      */
-    public RiderConfig setDriverItem(Item item, EquipmentSlot slot) {
+    public RiderConfig setMainDriverItem(Item item, EquipmentSlot slot) {
         this.driverItem = item;
         this.driverSlot = slot;
         return this;
@@ -145,6 +145,13 @@ public class RiderConfig {
                                      int amplifier, boolean hideParticles) {
         baseEffects.add(new MobEffectInstance(effect, duration, amplifier, false, !hideParticles));
         return this;
+    }
+
+    /**
+     * 快速方法
+     */
+    public RiderConfig addBaseEffect(Holder<MobEffect> effect, int amplifier){
+        return addBaseEffect(effect, 114514, amplifier, true);
     }
 
     /**

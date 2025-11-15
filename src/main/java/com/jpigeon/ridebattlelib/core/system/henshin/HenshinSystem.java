@@ -51,9 +51,6 @@ public class HenshinSystem implements IHenshinSystem {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
         Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
-        TransformedData oldData = getTransformedData(player);
-        if (oldData == null) return;
-        ResourceLocation oldFormId = oldData.formId();
         ResourceLocation formId = config.matchForm(player, driverItems);
         if (formId == null) return;
         FormConfig formConfig = config.getActiveFormConfig(player);
@@ -80,6 +77,9 @@ public class HenshinSystem implements IHenshinSystem {
             // 服务端直接同步
             SyncManager.INSTANCE.syncHenshinState(serverPlayer);
         }
+
+        TransformedData oldData = getTransformedData(player);
+        ResourceLocation oldFormId = oldData != null ? oldData.formId() : null;
 
         // 处理变身逻辑
         if (formConfig.shouldPause()) {

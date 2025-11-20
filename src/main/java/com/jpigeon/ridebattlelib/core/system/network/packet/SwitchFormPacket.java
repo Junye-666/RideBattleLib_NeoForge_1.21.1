@@ -27,7 +27,5 @@ public record SwitchFormPacket(UUID playerId, ResourceLocation formId) implement
             );
 
     @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
+    public @NotNull Type<?> type() { return TYPE; }
 }

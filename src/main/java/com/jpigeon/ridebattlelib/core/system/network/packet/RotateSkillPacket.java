@@ -24,7 +24,5 @@ public record RotateSkillPacket(UUID playerId) implements CustomPacketPayload {
             );
 
     @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
+    public @NotNull Type<?> type() { return TYPE; }
 }

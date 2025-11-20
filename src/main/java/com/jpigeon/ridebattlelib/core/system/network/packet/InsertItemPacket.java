@@ -7,16 +7,12 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
 public record InsertItemPacket(UUID playerId, ResourceLocation slotId, ItemStack stack) implements CustomPacketPayload {
     public static final Type<InsertItemPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "insert_item"));
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
 
     public static final StreamCodec<RegistryFriendlyByteBuf, InsertItemPacket> STREAM_CODEC = StreamCodec.composite(
             UUIDStreamCodec.INSTANCE,
@@ -27,4 +23,7 @@ public record InsertItemPacket(UUID playerId, ResourceLocation slotId, ItemStack
             InsertItemPacket::stack,
             InsertItemPacket::new
     );
+
+    @Override
+    public @NotNull Type<?> type() { return TYPE; }
 }

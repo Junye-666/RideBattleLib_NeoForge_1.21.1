@@ -1,7 +1,6 @@
 package com.jpigeon.ridebattlelib.core.system.network.packet;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-
 import com.jpigeon.ridebattlelib.core.system.network.handler.UUIDStreamCodec;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -25,7 +24,5 @@ public record UnhenshinPacket(UUID playerId) implements CustomPacketPayload {
             );
 
     @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
+    public @NotNull Type<?> type() { return TYPE; }
 }

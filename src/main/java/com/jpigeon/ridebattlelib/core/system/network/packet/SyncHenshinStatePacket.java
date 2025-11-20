@@ -29,5 +29,5 @@ public record SyncHenshinStatePacket(
             );
 
     @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
+    public @NotNull Type<?> type() { return TYPE; }
 }

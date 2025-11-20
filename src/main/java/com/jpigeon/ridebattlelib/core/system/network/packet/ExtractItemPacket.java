@@ -12,8 +12,7 @@ import java.util.UUID;
 
 public record ExtractItemPacket(UUID playerId, ResourceLocation slotId
 ) implements CustomPacketPayload {
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "extract_item");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "extract_item");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ExtractItemPacket> STREAM_CODEC =
             StreamCodec.composite(

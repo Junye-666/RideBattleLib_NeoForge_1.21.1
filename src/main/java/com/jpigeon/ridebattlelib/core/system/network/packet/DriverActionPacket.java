@@ -12,13 +12,14 @@ import java.util.UUID;
 
 public record DriverActionPacket(UUID playerId) implements CustomPacketPayload {
     public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_action");
-    public static final Type<DriverActionPacket> TYPE = new Type<>(ID);
 
     public static final StreamCodec<RegistryFriendlyByteBuf, DriverActionPacket> STREAM_CODEC = StreamCodec.composite(
             UUIDStreamCodec.INSTANCE,
             DriverActionPacket::playerId,
             DriverActionPacket::new
     );
+
+    public static final Type<DriverActionPacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

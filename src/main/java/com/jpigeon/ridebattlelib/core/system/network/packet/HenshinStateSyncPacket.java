@@ -18,10 +18,7 @@ public record HenshinStateSyncPacket(UUID playerId, HenshinState state,
                                      @Nullable ResourceLocation pendingFormId)
         implements CustomPacketPayload {
 
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "henshin_state_sync");
-
-    public static final Type<HenshinStateSyncPacket> TYPE = new Type<>(ID);
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "henshin_state_sync");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, HenshinStateSyncPacket> STREAM_CODEC =
             StreamCodec.composite(
@@ -35,6 +32,8 @@ public record HenshinStateSyncPacket(UUID playerId, HenshinState state,
                     HenshinStateSyncPacket::pendingFormId,
                     HenshinStateSyncPacket::new
             );
+
+    public static final Type<HenshinStateSyncPacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

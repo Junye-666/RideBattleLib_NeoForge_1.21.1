@@ -11,8 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public record HenshinPacket(UUID playerId, ResourceLocation riderId) implements CustomPacketPayload {
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "henshin");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "henshin");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, HenshinPacket> STREAM_CODEC =
             StreamCodec.composite(

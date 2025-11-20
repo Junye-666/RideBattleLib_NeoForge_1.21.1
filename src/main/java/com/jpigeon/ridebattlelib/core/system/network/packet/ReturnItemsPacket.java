@@ -8,8 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public record ReturnItemsPacket() implements CustomPacketPayload {
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "return_items");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "return_items");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ReturnItemsPacket> STREAM_CODEC =
             StreamCodec.unit(new ReturnItemsPacket());

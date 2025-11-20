@@ -11,10 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public record RotateSkillPacket(UUID playerId) implements CustomPacketPayload {
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "rotate_skill");
-
-    public static final Type<RotateSkillPacket> TYPE = new Type<>(ID);
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "rotate_skill");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, RotateSkillPacket> STREAM_CODEC =
             StreamCodec.composite(
@@ -22,6 +19,8 @@ public record RotateSkillPacket(UUID playerId) implements CustomPacketPayload {
                     RotateSkillPacket::playerId,
                     RotateSkillPacket::new
             );
+
+    public static final Type<RotateSkillPacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

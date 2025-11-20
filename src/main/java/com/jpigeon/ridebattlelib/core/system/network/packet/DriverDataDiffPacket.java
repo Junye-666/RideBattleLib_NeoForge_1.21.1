@@ -20,8 +20,7 @@ public record DriverDataDiffPacket(
         boolean fullSync
 ) implements CustomPacketPayload {
 
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_diff_sync");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_diff_sync");
 
     public static final Type<DriverDataDiffPacket> TYPE = new Type<>(ID);
 

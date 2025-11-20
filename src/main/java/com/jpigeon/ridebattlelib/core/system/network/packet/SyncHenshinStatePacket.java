@@ -13,11 +13,7 @@ public record SyncHenshinStatePacket(
         HenshinState state,
         ResourceLocation pendingFormId
 ) implements CustomPacketPayload {
-
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "sync_henshin_state");
-
-    public static final Type<SyncHenshinStatePacket> TYPE = new Type<>(ID);
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "sync_henshin_state");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncHenshinStatePacket> STREAM_CODEC =
             StreamCodec.composite(
@@ -27,6 +23,8 @@ public record SyncHenshinStatePacket(
                     SyncHenshinStatePacket::pendingFormId,
                     SyncHenshinStatePacket::new
             );
+
+    public static final Type<SyncHenshinStatePacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

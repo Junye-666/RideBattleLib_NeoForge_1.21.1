@@ -14,14 +14,14 @@ public record UnhenshinPacket(UUID playerId) implements CustomPacketPayload {
     public static final ResourceLocation ID =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "unhenshin");
 
-    public static final Type<UnhenshinPacket> TYPE = new Type<>(ID);
-
     public static final StreamCodec<RegistryFriendlyByteBuf, UnhenshinPacket> STREAM_CODEC =
             StreamCodec.composite(
                     UUIDStreamCodec.INSTANCE,
                     UnhenshinPacket::playerId,
                     UnhenshinPacket::new
             );
+
+    public static final Type<UnhenshinPacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

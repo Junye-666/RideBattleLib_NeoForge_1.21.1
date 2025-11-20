@@ -14,14 +14,14 @@ public record TriggerSkillPacket(UUID playerId) implements CustomPacketPayload {
     public static final ResourceLocation ID =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "trigger_skill");
 
-    public static final Type<TriggerSkillPacket> TYPE = new Type<>(ID);
-
     public static final StreamCodec<RegistryFriendlyByteBuf, TriggerSkillPacket> STREAM_CODEC =
             StreamCodec.composite(
                     UUIDStreamCodec.INSTANCE,
                     TriggerSkillPacket::playerId,
                     TriggerSkillPacket::new
             );
+
+    public static final Type<TriggerSkillPacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

@@ -12,9 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public record TransformedStatePacket(UUID playerId, boolean isTransformed) implements CustomPacketPayload {
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "transformed_state");
-    public static final Type<TransformedStatePacket> TYPE = new Type<>(ID);
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "transformed_state");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, TransformedStatePacket> STREAM_CODEC =
             StreamCodec.composite(
@@ -24,6 +22,8 @@ public record TransformedStatePacket(UUID playerId, boolean isTransformed) imple
                     TransformedStatePacket::isTransformed,
                     TransformedStatePacket::new
             );
+
+    public static final Type<TransformedStatePacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

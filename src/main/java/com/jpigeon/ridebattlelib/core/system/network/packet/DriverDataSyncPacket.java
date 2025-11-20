@@ -19,8 +19,7 @@ public record DriverDataSyncPacket(
         Map<ResourceLocation, ItemStack> auxItems
 ) implements CustomPacketPayload {
 
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_sync");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_sync");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, DriverDataSyncPacket> STREAM_CODEC =
             StreamCodec.composite(

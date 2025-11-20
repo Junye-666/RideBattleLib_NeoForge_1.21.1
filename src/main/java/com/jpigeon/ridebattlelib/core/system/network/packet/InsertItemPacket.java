@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public record InsertItemPacket(UUID playerId, ResourceLocation slotId, ItemStack stack) implements CustomPacketPayload {
-    public static final Type<InsertItemPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "insert_item"));
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "insert_item");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, InsertItemPacket> STREAM_CODEC = StreamCodec.composite(
             UUIDStreamCodec.INSTANCE,
@@ -23,6 +23,8 @@ public record InsertItemPacket(UUID playerId, ResourceLocation slotId, ItemStack
             InsertItemPacket::stack,
             InsertItemPacket::new
     );
+
+    public static final Type<InsertItemPacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

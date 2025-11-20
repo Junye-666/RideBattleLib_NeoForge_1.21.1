@@ -12,10 +12,7 @@ import java.util.UUID;
 
 
 public record SwitchFormPacket(UUID playerId, ResourceLocation formId) implements CustomPacketPayload {
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "switch_form");
-
-    public static final Type<SwitchFormPacket> TYPE = new Type<>(ID);
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "switch_form");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SwitchFormPacket> STREAM_CODEC =
             StreamCodec.composite(
@@ -25,6 +22,8 @@ public record SwitchFormPacket(UUID playerId, ResourceLocation formId) implement
                     SwitchFormPacket::formId,
                     SwitchFormPacket::new
             );
+
+    public static final Type<SwitchFormPacket> TYPE = new Type<>(ID);
 
     @Override
     public @NotNull Type<?> type() { return TYPE; }

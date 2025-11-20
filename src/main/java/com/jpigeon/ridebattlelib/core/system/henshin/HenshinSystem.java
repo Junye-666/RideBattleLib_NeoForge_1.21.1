@@ -173,10 +173,12 @@ public class HenshinSystem implements IHenshinSystem {
     public void unHenshin(Player player) {
         TransformedData data = getTransformedData(player);
         if (data != null) {
-            UnhenshinEvent.Pre preUnHenshin = new UnhenshinEvent.Pre(player);
+            ResourceLocation riderId = data.config().getRiderId();
+            ResourceLocation formId = data.formId();
+            boolean isPenalty = player.getHealth() == Config.PENALTY_THRESHOLD.get();
+            UnhenshinEvent.Pre preUnHenshin = new UnhenshinEvent.Pre(player, riderId, formId, isPenalty);
             NeoForge.EVENT_BUS.post(preUnHenshin);
             if (preUnHenshin.isCanceled()) return;
-            boolean isPenalty = player.getHealth() <= Config.PENALTY_THRESHOLD.get();
 
             // 先返还物品，再清除效果和装备
             DriverSystem.INSTANCE.returnItems(player);
@@ -208,7 +210,7 @@ public class HenshinSystem implements IHenshinSystem {
             transitionToState(player, HenshinState.IDLE, null);
 
             //事件触发
-            UnhenshinEvent.Post postUnHenshin = new UnhenshinEvent.Post(player);
+            UnhenshinEvent.Post postUnHenshin = new UnhenshinEvent.Post(player, riderId, formId, isPenalty);
             NeoForge.EVENT_BUS.post(postUnHenshin);
             RideBattleLib.LOGGER.info("玩家 {} 解除变身", player.getName().getString());
         }

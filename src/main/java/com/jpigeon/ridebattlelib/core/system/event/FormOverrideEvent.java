@@ -33,7 +33,7 @@ public class FormOverrideEvent extends Event implements ICancellableEvent {
      * 强制覆盖形态
      * @param overrideForm 变身时强制更改至的形态
      */
-    public void setOverrideForm(ResourceLocation overrideForm) {
+    public void overrideForm(ResourceLocation overrideForm) {
         this.overrideForm = overrideForm;
     }
 

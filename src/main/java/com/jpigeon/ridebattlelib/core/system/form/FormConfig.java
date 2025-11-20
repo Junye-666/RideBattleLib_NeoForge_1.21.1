@@ -107,6 +107,13 @@ public class FormConfig {
     }
 
     /**
+     * 添加属性（默认使用ADD_VALUE）
+     */
+    public FormConfig addAttribute(ResourceLocation attributeId, double amount) {
+        return addAttribute(attributeId, amount, AttributeModifier.Operation.ADD_VALUE);
+    }
+
+    /**
      * 状态效果
      * @param effect MobEffects中获取
      * @param duration 持续时间
@@ -154,6 +161,20 @@ public class FormConfig {
             grantedItems.add(stack.copy());
         }
         return this;
+    }
+
+    /**
+     * 添加授予物品（使用物品而非ItemStack）
+     */
+    public FormConfig addGrantedItem(Item item) {
+        return addGrantedItem(new ItemStack(item));
+    }
+
+    /**
+     * 添加授予物品（使用物品和数量）
+     */
+    public FormConfig addGrantedItem(Item item, int count) {
+        return addGrantedItem(new ItemStack(item, count));
     }
 
     /**

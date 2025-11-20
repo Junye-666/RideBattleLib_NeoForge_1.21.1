@@ -4,9 +4,12 @@
   "key.ridebattlelib.driver_activate": "驱动器按键",
   "key.ridebattlelib.return_items": "返回驱动器物品",
   "key.ridebattlelib.skill": "技能",
-  "ridebattlelib.configuration.logLevel": "Debug模式",
   "ridebattlelib.configuration.penaltyEnabled": "启用吃瘪",
   "ridebattlelib.configuration.penaltyThreshold": "吃瘪阈值",
   "ridebattlelib.configuration.cooldownDuration": "吃瘪冷却时间",
-  "ridebattlelib.configuration.explosionPower": "吃瘪爆炸强度"
+  "ridebattlelib.configuration.knockbackStrength": "击退强度",
+  "ridebattlelib.configuration.explosionPower": "吃瘪爆炸强度",
+  "ridebattlelib.configuration.keyCooldown": "按键冷却毫秒",
+  "ridebattlelib.configuration.interactionCooldown": "右键冷却毫秒",
+  "ridebattlelib.configuration.logLevel": "Debug模式"
 }

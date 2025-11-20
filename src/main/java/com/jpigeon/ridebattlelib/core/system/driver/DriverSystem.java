@@ -34,6 +34,8 @@ public class DriverSystem implements IDriverSystem {
             return false;
         }
 
+        if (player.getCooldowns().isOnCooldown(stack.getItem())) return false;
+
         if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("尝试插入物品 - 玩家: {}, 槽位: {}, 物品: {}, 变身状态: {}",
                     player.getName().getString(), slotId, stack.getItem(),

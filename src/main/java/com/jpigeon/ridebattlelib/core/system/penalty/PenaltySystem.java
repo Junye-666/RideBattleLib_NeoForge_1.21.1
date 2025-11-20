@@ -32,23 +32,18 @@ public class PenaltySystem implements IPenaltySystem {
         private static final PenaltySystem INSTANCE = new PenaltySystem();
     }
 
-    public float getPenaltyThreshold() {
-        return Config.PENALTY_THRESHOLD.get().floatValue();
-    }
+    public boolean penaltyEnabled() { return Config.PENALTY_ENABLED.get(); }
 
-    public int getCooldownDuration() {
-        return Config.COOLDOWN_DURATION.get();
-    }
+    public float getPenaltyThreshold() { return Config.PENALTY_THRESHOLD.get().floatValue(); }
 
-    public float getExplosionPower() {
-        return Config.EXPLOSION_POWER.get().floatValue();
-    }
+    public int getCooldownDuration() { return Config.COOLDOWN_DURATION.get(); }
 
-    public int getKnockBackStrength() {
-        return Config.KNOCKBACK_STRENGTH.get();
-    }
+    public float getExplosionPower() { return Config.EXPLOSION_POWER.get().floatValue(); }
+
+    public int getKnockBackStrength() { return Config.KNOCKBACK_STRENGTH.get(); }
 
     public static boolean shouldTriggerPenalty(Player player) {
+        if (!Config.PENALTY_ENABLED.get()) return false;
         PenaltySystem instance = getInstance();
         return HenshinSystem.INSTANCE.isTransformed(player) &&
                 player.getHealth() <= instance.getPenaltyThreshold() &&
@@ -130,12 +125,6 @@ public class PenaltySystem implements IPenaltySystem {
         if (chance < 10) {
             player.displayClientMessage(
                     Component.literal("我的身体已经菠萝菠萝哒!")
-                            .withStyle(ChatFormatting.RED),
-                    true
-            );
-        } else if (chance < 20) {
-            player.displayClientMessage(
-                    Component.literal("不能再打下去了!")
                             .withStyle(ChatFormatting.RED),
                     true
             );

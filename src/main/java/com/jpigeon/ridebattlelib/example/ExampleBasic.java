@@ -1,22 +1,19 @@
 package com.jpigeon.ridebattlelib.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
+import com.jpigeon.ridebattlelib.api.RiderManager;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -46,7 +43,7 @@ public class ExampleBasic {
             .setAuxDriverItem(Items.BRICK, EquipmentSlot.OFFHAND) // 辅助驱动器: 砖块(穿戴在副手)
             .addMainDriverSlot(
                     TEST_CORE_SLOT,
-                    List.of(Items.IRON_INGOT, Items.GOLD_INGOT, Items.DIAMOND),
+                    List.of(Items.IRON_INGOT, Items.GOLD_INGOT, Items.ENDER_PEARL),
                     true,
                     true
             ) // 驱动器中的核心槽位: 接受铁锭或金锭(必要槽位)
@@ -130,7 +127,6 @@ public class ExampleBasic {
             .addGrantedItem(Items.NETHERITE_SWORD.getDefaultInstance());
 
 
-
     private static void registerAlphaRider() {
         // 将形态添加到骑士配置
         riderAlpha
@@ -139,7 +135,7 @@ public class ExampleBasic {
                 .setBaseForm(alphaBaseForm.getFormId());// 设置基础形态
 
         alphaBaseForm.setAllowsEmptyDriver(false); // 指定驱动器物品的必要性
-        alphaBaseForm.setShouldPause(false); // 指定是否在驱动器键按下时暂停
+        alphaBaseForm.setShouldPause(true); // 指定是否在驱动器键按下时暂停
 
         alphaPoweredForm.setShouldPause(false);
 
@@ -158,21 +154,19 @@ public class ExampleBasic {
             // 监听按键事件测试强制完成
             @SubscribeEvent
             public void onHenshinPre(HenshinEvent.Pre event) {
-                Minecraft minecraft = Minecraft.getInstance();
-                LocalPlayer player = minecraft.player;
-                if (player == null) return;
+                Player player = event.getPlayer();
 
-                if (event.getRiderId().equals(TEST_RIDER_ALPHA)) {
-                    RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-                    if (data.getHenshinState() == HenshinState.TRANSFORMING) {
-                        DriverActionManager.INSTANCE.completeTransformation(player);
-                    }
+                if (event.getFormId().equals(TEST_FORM_BASE)) {
+                    RiderManager.scheduleSeconds(
+                            2.21F,
+                            () -> DriverActionManager.INSTANCE.completeTransformation(player)
+                    );
                 }
             }
 
             @SubscribeEvent
-            public void onSwitchForm(FormSwitchEvent.Pre event){
-                if (event.getOldFormId().equals(TEST_FORM_POWERED)){
+            public void onSwitchForm(FormSwitchEvent.Pre event) {
+                if (event.getOldFormId().equals(TEST_FORM_POWERED)) {
                     event.getPlayer().displayClientMessage(Component.literal(event.getOldFormId().toString()), false);
                 }
             }

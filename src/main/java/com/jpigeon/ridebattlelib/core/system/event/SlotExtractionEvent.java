@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.event;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.ICancellableEvent;
@@ -28,6 +29,13 @@ public class SlotExtractionEvent extends Event {
      */
     public void setExtractedStack(ItemStack extractedStack) {
         this.extractedStack = extractedStack;
+    }
+
+    /**
+     * 快捷方法
+     */
+    public void setExtractedStack(Item item){
+        setExtractedStack(item.getDefaultInstance());
     }
 
     public Player getPlayer() {

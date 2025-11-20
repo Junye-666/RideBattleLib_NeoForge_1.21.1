@@ -1,8 +1,7 @@
-package com.jpigeon.ridebattlelib.core.system.henshin.handler;
+package com.jpigeon.ridebattlelib.core;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.KeyBindings;
 
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -12,16 +11,54 @@ import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 
-public class KeyHandler {
+@EventBusSubscriber(modid = RideBattleLib.MODID, value = Dist.CLIENT)
+public class ClientModEvents {
+    @SubscribeEvent
+    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        event.register(KeyBindings.UNHENSHIN_KEY);
+        event.register(KeyBindings.DRIVER_KEY);
+        event.register(KeyBindings.RETURN_ITEMS_KEY);
+        event.register(KeyBindings.SKILL_KEY);
+    }
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        // 初始化客户端缓存
+        Minecraft.getInstance().execute(() -> {
+            LocalPlayer player = Minecraft.getInstance().player;
+            if (player != null) {
+                HenshinSystem.CLIENT_TRANSFORMED_CACHE.put(player.getUUID(), false);
+            }
+        });
+    }
+
+    private static final Map<UUID, Long> LAST_KEY_PRESS_TIME = new ConcurrentHashMap<>();
+
     @SubscribeEvent
     public static void onKeyInput(InputEvent.Key event) {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player == null) return;
+
+        if (isKeyPressOnCooldown(player)) {
+            return;
+        }
+
+        setKeyPressCooldown(player);
 
         if (KeyBindings.DRIVER_KEY.consumeClick()) {
             RiderConfig config = RiderConfig.findActiveDriverConfig(player);
@@ -60,5 +97,16 @@ public class KeyHandler {
                 PacketHandler.sendToServer(new TriggerSkillPacket(player.getUUID()));
             }
         }
+    }
+
+    private static boolean isKeyPressOnCooldown(Player player) {
+        Long lastPress = LAST_KEY_PRESS_TIME.get(player.getUUID());
+        if (lastPress == null) return false;
+
+        return System.currentTimeMillis() - lastPress < Config.KEY_COOLDOWN_MS.get();
+    }
+
+    private static void setKeyPressCooldown(Player player) {
+        LAST_KEY_PRESS_TIME.put(player.getUUID(), System.currentTimeMillis());
     }
 }

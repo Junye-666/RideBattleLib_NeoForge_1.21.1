@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.penalty;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -32,6 +33,10 @@ public class PenaltyHandler {
         // 强制解除
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             HenshinSystem.INSTANCE.unHenshin(player);
+        }
+
+        if (!DriverSystem.INSTANCE.getDriverItems(player).isEmpty()){
+            DriverSystem.INSTANCE.returnItems(player);
         }
 
         player.removeTag("penalty_cooldown");

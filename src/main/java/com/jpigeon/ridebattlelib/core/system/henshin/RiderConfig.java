@@ -67,12 +67,26 @@ public class RiderConfig {
     }
 
     /**
+     * 设置驱动器物品，使用默认槽位（LEGS）
+     */
+    public RiderConfig setMainDriverItem(Item item) {
+        return setMainDriverItem(item, EquipmentSlot.LEGS);
+    }
+
+    /**
      * 设置辅助驱动器物品和装备槽位(可选)
      */
     public RiderConfig setAuxDriverItem(Item item, EquipmentSlot slot) {
         this.auxDriverItem = item;
         this.auxDriverSlot = slot;
         return this;
+    }
+
+    /**
+     * 设置辅助驱动器物品，使用默认槽位（OFFHAND）
+     */
+    public RiderConfig setAuxDriverItem(Item item) {
+        return setAuxDriverItem(item, EquipmentSlot.OFFHAND);
     }
 
     /**

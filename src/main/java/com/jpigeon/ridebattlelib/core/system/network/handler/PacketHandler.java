@@ -52,6 +52,13 @@ public class PacketHandler {
                 .playToClient(DriverDataSyncPacket.TYPE, DriverDataSyncPacket.STREAM_CODEC,
                         (payload, context) ->
                                 DriverSystem.INSTANCE.applySyncPacket(payload))
+                .playToServer(InsertItemPacket.TYPE, InsertItemPacket.STREAM_CODEC,
+                        (payload, context) -> {
+                            Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
+                            if (targetPlayer != null) {
+                                DriverSystem.INSTANCE.insertItem(targetPlayer, payload.slotId(), payload.stack());
+                            }
+                        })
                 .playToServer(ReturnItemsPacket.TYPE, ReturnItemsPacket.STREAM_CODEC,
                         (payload, context) ->
                                 DriverSystem.INSTANCE.returnItems(context.player()))

@@ -3,14 +3,11 @@ package com.jpigeon.ridebattlelib;
 import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverHandler;
-import com.jpigeon.ridebattlelib.core.system.henshin.handler.KeyHandler;
-import com.jpigeon.ridebattlelib.core.system.henshin.handler.TriggerItemHandler;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.CountdownManager;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import org.slf4j.Logger;
-
 import com.mojang.logging.LogUtils;
-
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -32,11 +29,10 @@ public class RideBattleLib {
         modEventBus.addListener(PacketHandler::register);
 
         NeoForge.EVENT_BUS.register(this);
-        NeoForge.EVENT_BUS.register(KeyHandler.class);
         NeoForge.EVENT_BUS.register(DriverHandler.class);
-        NeoForge.EVENT_BUS.register(TriggerItemHandler.class);
         NeoForge.EVENT_BUS.register(AttachmentHandler.class);
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
+        NeoForge.EVENT_BUS.register(CountdownManager.getInstance());
         RiderAttachments.ATTACHMENTS.register(modEventBus);
 
         modEventBus.addListener(this::addCreative);

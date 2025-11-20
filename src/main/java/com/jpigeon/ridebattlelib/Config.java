@@ -17,6 +17,8 @@ public class Config
     public static final ModConfigSpec.IntValue COOLDOWN_DURATION;
     public static final ModConfigSpec.IntValue EXPLOSION_POWER;
     public static final ModConfigSpec.IntValue KNOCKBACK_STRENGTH;
+    public static final ModConfigSpec.IntValue KEY_COOLDOWN_MS;
+    public static final ModConfigSpec.IntValue INTERACTION_COOLDOWN_MS;
     public static final ModConfigSpec.BooleanValue DEBUG_MODE;
 
     static {
@@ -40,7 +42,15 @@ public class Config
 
         KNOCKBACK_STRENGTH = BUILDER
                 .comment("吃瘪触发时击退强度")
-                .defineInRange("knockbackStrength", (int) 1.5, 0, 20);
+                .defineInRange("knockbackStrength", 2, 0, 20);
+
+        KEY_COOLDOWN_MS = BUILDER
+                .comment("按键防抖动毫秒")
+                .defineInRange("keyCooldown", 150, 0, 400);
+
+        INTERACTION_COOLDOWN_MS = BUILDER
+                .comment("右键防抖动毫秒")
+                .defineInRange("interactionCooldown", 250, 0, 400);
 
         DEBUG_MODE = BUILDER
                 .define("logLevel", false);
@@ -54,12 +64,15 @@ public class Config
     static void onLoad(final ModConfigEvent event)
     {
         if (Config.DEBUG_MODE.get()){
-            RideBattleLib.LOGGER.debug("Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}, logLevel={}",
+            RideBattleLib.LOGGER.debug(
+                    "Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}, keyCooldown={}, interactionCooldown={}, logLevel={}",
                     PENALTY_ENABLED.get(),
                     PENALTY_THRESHOLD.get(),
                     COOLDOWN_DURATION.get(),
                     EXPLOSION_POWER.get(),
                     KNOCKBACK_STRENGTH.get(),
+                    KNOCKBACK_STRENGTH.get(),
+                    INTERACTION_COOLDOWN_MS.get(),
                     DEBUG_MODE.get());
         }
     }

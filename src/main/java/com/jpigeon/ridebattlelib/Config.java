@@ -47,11 +47,11 @@ public class Config
 
         KEY_COOLDOWN_MS = BUILDER
                 .comment("按键防抖动毫秒")
-                .defineInRange("keyCooldown", 150, 0, 400);
+                .defineInRange("keyCooldown", 150, 0, 500);
 
         INTERACTION_COOLDOWN_MS = BUILDER
                 .comment("右键防抖动毫秒")
-                .defineInRange("interactionCooldown", 250, 0, 400);
+                .defineInRange("interactionCooldown", 250, 0, 500);
 
         DEBUG_MODE = BUILDER
                 .comment("为牢J提供的日志，输出RideBattleLib所有调试日志")

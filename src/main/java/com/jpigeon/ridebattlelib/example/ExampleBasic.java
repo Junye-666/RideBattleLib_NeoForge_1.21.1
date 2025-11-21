@@ -24,6 +24,7 @@ public class ExampleBasic {
     private static final ResourceLocation TEST_RIDER_ALPHA =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_alpha");
 
+    // 定义测试形态的ID
     private static final ResourceLocation TEST_FORM_BASE =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "alpha_base_form");
 
@@ -51,11 +52,11 @@ public class ExampleBasic {
                     List.of(Items.REDSTONE, Items.GLOWSTONE_DUST, Items.APPLE),
                     true,
                     false
-            ); // 辅助驱动器中的能量槽位: 接受红石或荧石粉(非必要)
+            ); // 辅助驱动器中的能量槽位: 接受红石或荧石粉(必要槽位)
 
-    // 创建基础形态配置
+    // 创建对应基础形态的FormConfig
     public static final FormConfig alphaBaseForm = new FormConfig(TEST_FORM_BASE)
-            .setTriggerType(TriggerType.KEY) // 指定按键触发
+            .setTriggerType(TriggerType.KEY) // 指定按键触发（默认为按键触发）
             .setArmor(// 设置盔甲
                     Items.IRON_HELMET,
                     Items.IRON_CHESTPLATE,
@@ -72,21 +73,25 @@ public class ExampleBasic {
                     0.1,
                     AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
             )
-            .addEffect(// 墳加夜视效果
+            .addEffect(// 添加夜视效果
                     MobEffects.NIGHT_VISION,
                     114514,
                     0,
                     true
             )
+            .addEffect(// 快捷方式，添加急迫效果
+                    MobEffects.DIG_SPEED, 1
+            )
             .addRequiredItem(// 要求核心槽位有铁锭
                     TEST_CORE_SLOT,
                     Items.IRON_INGOT
             )
-            .addGrantedItem(Items.IRON_SWORD.getDefaultInstance()); // 变身时给予物品
+            .addGrantedItem(Items.IRON_SWORD.getDefaultInstance()) // 变身时给予物品（传入ItemStack）
+            .addGrantedItem(Items.SHIELD); // 变身时给予物品（传入Item）
 
-    // 创建强化形态配置
+    // 创建对应强化形态的FormConfig
     public static final FormConfig alphaPoweredForm = new FormConfig(TEST_FORM_POWERED)
-            .setTriggerType(TriggerType.AUTO) // 指定自动触发
+            .setTriggerType(TriggerType.AUTO) // 指定物品存入后自动触发
             .setArmor(// 金色盔甲
                     Items.GOLDEN_HELMET,
                     Items.GOLDEN_CHESTPLATE,
@@ -104,16 +109,10 @@ public class ExampleBasic {
                     AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
             )
             .addEffect(// 增加力量效果
-                    MobEffects.DAMAGE_BOOST,
-                    114514,
-                    0,
-                    true
+                    MobEffects.DAMAGE_BOOST, 0
             )
             .addEffect(
-                    MobEffects.NIGHT_VISION,
-                    114514,
-                    0,
-                    true
+                    MobEffects.NIGHT_VISION, 0
             )
             .addRequiredItem(// 要求核心槽位有金锭
                     TEST_CORE_SLOT,
@@ -123,7 +122,7 @@ public class ExampleBasic {
                     TEST_ENERGY_SLOT,
                     Items.REDSTONE
             )
-            .addGrantedItem(Items.NETHERITE_SWORD.getDefaultInstance());
+            .addGrantedItem(Items.NETHERITE_SWORD);
 
 
     private static void registerAlphaRider() {
@@ -138,25 +137,24 @@ public class ExampleBasic {
 
         alphaPoweredForm.setShouldPause(false);
 
-        // 注册骑士
+        // 注册骑士（核心步骤！）
         RiderRegistry.registerRider(riderAlpha);
     }
 
     public static void init() {
         registerAlphaRider();
-        registerPauseResumeHandler(); // 添加测试用的暂停/继续处理器
+        registerPauseResumeHandler(); // 添加演示用的暂停/继续处理器
     }
 
-    // 测试用的暂停/继续处理器
+    // 演示用的暂停/继续处理器
     private static void registerPauseResumeHandler() {
         NeoForge.EVENT_BUS.register(new Object() {
-            // 监听按键事件测试强制完成
             @SubscribeEvent
-            public void onHenshinPre(HenshinEvent.Pre event) {
+            public void onHenshinPre(HenshinEvent.Pre event) { // 监听变身事件
                 Player player = event.getPlayer();
 
-                if (event.getFormId().equals(TEST_FORM_BASE)) {
-                    RiderManager.scheduleSeconds(
+                if (event.getFormId().equals(TEST_FORM_BASE)) { // 仅为基础形态触发
+                    RiderManager.scheduleSeconds( // 等待2.21秒后触发completeHenshin
                             2.21F,
                             () -> RiderManager.completeHenshin(player)
                     );
@@ -164,9 +162,9 @@ public class ExampleBasic {
             }
 
             @SubscribeEvent
-            public void onSwitchForm(FormSwitchEvent.Pre event) {
-                if (event.getOldFormId().equals(TEST_FORM_POWERED)) {
-                    event.getPlayer().displayClientMessage(Component.literal(event.getOldFormId().toString()), false);
+            public void onSwitchForm(FormSwitchEvent.Pre event) { // 监听形态切换事件
+                if (event.getOldFormId().equals(TEST_FORM_POWERED)) { // 仅当切换形态前为金色形态时
+                    event.getPlayer().displayClientMessage(Component.literal("从金形态切换时会出现在物品栏上方的字"), true);
                 }
             }
         });

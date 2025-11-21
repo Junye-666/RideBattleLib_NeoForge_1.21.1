@@ -62,6 +62,7 @@ public class ExampleDynamicForm {
                 .addForm(baseForm)
                 .setBaseForm(BETA_BASE_FORM);
 
+        // 允许基础形态以空驱动器变身
         baseForm.setAllowsEmptyDriver(true);
 
         RiderRegistry.registerRider(riderBeta);
@@ -70,14 +71,14 @@ public class ExampleDynamicForm {
 
     private static void registerDynamicMappings() {
         // 钻石 -> 钻石头盔 + 跳跃提升 + 伤害吸收
-        DynamicFormConfig.registerItemArmor(Items.DIAMOND, EquipmentSlot.HEAD, Items.DIAMOND_HELMET);
+        DynamicFormConfig.registerItemArmor(Items.DIAMOND, EquipmentSlot.HEAD, Items.DIAMOND_HELMET); // 完整方法，可定义盔甲槽位
         DynamicFormConfig.registerItemEffect(Items.DIAMOND, MobEffects.JUMP);
         DynamicFormConfig.registerItemEffect(Items.DIAMOND, MobEffects.ABSORPTION);
         DynamicFormConfig.registerItemGrantedItems(Items.DIAMOND, new ItemStack(Items.DIAMOND_AXE)
         );
 
         // 绿宝石 -> 龟头 + 抗性效果
-        DynamicFormConfig.registerItemArmor(Items.EMERALD, Items.TURTLE_HELMET);
+        DynamicFormConfig.registerItemArmor(Items.EMERALD, Items.TURTLE_HELMET); // 快捷方法，系统自行寻找对应盔甲槽位
         DynamicFormConfig.registerItemEffect(Items.EMERALD, MobEffects.DAMAGE_RESISTANCE);
         DynamicFormConfig.registerItemGrantedItems(Items.EMERALD, new ItemStack(Items.GOLDEN_CARROT));
 
@@ -88,6 +89,15 @@ public class ExampleDynamicForm {
         // 萤石粉 -> 金甲 + 速度效果
         DynamicFormConfig.registerItemArmor(Items.GLOWSTONE_DUST, Items.GOLDEN_CHESTPLATE);
         DynamicFormConfig.registerItemEffect(Items.GLOWSTONE_DUST, MobEffects.MOVEMENT_SPEED);
+
+        // 为骑士注册底衣
+        DynamicFormConfig.registerRiderUndersuit(
+                TEST_RIDER_BETA, // 传入RiderId
+                Items.SKELETON_SKULL,
+                Items.CHAINMAIL_CHESTPLATE,
+                null,
+                Items.CHAINMAIL_BOOTS
+        ); // 底衣在不必要驱动器槽位所对应盔甲槽位未填充时出现
     }
 
     public static void init() {

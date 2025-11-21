@@ -1,5 +1,7 @@
 package com.jpigeon.ridebattlelib.api;
 
+import com.jpigeon.ridebattlelib.Config;
+import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
@@ -16,17 +18,17 @@ import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 假面骑士系统快捷方法管理器。
@@ -48,6 +50,7 @@ public final class RiderManager {
     public static boolean transform(Player player) {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config != null) {
+            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("尝试为玩家{}变身", player.getName().getString());
             PacketHandler.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));
             return true;
         }
@@ -62,6 +65,7 @@ public final class RiderManager {
      */
     public static boolean unTransform(Player player) {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
+            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("尝试解除玩家{}变身", player.getName().getString());
             PacketHandler.sendToServer(new UnhenshinPacket(player.getUUID()));
             return true;
         }
@@ -76,6 +80,7 @@ public final class RiderManager {
      */
     public static boolean switchForm(Player player, ResourceLocation newFormId) {
         if (!HenshinSystem.INSTANCE.isTransformed(player)) {
+            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("尝试切换玩家{}形态{}", player.getName().getString(), newFormId);
             PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
             return true;
         }
@@ -86,6 +91,7 @@ public final class RiderManager {
      * 快捷完成变身序列
      */
     public static void completeHenshin(Player player) {
+        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("完成玩家{}变身序列", player.getName().getString());
         DriverActionManager.INSTANCE.completeTransformation(player);
     }
 
@@ -109,6 +115,7 @@ public final class RiderManager {
      * 将单个物品从驱动器中取出
      */
     public static void extractItemFromSlot(Player player, ResourceLocation slotId) {
+        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("为玩家{}从槽位{}取出物品", player.getName().getString(), slotId);
         PacketHandler.sendToServer(new ExtractItemPacket(player.getUUID(), slotId));
     }
 
@@ -116,6 +123,7 @@ public final class RiderManager {
      * 为玩家返还所有驱动器物品
      */
     public static void returnDriverItems(Player player) {
+        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("返还玩家驱动器物品{}", player.getName().getString());
         PacketHandler.sendToServer(new ReturnItemsPacket());
     }
 
@@ -126,6 +134,7 @@ public final class RiderManager {
      */
     public static void penaltyUntransform(Player player) {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
+            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("强制解除玩家{}变身", player.getName().getString());
             PenaltySystem.PENALTY_SYSTEM.penaltyUnhenshin(player);
         }
     }
@@ -134,6 +143,7 @@ public final class RiderManager {
      * 开始变身冷却
      */
     public static void applyCooldown(Player player, int seconds) {
+        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("设置玩家{}变身冷却{}秒", player.getName().getString(), seconds);
         PenaltySystem.PENALTY_SYSTEM.startCooldown(player, seconds);
     }
 
@@ -141,7 +151,9 @@ public final class RiderManager {
      * 检查是否在冷却中
      */
     public static boolean isInCooldown(Player player) {
-        return PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
+        boolean inCooldown = PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
+        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("玩家{}是否处于冷却状态：{}", player.getName().getString(), inCooldown);
+        return inCooldown;
     }
 
     // ================ 技能系统快捷方法 ================
@@ -150,6 +162,7 @@ public final class RiderManager {
      * 触发技能
      */
     public static boolean triggerSkill(Player player, ResourceLocation formId, ResourceLocation skillId) {
+        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("触发{}形态{}技能：{}", player.getName().getString(), formId, skillId);
         return SkillSystem.triggerSkillEvent(player, formId, skillId);
     }
 
@@ -318,6 +331,147 @@ public final class RiderManager {
                 !isTransformed(player);
     }
 
+    /**
+     * 检查玩家驱动器中是否有指定物品（任何槽位）
+     *
+     * @param player 玩家
+     * @param item 要检查的物品
+     * @return 当驱动器中存在该物品返回true
+     */
+    public static boolean hasItemInDriver(Player player, Item item) {
+        if (player == null || item == null) return false;
+
+        Map<ResourceLocation, ItemStack> driverItems = getDriverItems(player);
+
+        for (ItemStack stack : driverItems.values()) {
+            if (!stack.isEmpty() && stack.is(item)) {
+                if (Config.DEVELOPER_MODE.get()) {
+                    RideBattleLib.LOGGER.debug("在驱动器中找到物品: {} (数量: {})",
+                            BuiltInRegistries.ITEM.getKey(item), stack.getCount());
+                }
+                return true;
+            }
+        }
+
+        if (Config.DEVELOPER_MODE.get()) {
+            RideBattleLib.LOGGER.debug("驱动器中未找到物品: {}", BuiltInRegistries.ITEM.getKey(item));
+        }
+        return false;
+    }
+
+    /**
+     * 检查玩家驱动器中是否有指定物品（考虑组件匹配）
+     *
+     * @param player 玩家
+     * @param itemStack 要检查的物品堆栈（包含组件）
+     * @return 当驱动器中存在匹配的物品返回true
+     */
+    public static boolean hasItemInDriver(Player player, ItemStack itemStack) {
+        if (player == null || itemStack.isEmpty()) return false;
+
+        Map<ResourceLocation, ItemStack> driverItems = getDriverItems(player);
+
+        for (ItemStack stack : driverItems.values()) {
+            if (ItemStack.isSameItemSameComponents(stack, itemStack)) {
+                if (Config.DEVELOPER_MODE.get()) {
+                    RideBattleLib.LOGGER.debug("在驱动器中找到匹配物品: {} (组件匹配)",
+                            BuiltInRegistries.ITEM.getKey(itemStack.getItem()));
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 检查玩家驱动器的指定槽位中是否有指定物品
+     *
+     * @param player 玩家
+     * @param slotId 槽位ID
+     * @param item 要检查的物品
+     * @return 如果指定槽位中存在该物品则返回true
+     */
+    public static boolean hasItemInSlot(Player player, ResourceLocation slotId, Item item) {
+        if (player == null || slotId == null || item == null) return false;
+
+        Map<ResourceLocation, ItemStack> driverItems = getDriverItems(player);
+        ItemStack stackInSlot = driverItems.get(slotId);
+
+        if (stackInSlot != null && !stackInSlot.isEmpty() && stackInSlot.is(item)) {
+            if (Config.DEVELOPER_MODE.get()) {
+                RideBattleLib.LOGGER.debug("在槽位 {} 中找到物品: {}",
+                        slotId, BuiltInRegistries.ITEM.getKey(item));
+            }
+            return true;
+        }
+
+        if (Config.DEVELOPER_MODE.get()) {
+            RideBattleLib.LOGGER.debug("槽位 {} 中未找到物品: {}",
+                    slotId, BuiltInRegistries.ITEM.getKey(item));
+        }
+        return false;
+    }
+
+    /**
+     * 检查玩家驱动器的指定槽位中是否有指定物品（考虑NBT匹配）
+     * @param player 玩家
+     * @param slotId 槽位ID
+     * @param itemStack 要检查的物品堆栈（包含NBT）
+     * @return 如果指定槽位中存在匹配的物品则返回true
+     */
+    public static boolean hasItemInSlot(Player player, ResourceLocation slotId, ItemStack itemStack) {
+        if (player == null || slotId == null || itemStack.isEmpty()) return false;
+
+        Map<ResourceLocation, ItemStack> driverItems = getDriverItems(player);
+        ItemStack stackInSlot = driverItems.get(slotId);
+
+        if (stackInSlot != null && ItemStack.isSameItemSameComponents(stackInSlot, itemStack)) {
+            if (Config.DEVELOPER_MODE.get()) {
+                RideBattleLib.LOGGER.debug("在槽位 {} 中找到匹配物品: {} (NBT匹配)",
+                        slotId, BuiltInRegistries.ITEM.getKey(itemStack.getItem()));
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 获取指定槽位中的物品堆栈
+     * @param player 玩家
+     * @param slotId 槽位ID
+     * @return 槽位中的物品堆栈，如果为空则返回ItemStack.EMPTY
+     */
+    public static ItemStack getItemForSlot(Player player, ResourceLocation slotId) {
+        if (player == null || slotId == null) return ItemStack.EMPTY;
+
+        Map<ResourceLocation, ItemStack> driverItems = getDriverItems(player);
+        ItemStack stack = driverItems.get(slotId);
+
+        return stack != null ? stack : ItemStack.EMPTY;
+    }
+
+    /**
+     * 检查驱动器是否为空
+     * @param player 玩家
+     * @return 如果驱动器没有任何物品则返回true
+     */
+    public static boolean isDriverEmpty(Player player) {
+        if (player == null) return true;
+
+        Map<ResourceLocation, ItemStack> driverItems = getDriverItems(player);
+
+        if (driverItems.isEmpty()) return true;
+
+        for (ItemStack stack : driverItems.values()) {
+            if (!stack.isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // ================ 数据同步方法 ================
 
     /**
@@ -350,6 +504,7 @@ public final class RiderManager {
     public static void playPublicSound(Player player, SoundEvent sound, SoundSource category, float volume, float pitch) {
         if (!player.level().isClientSide) {
             // 服务端：广播给所有玩家
+            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("播放音效{}", sound);
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), sound, category, volume, pitch);
         }
     }
@@ -374,6 +529,7 @@ public final class RiderManager {
      * @param callback 执行任务
      */
     public static void scheduleTicks(int ticks, Runnable callback){
+        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("等待{}刻后执行{}", ticks, callback);
         CountdownManager.getInstance().scheduleTask(ticks, callback);
     }
 

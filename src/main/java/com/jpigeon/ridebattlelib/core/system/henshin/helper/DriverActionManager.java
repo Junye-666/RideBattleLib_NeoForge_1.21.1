@@ -91,7 +91,7 @@ public class DriverActionManager {
             proceedFormSwitch(player, formId);
         }
 
-        RideBattleLib.LOGGER.info("玩家{} 变身为 {}", player.getName().getString(), formId);
+        RideBattleLib.LOGGER.info("玩家{}变身为 {}", player.getName().getString(), formId);
 
         // 重置状态
         data.setHenshinState(HenshinState.TRANSFORMED);

@@ -11,5 +11,6 @@
   "ridebattlelib.configuration.explosionPower": "Penalty Explosion Power",
   "ridebattlelib.configuration.keyCooldown": "Key Cooldown",
   "ridebattlelib.configuration.interactionCooldown": "RightClick Cooldown",
-  "ridebattlelib.configuration.logLevel": "Debug Mode"
+  "ridebattlelib.configuration.debugMode": "Debug Mode",
+  "ridebattlelib.configuration.developerMode": "Developer Mode"
 }

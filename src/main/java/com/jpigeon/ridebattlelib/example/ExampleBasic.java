@@ -159,7 +159,7 @@ public class ExampleBasic {
                 if (event.getFormId().equals(TEST_FORM_BASE)) {
                     RiderManager.scheduleSeconds(
                             2.21F,
-                            () -> DriverActionManager.INSTANCE.completeTransformation(player)
+                            () -> RiderManager.completeHenshin(player)
                     );
                 }
             }

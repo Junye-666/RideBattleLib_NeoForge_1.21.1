@@ -20,6 +20,7 @@ public class Config
     public static final ModConfigSpec.IntValue KEY_COOLDOWN_MS;
     public static final ModConfigSpec.IntValue INTERACTION_COOLDOWN_MS;
     public static final ModConfigSpec.BooleanValue DEBUG_MODE;
+    public static final ModConfigSpec.BooleanValue DEVELOPER_MODE;
 
     static {
         PENALTY_ENABLED = BUILDER
@@ -53,7 +54,12 @@ public class Config
                 .defineInRange("interactionCooldown", 250, 0, 400);
 
         DEBUG_MODE = BUILDER
-                .define("logLevel", false);
+                .comment("为牢J提供的日志，输出RideBattleLib所有调试日志")
+                .define("debugMode", false);
+
+        DEVELOPER_MODE = BUILDER
+                .comment("为开发者提供的小一号日志，输出RiderManager日志")
+                .define("developerMode", false);
 
         BUILDER.build();
     }
@@ -65,7 +71,7 @@ public class Config
     {
         if (Config.DEBUG_MODE.get()){
             RideBattleLib.LOGGER.debug(
-                    "Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}, keyCooldown={}, interactionCooldown={}, logLevel={}",
+                    "Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}, keyCooldown={}, interactionCooldown={}, debugMode={}, developerMode={}",
                     PENALTY_ENABLED.get(),
                     PENALTY_THRESHOLD.get(),
                     COOLDOWN_DURATION.get(),
@@ -73,7 +79,8 @@ public class Config
                     KNOCKBACK_STRENGTH.get(),
                     KNOCKBACK_STRENGTH.get(),
                     INTERACTION_COOLDOWN_MS.get(),
-                    DEBUG_MODE.get());
+                    DEBUG_MODE.get(),
+                    DEVELOPER_MODE.get());
         }
     }
 }

@@ -2,12 +2,14 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.compat.curios.CuriosCompat;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -46,6 +48,10 @@ public class RiderConfig {
     private final List<AttributeModifier> baseAttributes = new ArrayList<>();
     private final List<MobEffectInstance> baseEffects = new ArrayList<>();
     private boolean allowDynamicForms = false;
+
+    // 兼容层
+    private String curiosMainSlot = "belt";
+    private String curiosAuxSlot = "offhand";
 
     /**
      * 初始化时需要传入骑士Id
@@ -293,7 +299,7 @@ public class RiderConfig {
      * 通过玩家变身状态和装备查找激活的驱动器配置
      */
     public static RiderConfig findActiveDriverConfig(Player player) {
-        // 方法1：首先检查玩家是否处于变身状态，从变身数据中获取配置
+        // 方法1：首先检查变身状态中的配置
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
             if (transformedData != null) {
@@ -307,13 +313,32 @@ public class RiderConfig {
             }
         }
 
-        // 方法2：如果不在变身状态或变身数据无效，回退到原有的装备检查
+        // 方法2：检查所有已注册的骑士配置
         for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
-            // 精确匹配驱动器槽位和物品
-            ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
-            if (driverStack.is(config.getDriverItem())) {
+            boolean hasMainDriver = false;
+            String detectionMethod = "none";
+
+            // 检查原版槽位
+            if (config.getDriverSlot() != null) {
+                ItemStack driverStack = player.getItemBySlot(config.getDriverSlot());
+                if (driverStack.is(config.getDriverItem())) {
+                    hasMainDriver = true;
+                    detectionMethod = "vanilla";
+                }
+            }
+            // 检查Curios槽位
+            else if (config.getCuriosMainSlot() != null) {
+                if (CuriosCompat.hasItemInCuriosSlot(player, config.getDriverItem(), config.getCuriosMainSlot())) {
+                    hasMainDriver = true;
+                    detectionMethod = "curios";
+                }
+            }
+
+            if (hasMainDriver) {
                 if (Config.DEBUG_MODE.get()) {
-                    RideBattleLib.LOGGER.debug("从装备槽位获取驱动器配置: {}", config.getRiderId());
+                    RideBattleLib.LOGGER.debug("找到激活的驱动器: {}, 检测方式: {}, 槽位: {}",
+                            config.getRiderId(), detectionMethod,
+                            config.getCuriosMainSlot() != null ? config.getCuriosMainSlot() : config.getDriverSlot());
                 }
                 return config;
             }
@@ -404,7 +429,6 @@ public class RiderConfig {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
             if (transformedData != null && transformedData.config().getRiderId().equals(this.getRiderId())) {
-                // 检查变身时的驱动器快照中是否有辅助槽位物品
                 Map<ResourceLocation, ItemStack> driverSnapshot = transformedData.driverSnapshot();
                 for (ResourceLocation auxSlotId : getAuxSlotDefinitions().keySet()) {
                     if (driverSnapshot.containsKey(auxSlotId) && !driverSnapshot.get(auxSlotId).isEmpty()) {
@@ -414,9 +438,20 @@ public class RiderConfig {
             }
         }
 
-        // 不在变身状态，使用原有的装备检查
-        ItemStack auxStack = player.getItemBySlot(auxDriverSlot);
-        return !auxStack.isEmpty() && auxStack.is(auxDriverItem);
+        // 检查原版副手槽位
+        if (auxDriverSlot != null) {
+            ItemStack auxStack = player.getItemBySlot(auxDriverSlot);
+            if (!auxStack.isEmpty() && auxStack.is(auxDriverItem)) {
+                return true;
+            }
+        }
+
+        // 检查Curios辅助驱动器槽位
+        if (curiosAuxSlot != null && CuriosCompat.isCuriosLoaded()) {
+            return CuriosCompat.hasItemInCuriosSlot(player, auxDriverItem, curiosAuxSlot);
+        }
+
+        return false;
     }
 
     public DriverSlotDefinition getAuxSlotDefinition(ResourceLocation slotId) {
@@ -438,5 +473,57 @@ public class RiderConfig {
 
     public List<MobEffectInstance> getBaseEffects() {
         return Collections.unmodifiableList(baseEffects);
+    }
+
+
+    // 兼容方法
+
+    /**
+     * 设置主驱动器物品及其Curios槽位
+     * @param item 驱动器物品
+     * @param curiosSlotId Curios槽位ID（例如 "belt", "charm"）
+     * @return 当前RiderConfig实例
+     */
+    public RiderConfig setMainDriverItem(Item item, String curiosSlotId) {
+        if (Config.DEBUG_MODE.get()) {
+            RideBattleLib.LOGGER.debug("设置Curios主驱动器: 物品={}, 槽位={}",
+                    BuiltInRegistries.ITEM.getKey(item), curiosSlotId);
+        }
+
+        this.driverItem = item;
+        this.curiosMainSlot = curiosSlotId;
+        this.driverSlot = null;
+        return this;
+    }
+
+    /**
+     * 设置辅助驱动器物品及其Curios槽位
+     * @param item 辅助驱动器物品
+     * @param curiosSlotId Curios槽位ID
+     * @return 当前RiderConfig实例
+     */
+    public RiderConfig setAuxDriverItem(Item item, String curiosSlotId) {
+        if (Config.DEBUG_MODE.get()) {
+            RideBattleLib.LOGGER.debug("设置Curios辅助驱动器: 物品={}, 槽位={}",
+                    BuiltInRegistries.ITEM.getKey(item), curiosSlotId);
+        }
+        this.auxDriverItem = item;
+        this.curiosAuxSlot = curiosSlotId;
+        this.auxDriverSlot = null;
+        return this;
+    }
+
+    /**
+     * 获取Curios主驱动器槽位
+     */
+    public String getCuriosMainSlot() {
+        return curiosMainSlot;
+    }
+
+    /**
+     * 获取Curios辅助驱动器槽位
+     */
+    public String getCuriosAuxSlot() {
+        return curiosAuxSlot;
     }
 }

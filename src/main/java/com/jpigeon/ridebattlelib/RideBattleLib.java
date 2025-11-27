@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib;
 
+import com.jpigeon.ridebattlelib.compat.curios.CuriosCompat;
 import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverHandler;
@@ -40,6 +41,7 @@ public class RideBattleLib {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        CuriosCompat.isCuriosLoaded();
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {

@@ -242,16 +242,6 @@ public class HenshinSystem implements IHenshinSystem {
         }
         ResourceLocation oldFormId = data.formId();
 
-        // 触发形态切换事件
-        if (!newFormId.equals(oldFormId)) {
-            FormSwitchEvent.Pre preFormSwitch = new FormSwitchEvent.Pre(player, oldFormId, newFormId);
-            NeoForge.EVENT_BUS.post(preFormSwitch);
-            if (preFormSwitch.isCanceled()) {
-                DriverActionManager.INSTANCE.cancelHenshin(player);
-                return;
-            }
-        }
-
         HenshinHelper.INSTANCE.performFormSwitch(player, newFormId);
 
         // 触发形态切换事件

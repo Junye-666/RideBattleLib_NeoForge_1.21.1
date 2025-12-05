@@ -43,7 +43,6 @@ public final class RiderManager {
 
     /**
      * 尝试让玩家变身。
-     *
      * @param player 玩家
      * @return 是否成功发起变身
      */
@@ -54,8 +53,7 @@ public final class RiderManager {
     }
 
     /**
-     * 解除让玩家变身。
-     *
+     * 解除玩家变身。
      * @param player 玩家
      * @return 是否成功解除变身
      */
@@ -70,7 +68,6 @@ public final class RiderManager {
 
     /**
      * 尝试切换玩家形态。
-     *
      * @param player 玩家
      * @return 是否成功切换
      */
@@ -351,8 +348,8 @@ public final class RiderManager {
         for (ItemStack stack : driverItems.values()) {
             if (!stack.isEmpty() && stack.is(item)) {
                 if (Config.DEVELOPER_MODE.get()) {
-                    RideBattleLib.LOGGER.debug("在驱动器中找到物品: {} (数量: {})",
-                            BuiltInRegistries.ITEM.getKey(item), stack.getCount());
+                    RideBattleLib.LOGGER.debug("在驱动器中找到物品: {}",
+                            BuiltInRegistries.ITEM.getKey(item));
                 }
                 return true;
             }
@@ -545,6 +542,15 @@ public final class RiderManager {
      */
     public static void scheduleSeconds(float seconds, Runnable callback){
         scheduleTicks((int) (seconds * 20), callback);
+    }
+
+    /**
+     * 快捷完成变身方法
+     * @param ticks 等待游戏刻数
+     * @param player 要完成变身的玩家
+     */
+    public static void completeIn(int ticks, Player player){
+        scheduleTicks(ticks, () -> completeHenshin(player));
     }
 
     /**

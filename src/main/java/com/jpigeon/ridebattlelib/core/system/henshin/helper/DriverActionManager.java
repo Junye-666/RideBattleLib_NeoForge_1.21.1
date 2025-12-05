@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.RiderManager;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
@@ -21,6 +22,7 @@ public class DriverActionManager {
     public static final DriverActionManager INSTANCE = new DriverActionManager();
 
     public void prepareHenshin(Player player, ResourceLocation formId) {
+        if (RiderManager.isTransformed(player)) return;
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
@@ -39,6 +41,7 @@ public class DriverActionManager {
 
     public void prepareFormSwitch(Player player, ResourceLocation oldFormId, ResourceLocation newFormId){
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (oldFormId.equals(newFormId)) return;
         if (config == null) return;
 
         if (Config.DEBUG_MODE.get()) {

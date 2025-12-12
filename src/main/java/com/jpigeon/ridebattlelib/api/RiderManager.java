@@ -507,7 +507,7 @@ public final class RiderManager {
         if (!player.level().isClientSide) {
             // 服务端：广播给所有玩家
             if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("播放音效{}", sound);
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(), sound, category, volume, pitch);
+            player.level().playSound(null, player, sound, category, volume, pitch);
         }
     }
 

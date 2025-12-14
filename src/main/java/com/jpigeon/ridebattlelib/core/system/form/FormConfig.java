@@ -180,9 +180,12 @@ public class FormConfig {
     /**
      * 表明此形态变身时是否有缓冲阶段
      */
-    public void setShouldPause(boolean pause) {
+    public FormConfig setShouldPause(boolean pause) {
         this.shouldPause = pause;
+        return this;
     }
+
+
 
     /**
      * 为形态赋予技能

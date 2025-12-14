@@ -545,8 +545,9 @@ public class DynamicFormConfig extends FormConfig {
     }
 
     @Override
-    public void setShouldPause(boolean pause) {
+    public DynamicFormConfig setShouldPause(boolean pause) {
         this.shouldPause = pause;
+        return this;
     }
 
     @Override

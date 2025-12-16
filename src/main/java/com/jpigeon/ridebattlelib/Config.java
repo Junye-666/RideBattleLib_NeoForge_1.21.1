@@ -21,6 +21,7 @@ public class Config
     public static final ModConfigSpec.IntValue INTERACTION_COOLDOWN_MS;
     public static final ModConfigSpec.BooleanValue DEBUG_MODE;
     public static final ModConfigSpec.BooleanValue DEVELOPER_MODE;
+    public static final ModConfigSpec.BooleanValue SKILL_COOLDOWN_INFO;
 
     static {
         PENALTY_ENABLED = BUILDER
@@ -61,6 +62,10 @@ public class Config
                 .comment("为开发者提供的小一号日志，输出RiderManager日志")
                 .define("developerMode", false);
 
+        SKILL_COOLDOWN_INFO = BUILDER
+                .comment("是否在切换技能时（聊天栏）显示冷却时间")
+                        .define("skillCooldownInfo", false);
+
         BUILDER.build();
     }
 
@@ -71,7 +76,7 @@ public class Config
     {
         if (Config.DEBUG_MODE.get()){
             RideBattleLib.LOGGER.debug(
-                    "Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}, keyCooldown={}, interactionCooldown={}, debugMode={}, developerMode={}",
+                    "Loaded config: penaltyEnabled={}, penaltyThreshold={}, cooldown={}s, explosionPower={}, knockbackStrength={}, keyCooldown={}, interactionCooldown={}, debugMode={}, developerMode={}, skillCooldownInfo={}",
                     PENALTY_ENABLED.get(),
                     PENALTY_THRESHOLD.get(),
                     COOLDOWN_DURATION.get(),
@@ -80,7 +85,8 @@ public class Config
                     KNOCKBACK_STRENGTH.get(),
                     INTERACTION_COOLDOWN_MS.get(),
                     DEBUG_MODE.get(),
-                    DEVELOPER_MODE.get());
+                    DEVELOPER_MODE.get(),
+                    SKILL_COOLDOWN_INFO.get());
         }
     }
 }

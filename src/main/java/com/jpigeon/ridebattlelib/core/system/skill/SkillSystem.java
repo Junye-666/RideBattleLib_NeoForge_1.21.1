@@ -191,7 +191,7 @@ public class SkillSystem {
 
             // 显示冷却信息
             int cooldown = getSkillCooldown(newSkill);
-            if (cooldown > 0 && player instanceof ServerPlayer serverPlayer) {
+            if (cooldown > 0 && player instanceof ServerPlayer serverPlayer && Config.DEVELOPER_MODE.get()) {
                 serverPlayer.displayClientMessage(
                         Component.literal("技能冷却: " + cooldown + "秒")
                                 .withStyle(ChatFormatting.GRAY),

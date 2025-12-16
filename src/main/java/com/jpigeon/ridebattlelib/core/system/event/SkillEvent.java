@@ -12,24 +12,33 @@ public class SkillEvent extends Event {
     private final Player player;
     private final ResourceLocation formId;
     private final ResourceLocation skillId;
+    private final SkillTriggerType triggerType;
 
-    public SkillEvent(Player player, ResourceLocation formId, ResourceLocation skillId) {
+    public enum SkillTriggerType {
+        SYSTEM,
+        WEAPON,
+        ITEM,
+        OTHER
+    }
+
+    public SkillEvent(Player player, ResourceLocation formId, ResourceLocation skillId, SkillTriggerType triggerType) {
         this.player = player;
         this.formId = formId;
         this.skillId = skillId;
+        this.triggerType = triggerType;
     }
 
     // 预触发事件（可取消）
     public static class Pre extends SkillEvent implements ICancellableEvent {
-        public Pre(Player player, ResourceLocation formId, ResourceLocation skillId) {
-            super(player, formId, skillId);
+        public Pre(Player player, ResourceLocation formId, ResourceLocation skillId, SkillTriggerType triggerType) {
+            super(player, formId, skillId, triggerType);
         }
     }
 
     // 技能触发后事件
     public static class Post extends SkillEvent {
-        public Post(Player player, ResourceLocation formId, ResourceLocation skillId) {
-            super(player, formId, skillId);
+        public Post(Player player, ResourceLocation formId, ResourceLocation skillId, SkillTriggerType triggerType) {
+            super(player, formId, skillId, triggerType);
         }
     }
 
@@ -37,4 +46,7 @@ public class SkillEvent extends Event {
     public Player getPlayer() { return player; }
     public ResourceLocation getFormId() { return formId; }
     public ResourceLocation getSkillId() { return skillId; }
+    public SkillTriggerType getTriggerType() {
+        return triggerType;
+    }
 }

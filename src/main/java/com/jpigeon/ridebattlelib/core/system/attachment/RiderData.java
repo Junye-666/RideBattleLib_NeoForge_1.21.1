@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public class RiderData {
-    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainDriverItems;
-    public Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxDriverItems;
+    public final Map<ResourceLocation, Map<ResourceLocation, ItemStack>> mainDriverItems;
+    public final Map<ResourceLocation, Map<ResourceLocation, ItemStack>> auxDriverItems;
     private final @Nullable TransformedAttachmentData transformedData;
     private HenshinState henshinState;
     private @Nullable ResourceLocation pendingFormId;

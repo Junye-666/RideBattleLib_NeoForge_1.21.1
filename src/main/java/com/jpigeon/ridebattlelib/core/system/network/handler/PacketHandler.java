@@ -9,7 +9,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
-import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;

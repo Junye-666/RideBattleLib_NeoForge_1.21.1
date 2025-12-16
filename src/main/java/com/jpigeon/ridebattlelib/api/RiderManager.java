@@ -5,6 +5,7 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
+import com.jpigeon.ridebattlelib.core.system.event.SkillEvent;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -18,7 +19,9 @@ import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -163,9 +166,36 @@ public final class RiderManager {
     /**
      * 触发技能
      */
+    public static boolean triggerSkill(Player player, ResourceLocation formId, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
+        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
+        if (data == null) return false;
+
+        if (skillId != null) {
+            // 检查技能冷却
+            if (SkillSystem.isSkillOnCooldown(player, skillId)) {
+                int remaining = SkillSystem.getSkillRemainingCooldown(player, skillId);
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.displayClientMessage(
+                            Component.literal("技能冷却中，剩余时间: " + remaining + "秒")
+                                    .withStyle(ChatFormatting.RED),
+                            true
+                    );
+                }
+                return false;
+            }
+
+            // 只触发事件，不执行具体逻辑
+            if (SkillSystem.triggerSkillEvent(player, formId, skillId, type)) {
+                // 技能成功触发后开始冷却
+                SkillSystem.startSkillCooldown(player, skillId);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean triggerSkill(Player player, ResourceLocation formId, ResourceLocation skillId) {
-        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("触发{}形态{}技能：{}", player.getName().getString(), formId, skillId);
-        return SkillSystem.triggerSkillEvent(player, formId, skillId);
+        return triggerSkill(player, formId, skillId, SkillEvent.SkillTriggerType.OTHER);
     }
 
     /**

@@ -135,7 +135,7 @@ public class SkillSystem {
             }
 
             // 只触发事件，不执行具体逻辑
-            if (triggerSkillEvent(player, data.formId(), skillId)) {
+            if (triggerSkillEvent(player, data.formId(), skillId, SkillEvent.SkillTriggerType.SYSTEM)) {
                 // 技能成功触发后开始冷却
                 startSkillCooldown(player, skillId);
             }
@@ -143,18 +143,18 @@ public class SkillSystem {
     }
 
     // 触发技能（只负责事件分发）
-    public static boolean triggerSkillEvent(Player player, ResourceLocation formId, ResourceLocation skillId) {
+    public static boolean triggerSkillEvent(Player player, ResourceLocation formId, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
         if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("触发技能事件");
         }
 
         // 触发Pre事件（可取消）
-        SkillEvent.Pre preEvent = new SkillEvent.Pre(player, formId, skillId);
+        SkillEvent.Pre preEvent = new SkillEvent.Pre(player, formId, skillId, type);
         NeoForge.EVENT_BUS.post(preEvent);
         if (preEvent.isCanceled()) return false;
 
         // 触发Post事件（实际执行逻辑的地方）
-        NeoForge.EVENT_BUS.post(new SkillEvent.Post(player, formId, skillId));
+        NeoForge.EVENT_BUS.post(new SkillEvent.Post(player, formId, skillId, type));
         return true;
     }
 

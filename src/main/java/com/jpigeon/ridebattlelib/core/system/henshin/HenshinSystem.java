@@ -6,7 +6,6 @@ import com.jpigeon.ridebattlelib.api.IHenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.event.*;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.attachment.TransformedAttachmentData;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
@@ -90,8 +89,8 @@ public class HenshinSystem implements IHenshinSystem {
 
             if (!isTransformed(player)) {
                 DriverActionManager.INSTANCE.prepareHenshin(player, formId);
-            } else {
-                DriverActionManager.INSTANCE.prepareFormSwitch(player, oldFormId, formId);
+            } else if (oldFormId != null) {
+                    DriverActionManager.INSTANCE.prepareFormSwitch(player, oldFormId, formId);
             }
 
             HenshinPauseEvent.Post postPause = new HenshinPauseEvent.Post(player, config.getRiderId(), formId);

@@ -4,6 +4,7 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
+import com.jpigeon.ridebattlelib.core.system.event.RotateSkillEvent;
 import com.jpigeon.ridebattlelib.core.system.event.SkillEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -159,6 +160,10 @@ public class SkillSystem {
 
     public static void rotateSkill(Player player) {
         if (!HenshinSystem.INSTANCE.isTransformed(player)) return;
+
+        RotateSkillEvent event = new RotateSkillEvent(player);
+        NeoForge.EVENT_BUS.post(event);
+        if (event.isCanceled()) return;
 
         if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("尝试轮转技能");

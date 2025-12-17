@@ -198,6 +198,11 @@ public final class RiderManager {
         return triggerSkill(player, formId, skillId, SkillEvent.SkillTriggerType.OTHER);
     }
 
+    public static boolean triggerSkill(Player player, ResourceLocation skillId) {
+        ResourceLocation formId = getCurrentForm(player);
+        return triggerSkill(player, formId, skillId, SkillEvent.SkillTriggerType.OTHER);
+    }
+
     /**
      * 获取玩家当前形态的技能列表
      * @param player 玩家

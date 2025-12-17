@@ -23,7 +23,6 @@ public class RideBattleLib {
     public RideBattleLib(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(PacketHandler::register);
 
-        NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(DriverHandler.class);
         NeoForge.EVENT_BUS.register(AttachmentHandler.class);
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);

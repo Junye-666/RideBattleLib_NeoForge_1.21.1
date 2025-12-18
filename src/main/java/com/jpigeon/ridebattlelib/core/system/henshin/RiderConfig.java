@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.RiderManager;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSlotDefinition;
 import com.jpigeon.ridebattlelib.core.system.event.FormOverrideEvent;
@@ -386,6 +387,18 @@ public class RiderConfig {
     // 添加形态获取方法
     public FormConfig getForms(ResourceLocation formId) {
         return forms.get(formId);
+    }
+
+    public Map<ResourceLocation, FormConfig> getForms(){
+        return forms;
+    }
+
+    public boolean includesForm(FormConfig formConfig) {
+        return this.getForms().containsValue(formConfig);
+    }
+
+    public boolean includesForm(ResourceLocation formId) {
+        return includesForm(RiderRegistry.getForm(formId));
     }
 
     public ResourceLocation getBaseFormId() {

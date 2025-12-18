@@ -311,10 +311,10 @@ public final class RiderManager {
     }
 
     /**
-     * 检查玩家是否拥有特定形态
+     * 检查玩家是否变身为特定形态
      * @param player 玩家
      * @param formId 形态ID
-     * @return 是否拥有该形态
+     * @return 是否变身为该形态
      */
     public static boolean isSpecificForm(Player player, ResourceLocation formId) {
         ResourceLocation currentForm = getCurrentForm(player);

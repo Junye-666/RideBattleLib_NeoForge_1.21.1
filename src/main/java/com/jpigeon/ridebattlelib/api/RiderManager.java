@@ -75,7 +75,7 @@ public final class RiderManager {
      * @return 是否成功切换
      */
     public static boolean switchForm(Player player, ResourceLocation newFormId) {
-        if (isTransformed(player) && getCurrentForm(player) != newFormId) {
+        if (isTransformed(player) && getCurrentFormId(player) != newFormId) {
             if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("尝试切换玩家{}形态{}", player.getName().getString(), newFormId);
             PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
             return true;
@@ -199,8 +199,11 @@ public final class RiderManager {
     }
 
     public static boolean triggerSkill(Player player, ResourceLocation skillId) {
-        ResourceLocation formId = getCurrentForm(player);
-        return triggerSkill(player, formId, skillId, SkillEvent.SkillTriggerType.OTHER);
+        return triggerSkill(player, getCurrentFormId(player), SkillEvent.SkillTriggerType.OTHER);
+    }
+
+    public static boolean triggerSkill(Player player, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
+        return triggerSkill(player, getCurrentFormId(player), skillId, type);
     }
 
     /**
@@ -243,7 +246,7 @@ public final class RiderManager {
      * @return 玩家当前形态Id
      */
     @Nullable
-    public static ResourceLocation getCurrentForm(Player player) {
+    public static ResourceLocation getCurrentFormId(Player player) {
         HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
         return data != null ? data.formId() : null;
     }
@@ -254,13 +257,20 @@ public final class RiderManager {
      * @return 通过Id匹配的配置
      */
     @Nullable
-    public static FormConfig getFormConfig(ResourceLocation formId) {
-        // 先检查预设形态
-        FormConfig form = RiderRegistry.getForm(formId);
+    public static FormConfig getFormConfig(Player player, ResourceLocation formId) {
+        // 优先从玩家当前骑士获取
+        FormConfig form = RiderRegistry.getForm(player, formId);
+
         if (form == null) {
-            // 再检查动态形态
+            // 回退到动态形态
             form = DynamicFormConfig.getDynamicForm(formId);
         }
+
+        if (form == null && Config.DEBUG_MODE.get()) {
+            RideBattleLib.LOGGER.debug("未找到形态配置: {} (玩家: {})", formId,
+                    player.getName().getString());
+        }
+
         return form;
     }
 
@@ -283,7 +293,6 @@ public final class RiderManager {
         return DriverSystem.INSTANCE.getDriverItems(player);
     }
 
-
     /**
      * 获取当前选中的技能ID
      */
@@ -294,7 +303,7 @@ public final class RiderManager {
         HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
         if (data == null) return null;
 
-        FormConfig form = RiderRegistry.getForm(data.formId());
+        FormConfig form = getFormConfig(player, data.formId());
         if (form == null) return null;
 
         return form.getCurrentSkillId(player);
@@ -317,7 +326,7 @@ public final class RiderManager {
      * @return 是否变身为该形态
      */
     public static boolean isSpecificForm(Player player, ResourceLocation formId) {
-        ResourceLocation currentForm = getCurrentForm(player);
+        ResourceLocation currentForm = getCurrentFormId(player);
         return currentForm != null && currentForm.equals(formId);
     }
 

@@ -64,7 +64,7 @@ public final class HenshinHelper implements IHenshinHelper {
         }
 
         // 应用属性和效果
-        EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig);
+        EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formId);
 
         // 保存变身快照
         saveTransformedSnapshot(player, config, formConfig.getFormId(), originalGear, driverItems);
@@ -82,19 +82,16 @@ public final class HenshinHelper implements IHenshinHelper {
             return;
         }
         ResourceLocation oldFormId = data.formId();
-        FormConfig oldForm = RiderRegistry.getForm(oldFormId);
-        if (oldForm == null) {
-            DynamicFormConfig.getDynamicForm(oldFormId);
-        }
-        FormConfig newForm = RiderRegistry.getForm(newFormId);
+        FormConfig newForm = RiderRegistry.getForm(player, newFormId);
         if (newForm == null) {
-            newForm = DynamicFormConfig.getDynamicForm(newFormId); // 添加动态形态支持
+            newForm = DynamicFormConfig.getDynamicForm(newFormId);
         }
+
         Map<ResourceLocation, ItemStack> currentDriver = DriverSystem.INSTANCE.getDriverItems(player);
         boolean needsUpdate = !newFormId.equals(oldFormId);
         if (newForm != null && needsUpdate) {
-            if (newForm instanceof DynamicFormConfig) {
-                DynamicHenshinManager.applyDynamicArmor(player, (DynamicFormConfig) newForm); // 应用动态盔甲
+            if (newForm instanceof DynamicFormConfig dynamicForm) {
+                DynamicHenshinManager.applyDynamicArmor(player, dynamicForm); // 应用动态盔甲
             } else {
                 ARMOR.equipArmor(player, newForm); // 普通盔甲
             }
@@ -102,7 +99,7 @@ public final class HenshinHelper implements IHenshinHelper {
             EFFECT_ATTRIBUTE.removeAttributesAndEffects(player, oldFormId );
             ITEM.removeGrantedItems(player, oldFormId);
             // 应用新属性, 效果和物品
-            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, newForm );
+            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, newFormId);
             ITEM.grantFormItems(player, newFormId);
             // 更新数据
             setTransformed(player, data.config(), newFormId,
@@ -127,7 +124,7 @@ public final class HenshinHelper implements IHenshinHelper {
             ARMOR.equipArmor(player, formConfig);
 
             // 重新应用属性
-            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig );
+            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig.getFormId());
 
             // 更新变身状态
             setTransformed(player, config, attachmentData.formId(),
@@ -216,7 +213,7 @@ public final class HenshinHelper implements IHenshinHelper {
             }
 
             // 重新应用属性
-            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig);
+            EFFECT_ATTRIBUTE.applyAttributesAndEffects(player, formConfig.getFormId());
 
             // 保存恢复后的状态
             saveTransformedSnapshot(player, config, data.formId(),

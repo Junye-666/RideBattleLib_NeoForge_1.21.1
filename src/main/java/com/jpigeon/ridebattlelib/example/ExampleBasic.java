@@ -86,6 +86,7 @@ public class ExampleBasic {
                     TEST_CORE_SLOT,
                     Items.IRON_INGOT
             )
+            .setShouldPause(true)
             .addGrantedItem(Items.IRON_SWORD.getDefaultInstance()) // 变身时给予物品（传入ItemStack）
             .addGrantedItem(Items.SHIELD); // 变身时给予物品（传入Item）
 
@@ -133,9 +134,6 @@ public class ExampleBasic {
                 .setBaseForm(alphaBaseForm.getFormId());// 设置基础形态
 
         alphaBaseForm.setAllowsEmptyDriver(false); // 指定驱动器物品的必要性
-        alphaBaseForm.setShouldPause(true); // 指定是否在驱动器键按下时暂停
-
-        alphaPoweredForm.setShouldPause(false);
 
         // 注册骑士（核心步骤！）
         RiderRegistry.registerRider(riderAlpha);

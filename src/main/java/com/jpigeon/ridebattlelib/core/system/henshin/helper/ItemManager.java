@@ -12,22 +12,34 @@ import net.neoforged.neoforge.common.NeoForge;
 public class ItemManager {
     public static final ItemManager INSTANCE = new ItemManager();
 
-    // 给予形态物品
+
     public void grantFormItems(Player player, ResourceLocation formId) {
-        FormConfig formConfig = RiderRegistry.getForm(formId);
-        if (formConfig == null) {
-            formConfig = DynamicFormConfig.getDynamicForm(formId);
-        }
+        FormConfig formConfig = getFormConfig(player, formId);
         if (formConfig != null) {
-            for (ItemStack stack : formConfig.getGrantedItems()) {
-                ItemGrantEvent.Pre preGrant = new ItemGrantEvent.Pre(player, stack, formConfig);
+            grantFormItemsInternal(player, formConfig);
+        }
+    }
+
+    public void removeGrantedItems(Player player, ResourceLocation formId) {
+        FormConfig formConfig = getFormConfig(player, formId);
+        if (formConfig != null) {
+            removeGrantedItemsInternal(player, formConfig);
+        }
+    }
+
+
+    // 给予形态物品
+    public void grantFormItemsInternal(Player player, FormConfig form) {
+        if (form != null) {
+            for (ItemStack stack : form.getGrantedItems()) {
+                ItemGrantEvent.Pre preGrant = new ItemGrantEvent.Pre(player, stack, form);
                 NeoForge.EVENT_BUS.post(preGrant);
                 if (preGrant.isCanceled()) return;
 
                 if (!player.addItem(preGrant.getStack().copy())) {
                     player.drop(preGrant.getStack().copy(), false);
 
-                    ItemGrantEvent.Post postGrant = new ItemGrantEvent.Post(player, preGrant.getStack().copy(), formConfig);
+                    ItemGrantEvent.Post postGrant = new ItemGrantEvent.Post(player, preGrant.getStack().copy(), form);
                     NeoForge.EVENT_BUS.post(postGrant);
                 }
             }
@@ -35,13 +47,9 @@ public class ItemManager {
     }
 
     // 移除给予的物品
-    public void removeGrantedItems(Player player, ResourceLocation formId) {
-        FormConfig formConfig = RiderRegistry.getForm(formId);
-        if (formConfig == null) {
-            formConfig = DynamicFormConfig.getDynamicForm(formId);
-        }
-        if (formConfig != null) {
-            for (ItemStack grantedItem : formConfig.getGrantedItems()) {
+    public void removeGrantedItemsInternal(Player player, FormConfig form) {
+        if (form != null) {
+            for (ItemStack grantedItem : form.getGrantedItems()) {
                 int countToRemove = grantedItem.getCount();
 
                 // 只移除玩家背包中的物品
@@ -57,5 +65,17 @@ public class ItemManager {
                 }
             }
         }
+    }
+
+    private FormConfig getFormConfig(Player player, ResourceLocation formId) {
+        // 优先从玩家当前骑士获取
+        FormConfig form = RiderRegistry.getForm(player, formId);
+
+        // 如果没找到，尝试动态形态
+        if (form == null) {
+            form = DynamicFormConfig.getDynamicForm(formId);
+        }
+
+        return form;
     }
 }

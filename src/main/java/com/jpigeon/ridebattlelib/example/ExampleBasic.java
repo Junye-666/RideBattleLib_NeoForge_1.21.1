@@ -164,6 +164,12 @@ public class ExampleBasic {
                 if (event.getOldFormId().equals(TEST_FORM_POWERED)) { // 仅当切换形态前为金色形态时
                     event.getPlayer().displayClientMessage(Component.literal("从金形态切换时会出现在物品栏上方的字"), true);
                 }
+                if (event.getNewFormId().equals(TEST_FORM_BASE)) { // 仅为基础形态触发
+                    RiderManager.scheduleSeconds( // 等待2.21秒后触发completeHenshin
+                            2.21F,
+                            () -> RiderManager.completeHenshin(event.getPlayer())
+                    );
+                }
             }
         });
     }

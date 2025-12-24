@@ -205,6 +205,7 @@ public class FormConfig {
         this.allowsEmptyDriver = allow;
     }
 
+
     //====================内部方法====================
     // 匹配验证
     public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
@@ -385,10 +386,26 @@ public class FormConfig {
     }
 
     public ResourceLocation getCurrentSkillId(Player player) {
+        // 从玩家数据中获取技能索引
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         int index = data.getCurrentSkillIndex();
-        return skillIds.isEmpty() ? null : skillIds.get(index % skillIds.size());
+
+        // 确保索引在有效范围内
+        if (skillIds.isEmpty()) {
+            return null;
+        }
+
+        // 使用模运算确保索引有效
+        return skillIds.get(index % skillIds.size());
     }
+
+    /**
+     * 检查形态是否包含指定技能
+     */
+    public boolean hasSkill(ResourceLocation skillId) {
+        return skillIds.contains(skillId);
+    }
+
 
     /**
      * 创建此FormConfig的深度副本

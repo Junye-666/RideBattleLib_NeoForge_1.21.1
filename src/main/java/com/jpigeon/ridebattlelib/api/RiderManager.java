@@ -164,46 +164,48 @@ public final class RiderManager {
     // ================ 技能系统快捷方法 ================
 
     /**
-     * 触发技能
+     * 触发技能（使用玩家当前形态）
+     * @param player 玩家
+     * @param skillId 技能ID
+     * @return 是否成功触发
      */
-    public static boolean triggerSkill(Player player, ResourceLocation formId, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
-        if (data == null) return false;
-
-        if (skillId != null) {
-            // 检查技能冷却
-            if (SkillSystem.isSkillOnCooldown(player, skillId)) {
-                int remaining = SkillSystem.getSkillRemainingCooldown(player, skillId);
-                if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.displayClientMessage(
-                            Component.literal("技能冷却中，剩余时间: " + remaining + "秒")
-                                    .withStyle(ChatFormatting.RED),
-                            true
-                    );
-                }
-                return false;
-            }
-
-            // 只触发事件，不执行具体逻辑
-            if (SkillSystem.triggerSkillEvent(player, formId, skillId, type)) {
-                // 技能成功触发后开始冷却
-                SkillSystem.startSkillCooldown(player, skillId);
-                return true;
-            }
-        }
-        return false;
+    public static boolean triggerSkill(Player player, ResourceLocation skillId) {
+        return SkillSystem.triggerSkill(player, skillId);
     }
 
+    /**
+     * 触发技能（指定触发类型）
+     * @param player 玩家
+     * @param skillId 技能ID
+     * @param type 触发类型
+     * @return 是否成功触发
+     */
+    public static boolean triggerSkill(Player player, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
+        return SkillSystem.triggerSkill(player, skillId, type);
+    }
+
+    /**
+     * 触发指定形态的技能
+     * @param player 玩家
+     * @param formId 形态ID
+     * @param skillId 技能ID
+     * @return 是否成功触发
+     */
     public static boolean triggerSkill(Player player, ResourceLocation formId, ResourceLocation skillId) {
         return triggerSkill(player, formId, skillId, SkillEvent.SkillTriggerType.OTHER);
     }
 
-    public static boolean triggerSkill(Player player, ResourceLocation skillId) {
-        return triggerSkill(player, getCurrentFormId(player), SkillEvent.SkillTriggerType.OTHER);
-    }
-
-    public static boolean triggerSkill(Player player, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
-        return triggerSkill(player, getCurrentFormId(player), skillId, type);
+    /**
+     * 触发指定形态的技能
+     * @param player 玩家
+     * @param formId 形态ID
+     * @param skillId 技能ID
+     * @param type 触发类型
+     * @return 是否成功触发
+     */
+    public static boolean triggerSkill(Player player, ResourceLocation formId,
+                                       ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
+        return SkillSystem.triggerSkill(player, formId, skillId, type);
     }
 
     /**
@@ -212,10 +214,15 @@ public final class RiderManager {
      * @return 技能ID列表，无技能则返回空列表
      */
     public static List<ResourceLocation> getCurrentFormSkills(Player player) {
-        FormConfig formConfig = getActiveFormConfig(player);
-        return formConfig != null ? formConfig.getSkillIds() : Collections.emptyList();
+        return SkillSystem.getCurrentFormSkills(player);
     }
 
+    /**
+     * 触发当前选中的技能
+     */
+    public static void triggerCurrentSkill(Player player) {
+        SkillSystem.triggerCurrentSkill(player);
+    }
     // ================ 快速获取 ================
 
     /**
@@ -298,15 +305,7 @@ public final class RiderManager {
      */
     @Nullable
     public static ResourceLocation getCurrentSkill(Player player) {
-        if (!isTransformed(player)) return null;
-
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
-        if (data == null) return null;
-
-        FormConfig form = getFormConfig(player, data.formId());
-        if (form == null) return null;
-
-        return form.getCurrentSkillId(player);
+        return SkillSystem.getCurrentSkillId(player);
     }
 
     // 快速检查方法

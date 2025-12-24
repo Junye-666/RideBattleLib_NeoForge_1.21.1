@@ -7,6 +7,7 @@ import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.*;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
+import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
@@ -123,7 +124,8 @@ public class ExampleBasic {
                     TEST_ENERGY_SLOT,
                     Items.REDSTONE
             )
-            .addGrantedItem(Items.NETHERITE_SWORD);
+            .addGrantedItem(Items.NETHERITE_SWORD)
+            .addSkill(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_skill"));
 
 
     private static void registerAlphaRider() {
@@ -135,6 +137,7 @@ public class ExampleBasic {
 
         alphaBaseForm.setAllowsEmptyDriver(false); // 指定驱动器物品的必要性
 
+        SkillSystem.registerSkill(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_skill"), Component.literal("MAN"), 20);
         // 注册骑士（核心步骤！）
         RiderRegistry.registerRider(riderAlpha);
     }

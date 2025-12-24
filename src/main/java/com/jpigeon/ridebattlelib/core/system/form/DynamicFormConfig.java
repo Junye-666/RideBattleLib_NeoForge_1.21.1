@@ -554,4 +554,18 @@ public class DynamicFormConfig extends FormConfig {
     public boolean shouldPause() {
         return shouldPause;
     }
+
+    /**
+     * 重写获取技能ID的方法，支持动态形态的技能
+     */
+    @Override
+    public List<ResourceLocation> getSkillIds() {
+        // 动态形态可以合并基础形态的技能
+        List<ResourceLocation> allSkills = new ArrayList<>(super.getSkillIds());
+
+        // 可以根据驱动器物品添加额外技能
+        // 例如：遍历driverSnapshot，根据物品类型添加技能
+
+        return Collections.unmodifiableList(allSkills);
+    }
 }

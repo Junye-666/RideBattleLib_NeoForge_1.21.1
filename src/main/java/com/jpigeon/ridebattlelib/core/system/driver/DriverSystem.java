@@ -84,7 +84,7 @@ public class DriverSystem implements IDriverSystem {
             if (!existing.isEmpty()) {
                 if (slot.allowReplace()) {
                     // 返还旧物品
-                    returnItemToPlayer(player, existing.copyWithCount(1));
+                    extractItem(player, slotId);
 
                     // 插入新物品
                     ItemStack toInsert = stack.copyWithCount(1);

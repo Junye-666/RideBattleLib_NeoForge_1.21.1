@@ -72,7 +72,6 @@ public class AttachmentHandler {
         RiderData originalData = original.getData(RiderAttachments.RIDER_DATA);
         SkillSystem.clearAllSkillCooldowns(newPlayer);
 
-
         // 只复制 mainDriverItems 和变身数据（但重生时不自动恢复）
         newPlayer.setData(RiderAttachments.RIDER_DATA, new RiderData(
                 new HashMap<>(originalData.mainDriverItems),
@@ -104,10 +103,5 @@ public class AttachmentHandler {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             HenshinSystem.INSTANCE.unHenshin(player);
         }
-    }
-
-    @SubscribeEvent
-    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        SkillSystem.clearPlayerCooldowns(event.getEntity().getUUID());
     }
 }

@@ -52,13 +52,8 @@ public class DriverSystem implements IDriverSystem {
 
         if (preInsertion.isCanceled()) return false;
 
-        // 阻止驱动器物品
-        if (stack.is(config.getDriverItem()) || stack.is(config.getAuxDriverItem())) {
-            return false;
-        }
-
-        // 阻止触发物品
-        if (stack.is(config.getTriggerItem())) {
+        // 阻止驱动器物品/触发物品
+        if (stack.is(config.getDriverItem()) || stack.is(config.getAuxDriverItem()) || stack.is(config.getTriggerItem())) {
             return false;
         }
 
@@ -72,7 +67,7 @@ public class DriverSystem implements IDriverSystem {
         }
 
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-        // 确保我们操作的是副本，而不是只读Map
+        // 确保是副本，而不是只读Map
         Map<ResourceLocation, ItemStack> mainItems = new HashMap<>(data.getDriverItems(config.getRiderId()));
         Map<ResourceLocation, ItemStack> auxItems = new HashMap<>(data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>()));
 
@@ -87,17 +82,19 @@ public class DriverSystem implements IDriverSystem {
                     extractItem(player, slotId);
 
                     // 插入新物品
-                    ItemStack toInsert = stack.copyWithCount(1);
-                    targetMap.put(slotId, toInsert);
-
-                    // 更新数据存储
+                    targetMap.put(slotId, stack.copyWithCount(1));
+                    cleanInvalidStacks(mainItems);
+                    cleanInvalidStacks(auxItems);
                     data.setDriverItems(config.getRiderId(), mainItems);
                     data.setAuxDriverItems(config.getRiderId(), auxItems);
 
                     if (player instanceof ServerPlayer serverPlayer) {
                         SyncManager.INSTANCE.syncDriverData(serverPlayer);
                     }
-                    stack.shrink(1);
+
+                    ItemInsertionEvent.Post postEvent = new ItemInsertionEvent.Post(player, slotId, stack, config);
+                    NeoForge.EVENT_BUS.post(postEvent);
+
                     return true;
                 }
                 return false;

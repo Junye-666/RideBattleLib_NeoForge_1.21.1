@@ -36,7 +36,5 @@ public interface IHenshinHelper {
     /**
      * 保存变身快照（内部使用）
      */
-    void saveTransformedSnapshot(Player player, RiderConfig config, ResourceLocation formId,
-                                 Map<EquipmentSlot, ItemStack> originalGear,
-                                 Map<ResourceLocation, ItemStack> driverSnapshot);
+    void saveTransformedSnapshot(Player player, RiderConfig config, ResourceLocation formId, Map<EquipmentSlot, ItemStack> originalGear, Map<ResourceLocation, ItemStack> driverSnapshot);
 }

@@ -6,7 +6,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-
 @EventBusSubscriber(modid = RideBattleLib.MODID)
 public class Config
 {

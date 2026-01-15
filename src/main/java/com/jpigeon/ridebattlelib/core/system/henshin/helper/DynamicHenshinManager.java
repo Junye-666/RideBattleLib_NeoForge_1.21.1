@@ -10,8 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 public class DynamicHenshinManager {
-
-     // 应用动态盔甲
+    // 应用动态盔甲
     public static void applyDynamicArmor(Player player, DynamicFormConfig formConfig) {
         if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("应用动态形态盔甲 - 头盔: {}, 胸甲: {}, 护腿: {}, 靴子: {}",

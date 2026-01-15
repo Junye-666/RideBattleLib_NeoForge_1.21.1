@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 @EventBusSubscriber(modid = RideBattleLib.MODID, value = Dist.CLIENT)
 public class ClientModEvents {
     @SubscribeEvent

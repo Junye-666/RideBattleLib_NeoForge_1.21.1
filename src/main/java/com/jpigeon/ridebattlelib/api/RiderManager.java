@@ -19,9 +19,7 @@ import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -31,7 +29,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 假面骑士系统快捷方法管理器。
@@ -41,11 +40,13 @@ import java.util.*;
  * 所有方法均线程安全，可在客户端或服务端调用。
  */
 public final class RiderManager {
-    private RiderManager() {}
+    private RiderManager() {
+    }
     // ================ 变身系统快捷方法 ================
 
     /**
      * 尝试让玩家变身。
+     *
      * @param player 玩家
      * @return 是否成功发起变身
      */
@@ -57,12 +58,14 @@ public final class RiderManager {
 
     /**
      * 解除玩家变身。
+     *
      * @param player 玩家
      * @return 是否成功解除变身
      */
     public static boolean unTransform(Player player) {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
-            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("尝试解除玩家{}变身", player.getName().getString());
+            if (Config.DEVELOPER_MODE.get())
+                RideBattleLib.LOGGER.debug("尝试解除玩家{}变身", player.getName().getString());
             PacketHandler.sendToServer(new UnhenshinPacket(player.getUUID()));
             return true;
         }
@@ -71,12 +74,14 @@ public final class RiderManager {
 
     /**
      * 尝试切换玩家形态。
+     *
      * @param player 玩家
      * @return 是否成功切换
      */
     public static boolean switchForm(Player player, ResourceLocation newFormId) {
         if (isTransformed(player) && getCurrentFormId(player) != newFormId) {
-            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("尝试切换玩家{}形态{}", player.getName().getString(), newFormId);
+            if (Config.DEVELOPER_MODE.get())
+                RideBattleLib.LOGGER.debug("尝试切换玩家{}形态{}", player.getName().getString(), newFormId);
             PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
             return true;
         }
@@ -97,22 +102,15 @@ public final class RiderManager {
      * 插入物品至驱动器
      * 注意：此方法不触发AUTO变身
      */
-    public static boolean insertItemToSlot(Player player, ResourceLocation slotId, ItemStack stack) {
-        if (player.level().isClientSide) {
-            // 客户端发送网络包
-            PacketHandler.sendToServer(new InsertItemPacket(player.getUUID(), slotId, stack));
-            return true; // 假设成功，实际结果需要服务端确认
-        } else {
-            // 服务端直接调用
-            return DriverSystem.INSTANCE.insertItem(player, slotId, stack);
-        }
+    public static void insertItemToSlot(Player player, ResourceLocation slotId, ItemStack stack) {
+        PacketHandler.sendToServer(new InsertItemPacket(player.getUUID(), slotId, stack));
     }
 
     /**
      * 快捷方法
      */
-    public static boolean insertItemToSlot(Player player, ResourceLocation slotId, Item item){
-        return insertItemToSlot(player, slotId, item.getDefaultInstance());
+    public static void insertItemToSlot(Player player, ResourceLocation slotId, Item item) {
+        insertItemToSlot(player, slotId, item.getDefaultInstance());
     }
 
     /**
@@ -120,7 +118,8 @@ public final class RiderManager {
      */
     public static void extractItemFromSlot(Player player, ResourceLocation slotId) {
         if (getItemForSlot(player, slotId).isEmpty()) return;
-        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("为玩家{}从槽位{}取出物品", player.getName().getString(), slotId);
+        if (Config.DEVELOPER_MODE.get())
+            RideBattleLib.LOGGER.debug("为玩家{}从槽位{}取出物品", player.getName().getString(), slotId);
         PacketHandler.sendToServer(new ExtractItemPacket(player.getUUID(), slotId));
     }
 
@@ -128,7 +127,8 @@ public final class RiderManager {
      * 为玩家返还所有驱动器物品
      */
     public static void returnDriverItems(Player player) {
-        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("返还玩家驱动器物品{}", player.getName().getString());
+        if (Config.DEVELOPER_MODE.get())
+            RideBattleLib.LOGGER.debug("返还玩家驱动器物品{}", player.getName().getString());
         PacketHandler.sendToServer(new ReturnItemsPacket());
     }
 
@@ -139,7 +139,8 @@ public final class RiderManager {
      */
     public static void penaltyUntransform(Player player) {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
-            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("强制解除玩家{}变身", player.getName().getString());
+            if (Config.DEVELOPER_MODE.get())
+                RideBattleLib.LOGGER.debug("强制解除玩家{}变身", player.getName().getString());
             PenaltySystem.PENALTY_SYSTEM.penaltyUnhenshin(player);
         }
     }
@@ -148,7 +149,8 @@ public final class RiderManager {
      * 开始变身冷却
      */
     public static void applyCooldown(Player player, int seconds) {
-        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("设置玩家{}变身冷却{}秒", player.getName().getString(), seconds);
+        if (Config.DEVELOPER_MODE.get())
+            RideBattleLib.LOGGER.debug("设置玩家{}变身冷却{}秒", player.getName().getString(), seconds);
         PenaltySystem.PENALTY_SYSTEM.startCooldown(player, seconds);
     }
 
@@ -157,7 +159,8 @@ public final class RiderManager {
      */
     public static boolean isInCooldown(Player player) {
         boolean inCooldown = PenaltySystem.PENALTY_SYSTEM.isInCooldown(player);
-        if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("玩家{}是否处于冷却状态：{}", player.getName().getString(), inCooldown);
+        if (Config.DEVELOPER_MODE.get())
+            RideBattleLib.LOGGER.debug("玩家{}是否处于冷却状态：{}", player.getName().getString(), inCooldown);
         return inCooldown;
     }
 
@@ -165,7 +168,8 @@ public final class RiderManager {
 
     /**
      * 触发技能（使用玩家当前形态）
-     * @param player 玩家
+     *
+     * @param player  玩家
      * @param skillId 技能ID
      * @return 是否成功触发
      */
@@ -175,9 +179,10 @@ public final class RiderManager {
 
     /**
      * 触发技能（指定触发类型）
-     * @param player 玩家
+     *
+     * @param player  玩家
      * @param skillId 技能ID
-     * @param type 触发类型
+     * @param type    触发类型
      * @return 是否成功触发
      */
     public static boolean triggerSkill(Player player, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
@@ -186,8 +191,9 @@ public final class RiderManager {
 
     /**
      * 触发指定形态的技能
-     * @param player 玩家
-     * @param formId 形态ID
+     *
+     * @param player  玩家
+     * @param formId  形态ID
      * @param skillId 技能ID
      * @return 是否成功触发
      */
@@ -197,10 +203,11 @@ public final class RiderManager {
 
     /**
      * 触发指定形态的技能
-     * @param player 玩家
-     * @param formId 形态ID
+     *
+     * @param player  玩家
+     * @param formId  形态ID
      * @param skillId 技能ID
-     * @param type 触发类型
+     * @param type    触发类型
      * @return 是否成功触发
      */
     public static boolean triggerSkill(Player player, ResourceLocation formId,
@@ -210,6 +217,7 @@ public final class RiderManager {
 
     /**
      * 获取玩家当前形态的技能列表
+     *
      * @param player 玩家
      * @return 技能ID列表，无技能则返回空列表
      */
@@ -227,6 +235,7 @@ public final class RiderManager {
 
     /**
      * 获取玩家当前骑士配置
+     *
      * @param player 玩家
      * @return 当前骑士配置，未找到则返回null
      */
@@ -237,6 +246,7 @@ public final class RiderManager {
 
     /**
      * 获取玩家当前激活的形态配置
+     *
      * @param player 玩家
      * @return 当前形态配置，未找到则返回null
      */
@@ -249,6 +259,7 @@ public final class RiderManager {
 
     /**
      * 获取当前变身数据
+     *
      * @param player 玩家
      * @return 玩家当前形态Id
      */
@@ -260,6 +271,7 @@ public final class RiderManager {
 
     /**
      * 通过形态Id获取形态配置
+     *
      * @param formId 形态Id
      * @return 通过Id匹配的配置
      */
@@ -283,6 +295,7 @@ public final class RiderManager {
 
     /**
      * 获取玩家当前目标形态
+     *
      * @return 当前缓冲形态Id
      */
     @Nullable
@@ -294,6 +307,7 @@ public final class RiderManager {
 
     /**
      * 获取玩家驱动器内物品
+     *
      * @return 玩家当前驱动器内物品列表
      */
     public static Map<ResourceLocation, ItemStack> getDriverItems(Player player) {
@@ -320,6 +334,7 @@ public final class RiderManager {
 
     /**
      * 检查玩家是否变身为特定形态
+     *
      * @param player 玩家
      * @param formId 形态ID
      * @return 是否变身为该形态
@@ -380,7 +395,7 @@ public final class RiderManager {
      * 检查玩家驱动器中是否有指定物品（任何槽位）
      *
      * @param player 玩家
-     * @param item 要检查的物品
+     * @param item   要检查的物品
      * @return 当驱动器中存在该物品返回true
      */
     public static boolean hasItemInDriver(Player player, Item item) {
@@ -407,7 +422,7 @@ public final class RiderManager {
     /**
      * 检查玩家驱动器中是否有指定物品（考虑组件匹配）
      *
-     * @param player 玩家
+     * @param player    玩家
      * @param itemStack 要检查的物品堆栈（包含组件）
      * @return 当驱动器中存在匹配的物品返回true
      */
@@ -433,7 +448,7 @@ public final class RiderManager {
      *
      * @param player 玩家
      * @param slotId 槽位ID
-     * @param item 要检查的物品
+     * @param item   要检查的物品
      * @return 如果指定槽位中存在该物品则返回true
      */
     public static boolean hasItemInSlot(Player player, ResourceLocation slotId, Item item) {
@@ -459,8 +474,9 @@ public final class RiderManager {
 
     /**
      * 检查玩家驱动器的指定槽位中是否有指定物品（考虑NBT匹配）
-     * @param player 玩家
-     * @param slotId 槽位ID
+     *
+     * @param player    玩家
+     * @param slotId    槽位ID
      * @param itemStack 要检查的物品堆栈（包含NBT）
      * @return 如果指定槽位中存在匹配的物品则返回true
      */
@@ -483,6 +499,7 @@ public final class RiderManager {
 
     /**
      * 获取指定槽位中的物品堆栈
+     *
      * @param player 玩家
      * @param slotId 槽位ID
      * @return 槽位中的物品堆栈，如果为空则返回ItemStack.EMPTY
@@ -498,6 +515,7 @@ public final class RiderManager {
 
     /**
      * 检查驱动器是否为空
+     *
      * @param player 玩家
      * @return 如果驱动器没有任何物品则返回true
      */
@@ -570,29 +588,32 @@ public final class RiderManager {
 
     /**
      * 倒计时方法
-     * @param ticks 等待游戏刻数
+     *
+     * @param ticks    等待游戏刻数
      * @param callback 执行任务
      */
-    public static void scheduleTicks(int ticks, Runnable callback){
+    public static void scheduleTicks(int ticks, Runnable callback) {
         if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("等待{}刻后执行{}", ticks, callback);
         CountdownManager.getInstance().scheduleTask(ticks, callback);
     }
 
     /**
      * 倒计时方法
-     * @param seconds 等待秒数
+     *
+     * @param seconds  等待秒数
      * @param callback 执行任务
      */
-    public static void scheduleSeconds(float seconds, Runnable callback){
+    public static void scheduleSeconds(float seconds, Runnable callback) {
         scheduleTicks((int) (seconds * 20), callback);
     }
 
     /**
      * 快捷完成变身方法
-     * @param ticks 等待游戏刻数
+     *
+     * @param ticks  等待游戏刻数
      * @param player 要完成变身的玩家
      */
-    public static void completeIn(int ticks, Player player){
+    public static void completeIn(int ticks, Player player) {
         scheduleTicks(ticks, () -> completeHenshin(player));
     }
 

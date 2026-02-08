@@ -171,7 +171,6 @@ public class DriverHandler {
         if (!RiderManager.isTransformed(player)) return;
         RiderConfig config = RiderManager.getActiveRiderConfig(player);
         if (config == null) return;
-        RideBattleLib.LOGGER.debug("检测到玩家更改");
 
         // 只关心骑士驱动器槽位
         EquipmentSlot slot = event.getSlot();

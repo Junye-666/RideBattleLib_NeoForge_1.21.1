@@ -19,7 +19,7 @@ public class RiderRegistry {
 
     public static void registerRider(RiderConfig config) {
         RIDERS.put(config.getRiderId(), config);
-
+        RiderArmorRegistry.registerRiderArmor(config);
         // 注册所有形态，并建立形态到骑士的映射
         for (FormConfig form : config.forms.values()) {
             registerFormForRider(form, config.getRiderId());

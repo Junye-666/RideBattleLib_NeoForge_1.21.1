@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.driver;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.RiderManager;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
@@ -12,12 +13,15 @@ import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverActionPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.LogicalSide;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
+import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.Map;
@@ -159,4 +163,52 @@ public class DriverHandler {
             event.setCanceled(true);
         }
     }
+
+    @SubscribeEvent
+    public static void onEquipmentChange(LivingEquipmentChangeEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        // 是否处于变身状态
+        if (!RiderManager.isTransformed(player)) return;
+        RiderConfig config = RiderManager.getActiveRiderConfig(player);
+        if (config == null) return;
+        RideBattleLib.LOGGER.debug("检测到玩家更改");
+
+        // 只关心骑士驱动器槽位
+        EquipmentSlot slot = event.getSlot();
+        if (!isRiderDriverSlot(config, slot)) return;
+
+        ItemStack from = event.getFrom();
+        ItemStack to = event.getTo();
+
+        // 如果试图移除驱动器
+        if (isRiderDriver(from)) {
+            if (to.isEmpty()) {
+                RiderManager.unTransform(player);
+            } else {
+                if (!player.getInventory().add(to)) player.drop(to, false);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onItemPickup(ItemEntityPickupEvent.Pre event) {
+        ItemStack stack = event.getItemEntity().getItem();
+        if (isRiderArmor(stack)) {
+            stack.shrink(stack.getCount());
+        }
+    }
+
+
+    private static boolean isRiderDriverSlot(RiderConfig config, EquipmentSlot slot) {
+        return slot.equals(config.getDriverSlot());
+    }
+
+    private static boolean isRiderArmor(ItemStack stack) {
+        return RiderArmorRegistry.getAllArmor().contains(stack.getItem());
+    }
+
+    private static boolean isRiderDriver(ItemStack stack) {
+        return RiderArmorRegistry.getAllDriver().contains(stack.getItem());
+    }
+
 }

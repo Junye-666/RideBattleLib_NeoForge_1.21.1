@@ -59,8 +59,8 @@ public class ArmorManager {
 
         // 恢复所有槽位，包括空槽位
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR ||
-                    slot == data.config().getDriverSlot()) {
+            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR &&
+                    slot != data.config().getDriverSlot()) {
 
                 ItemStack original = data.originalGear().get(slot);
 
@@ -69,33 +69,6 @@ public class ArmorManager {
                     player.setItemSlot(slot, ItemStack.EMPTY);
                 } else {
                     player.setItemSlot(slot, original);
-                }
-            }
-        }
-
-        // 只在驱动器槽位丢失时才补充驱动器
-        EquipmentSlot driverSlot = data.config().getDriverSlot();
-        ItemStack currentDriver = player.getItemBySlot(driverSlot);
-
-        // 检查当前驱动器槽位是否是正确的驱动器
-        boolean hasDriverInSlot = !currentDriver.isEmpty() &&
-                currentDriver.is(data.config().getDriverItem());
-
-        // 如果驱动器槽位没有正确驱动器，才检查背包
-        if (!hasDriverInSlot) {
-            boolean hasDriverInInventory = false;
-            for (ItemStack stack : player.getInventory().items) {
-                if (!stack.isEmpty() && stack.is(data.config().getDriverItem())) {
-                    hasDriverInInventory = true;
-                    break;
-                }
-            }
-
-            // 如果整个背包都没有驱动器，才返还一个
-            if (!hasDriverInInventory) {
-                ItemStack driver = new ItemStack(data.config().getDriverItem());
-                if (!player.addItem(driver)) {
-                    player.drop(driver, false);
                 }
             }
         }

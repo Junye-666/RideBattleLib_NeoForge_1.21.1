@@ -1,7 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.network.packet;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.network.handler.UUIDStreamCodec;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -26,7 +26,7 @@ public record DriverDataDiffPacket(
 
     public static final StreamCodec<RegistryFriendlyByteBuf, DriverDataDiffPacket> STREAM_CODEC =
             StreamCodec.composite(
-                    UUIDStreamCodec.INSTANCE,
+                    UUIDUtil.STREAM_CODEC,
                     DriverDataDiffPacket::playerId,
                     createChangesCodec(),
                     DriverDataDiffPacket::changes,

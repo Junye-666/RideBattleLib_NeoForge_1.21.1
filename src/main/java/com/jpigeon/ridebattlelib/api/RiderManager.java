@@ -15,7 +15,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.helper.CountdownManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
-import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
@@ -27,6 +27,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -561,29 +564,47 @@ public final class RiderManager {
     // ================ 开发便捷方法 ================
 
     /**
-     * 播放公共音效 - 所有附近玩家都能听到
-     * 现在只在服务端调用，因为所有逻辑都在服务端执行
+     * 播放一个全服都能听到的音效（基于玩家位置）
+     *
+     * @param player 音源玩家（可以是客户端或服务端实例）
+     * @param sound  音效事件
+     * @param volume 音量（影响传播范围）
+     * @param pitch  音调
      */
-    public static void playPublicSound(Player player, SoundEvent sound, SoundSource category, float volume, float pitch) {
-        if (!player.level().isClientSide) {
-            // 服务端：广播给所有玩家
-            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("播放音效{}", sound);
-            player.level().playSound(null, player, sound, category, volume, pitch);
+    public static void playPublicSound(Player player, SoundEvent sound, float volume, float pitch) {
+        if (player.level().isClientSide()) {
+            // 客户端：发送网络包请求服务端播放
+            sendSoundPacketToServer(player, sound, volume, pitch);
+        } else {
+            // 服务端：直接广播
+            player.level().playSound(null, player, sound, SoundSource.PLAYERS, volume, pitch);
         }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void sendSoundPacketToServer(Player player, SoundEvent sound, float volume, float pitch) {
+        // 构造包并发送
+        SoundPacket packet = new SoundPacket(
+                player.getUUID(),
+                BuiltInRegistries.SOUND_EVENT.getKey(sound),
+                volume,
+                pitch
+        );
+        PacketDistributor.sendToServer(packet);
     }
 
     /**
      * 播放公共音效（简化单个参数）
      */
     public static void playPublicSound(Player player, SoundEvent sound, float volume) {
-        playPublicSound(player, sound, SoundSource.PLAYERS, volume, 1.0F);
+        playPublicSound(player, sound, volume, 1.0F);
     }
 
     /**
      * 播放公共音效（简化两个参数）
      */
     public static void playPublicSound(Player player, SoundEvent sound) {
-        playPublicSound(player, sound, SoundSource.PLAYERS, 1.0F, 1.0F);
+        playPublicSound(player, sound, 1.0F, 1.0F);
     }
 
     /**

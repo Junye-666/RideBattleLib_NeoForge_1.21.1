@@ -5,7 +5,7 @@ import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.CountdownManager;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
-import com.jpigeon.ridebattlelib.core.system.network.handler.PacketHandler;
+import com.jpigeon.ridebattlelib.core.system.network.PacketHandler;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;

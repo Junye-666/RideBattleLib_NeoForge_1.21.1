@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.core.system.network.handler;
+package com.jpigeon.ridebattlelib.core.system.network;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
@@ -11,8 +11,11 @@ import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
@@ -138,6 +141,23 @@ public class PacketHandler {
                             if (targetPlayer != null) {
                                 SkillSystem.triggerCurrentSkill(targetPlayer);
                             }
+                        }
+                )
+                .playToServer(
+                        SoundPacket.TYPE,
+                        SoundPacket.STREAM_CODEC,
+                        (payload, context) -> {
+                            // 服务端处理
+                            ServerPlayer sender = (ServerPlayer) context.player();
+
+                            if (!sender.getUUID().equals(payload.playerId())) return;
+
+                            // 获取音效
+                            SoundEvent sound = BuiltInRegistries.SOUND_EVENT.get(payload.soundId());
+                            if (sound == null) return;
+
+                            // 服务端广播
+                            sender.level().playSound(null, sender, sound, SoundSource.PLAYERS, payload.volume(), payload.pitch());
                         }
                 )
         ;

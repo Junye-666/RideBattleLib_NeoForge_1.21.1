@@ -1,7 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.network.packet;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.network.handler.UUIDStreamCodec;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -15,7 +15,7 @@ public record InsertItemPacket(UUID playerId, ResourceLocation slotId, ItemStack
     public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "insert_item");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, InsertItemPacket> STREAM_CODEC = StreamCodec.composite(
-            UUIDStreamCodec.INSTANCE,
+            UUIDUtil.STREAM_CODEC,
             InsertItemPacket::playerId,
             ResourceLocation.STREAM_CODEC,
             InsertItemPacket::slotId,

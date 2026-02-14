@@ -1,7 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.network.packet;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.network.handler.UUIDStreamCodec;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -16,7 +16,7 @@ public record ExtractItemPacket(UUID playerId, ResourceLocation slotId
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ExtractItemPacket> STREAM_CODEC =
             StreamCodec.composite(
-                    UUIDStreamCodec.INSTANCE,
+                    UUIDUtil.STREAM_CODEC,
                     ExtractItemPacket::playerId,
                     ResourceLocation.STREAM_CODEC,
                     ExtractItemPacket::slotId,

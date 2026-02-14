@@ -1,7 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.network.packet;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.core.system.network.handler.UUIDStreamCodec;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -16,7 +16,7 @@ public record TransformedStatePacket(UUID playerId, boolean isTransformed) imple
 
     public static final StreamCodec<RegistryFriendlyByteBuf, TransformedStatePacket> STREAM_CODEC =
             StreamCodec.composite(
-                    UUIDStreamCodec.INSTANCE,
+                    UUIDUtil.STREAM_CODEC,
                     TransformedStatePacket::playerId,
                     ByteBufCodecs.BOOL,
                     TransformedStatePacket::isTransformed,

@@ -21,7 +21,7 @@ public class RideBattleLibClient {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         RideBattleLib.LOGGER.info("请确保骑士初始化在ClientSetup中哦~");
-        ExampleBasic.init();
+        // ExampleBasic.init();
         // ExampleDynamicForm.init();
 
         event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {

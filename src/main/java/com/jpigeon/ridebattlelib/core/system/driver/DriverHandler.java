@@ -177,9 +177,7 @@ public class DriverHandler {
         if (!isRiderDriverSlot(config, slot)) return;
 
         ItemStack from = event.getFrom();
-        ItemStack to = event.getTo();
 
-        if (isRiderDriver(to)) return;
         // 如果试图移除驱动器
         if (isRiderDriver(from)) {
             RiderManager.unTransform(player);

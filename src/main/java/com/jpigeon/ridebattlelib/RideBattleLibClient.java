@@ -1,7 +1,6 @@
 package com.jpigeon.ridebattlelib;
 
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
-import com.jpigeon.ridebattlelib.example.ExampleBasic;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;

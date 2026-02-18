@@ -6,13 +6,13 @@ import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
-import com.jpigeon.ridebattlelib.core.system.network.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.HenshinStateSyncPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.TransformedStatePacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class SyncManager {
                     player.getName().getString(), data.getHenshinState(), data.getPendingFormId());
         }
 
-        PacketHandler.sendToClient(player, new HenshinStateSyncPacket(
+        PacketDistributor.sendToPlayer(player, new HenshinStateSyncPacket(
                 player.getUUID(),
                 data.getHenshinState(),
                 data.getPendingFormId()
@@ -58,7 +58,7 @@ public class SyncManager {
         Map<ResourceLocation, ItemStack> mainItems = data.getDriverItems(config.getRiderId());
         Map<ResourceLocation, ItemStack> auxItems = data.auxDriverItems.getOrDefault(config.getRiderId(), new HashMap<>());
 
-        PacketHandler.sendToClient(player, new DriverDataSyncPacket(
+        PacketDistributor.sendToPlayer(player, new DriverDataSyncPacket(
                 player.getUUID(),
                 new HashMap<>(mainItems),
                 new HashMap<>(auxItems)
@@ -70,6 +70,6 @@ public class SyncManager {
      */
     public void syncTransformedState(ServerPlayer player) {
         boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
-        PacketHandler.sendToClient(player, new TransformedStatePacket(player.getUUID(), isTransformed));
+        PacketDistributor.sendToPlayer(player, new TransformedStatePacket(player.getUUID(), isTransformed));
     }
 }

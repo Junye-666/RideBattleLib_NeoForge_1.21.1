@@ -2,17 +2,14 @@ package com.jpigeon.ridebattlelib.core.system.network;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
-
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
-import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
+import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -68,7 +65,7 @@ public class PacketHandler {
                         (payload, context) -> {
                             Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
                             if (targetPlayer != null) {
-                                DriverSystem.INSTANCE.extractItem(context.player(), payload.slotId());
+                                DriverSystem.INSTANCE.extractItem(targetPlayer, payload.slotId());
                             }
                         })
 
@@ -78,8 +75,7 @@ public class PacketHandler {
                 .playToClient(TransformedStatePacket.TYPE, TransformedStatePacket.STREAM_CODEC,
                         (payload, context) -> HenshinSystem.CLIENT_TRANSFORMED_CACHE.put(payload.playerId(), payload.isTransformed()))
                 .playToClient(HenshinStateSyncPacket.TYPE, HenshinStateSyncPacket.STREAM_CODEC,
-                        (payload, context) ->
-                        {
+                        (payload, context) -> {
                             if (context.player() instanceof ServerPlayer serverPlayer) {
                                 SyncManager.INSTANCE.syncTransformedState(serverPlayer);
                             }
@@ -104,7 +100,7 @@ public class PacketHandler {
                             // 同步给所有客户端
                             if (context.player() instanceof ServerPlayer serverPlayer) {
                                 SyncManager.INSTANCE.syncHenshinState(serverPlayer);
-                            } else if (Config.DEBUG_MODE.get()){
+                            } else if (Config.DEBUG_MODE.get()) {
                                 RideBattleLib.LOGGER.debug("玩家未连接: {}", player.getName().getString());
                             }
                         }
@@ -113,12 +109,6 @@ public class PacketHandler {
                         RotateSkillPacket.TYPE,
                         RotateSkillPacket.STREAM_CODEC,
                         (payload, context) -> {
-                            // 验证发送者身份
-                            if (!payload.playerId().equals(context.player().getUUID()) && Config.DEBUG_MODE.get()) {
-                                RideBattleLib.LOGGER.debug("RotateSkillPacket发送者身份不匹配: 预期={}, 实际={}",
-                                        payload.playerId(), context.player().getUUID());
-                            }
-
                             // 获取正确的玩家对象
                             Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
                             if (targetPlayer != null) {
@@ -130,12 +120,6 @@ public class PacketHandler {
                         TriggerSkillPacket.TYPE,
                         TriggerSkillPacket.STREAM_CODEC,
                         (payload, context) -> {
-                            // 验证发送者身份
-                            if (!payload.playerId().equals(context.player().getUUID()) && Config.DEBUG_MODE.get()) {
-                                RideBattleLib.LOGGER.debug("TriggerSkillPacket发送者身份不匹配: 预期={}, 实际={}",
-                                        payload.playerId(), context.player().getUUID());
-                            }
-
                             // 获取正确的玩家对象
                             Player targetPlayer = context.player().level().getPlayerByUUID(payload.playerId());
                             if (targetPlayer != null) {
@@ -161,18 +145,5 @@ public class PacketHandler {
                         }
                 )
         ;
-    }
-
-    public static void sendToServer(CustomPacketPayload packet) {
-        if (Minecraft.getInstance().getConnection() != null) {
-            Minecraft.getInstance().getConnection().send(packet);
-        }
-    }
-
-    public static void sendToClient(ServerPlayer player, CustomPacketPayload packet) {
-        if (packet instanceof HenshinStateSyncPacket && Config.DEBUG_MODE.get()){
-            RideBattleLib.LOGGER.debug("发送状态同步包");
-        }
-        player.connection.send(packet);
     }
 }

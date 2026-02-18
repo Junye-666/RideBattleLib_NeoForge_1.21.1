@@ -5,7 +5,8 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.api.RiderManager;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
-import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
+import com.jpigeon.ridebattlelib.core.system.event.FormSwitchEvent;
+import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.network.PacketHandler;
@@ -15,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Objects;
 
@@ -62,7 +64,7 @@ public class DriverActionManager {
             RideBattleLib.LOGGER.debug("使玩家 {} 继续变身 {}", player.getName().getString(), config.getRiderId());
             RideBattleLib.LOGGER.debug("发送变身包: {}", config.getRiderId());
         }
-        PacketHandler.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));
+        PacketDistributor.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));
     }
 
     public void proceedFormSwitch(Player player, ResourceLocation newFormId) {
@@ -70,7 +72,7 @@ public class DriverActionManager {
             RideBattleLib.LOGGER.debug("玩家 {} 进入形态切换阶段", player.getName());
             RideBattleLib.LOGGER.debug("发送形态切换包: {}", newFormId);
         }
-        PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
+        PacketDistributor.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
     }
 
     public void completeTransformation(Player player) {

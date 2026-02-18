@@ -4,15 +4,15 @@ import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.driver.DriverHandler;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.CountdownManager;
-import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.jpigeon.ridebattlelib.core.system.network.PacketHandler;
-import org.slf4j.Logger;
+import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
+import org.slf4j.Logger;
 
 @Mod(RideBattleLib.MODID)
 public class RideBattleLib {

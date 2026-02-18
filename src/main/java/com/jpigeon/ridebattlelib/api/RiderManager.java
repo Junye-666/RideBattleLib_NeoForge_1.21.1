@@ -15,7 +15,6 @@ import com.jpigeon.ridebattlelib.core.system.henshin.helper.CountdownManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
-import com.jpigeon.ridebattlelib.core.system.network.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
@@ -55,7 +54,7 @@ public final class RiderManager {
      */
     public static boolean transform(Player player) {
         if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("尝试为玩家{}变身", player.getName().getString());
-        PacketHandler.sendToServer(new DriverActionPacket(player.getUUID()));
+        PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
         return true;
     }
 
@@ -69,7 +68,7 @@ public final class RiderManager {
         if (HenshinSystem.INSTANCE.isTransformed(player)) {
             if (Config.DEVELOPER_MODE.get())
                 RideBattleLib.LOGGER.debug("尝试解除玩家{}变身", player.getName().getString());
-            PacketHandler.sendToServer(new UnhenshinPacket(player.getUUID()));
+            PacketDistributor.sendToServer(new UnhenshinPacket(player.getUUID()));
             return true;
         }
         return false;
@@ -85,7 +84,7 @@ public final class RiderManager {
         if (isTransformed(player) && getCurrentFormId(player) != newFormId) {
             if (Config.DEVELOPER_MODE.get())
                 RideBattleLib.LOGGER.debug("尝试切换玩家{}形态{}", player.getName().getString(), newFormId);
-            PacketHandler.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
+            PacketDistributor.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
             return true;
         }
         return false;
@@ -106,7 +105,7 @@ public final class RiderManager {
      * 注意：此方法不触发AUTO变身
      */
     public static void insertItemToSlot(Player player, ResourceLocation slotId, ItemStack stack) {
-        PacketHandler.sendToServer(new InsertItemPacket(player.getUUID(), slotId, stack));
+        PacketDistributor.sendToServer(new InsertItemPacket(player.getUUID(), slotId, stack));
     }
 
     /**
@@ -123,7 +122,7 @@ public final class RiderManager {
         if (getItemForSlot(player, slotId).isEmpty()) return;
         if (Config.DEVELOPER_MODE.get())
             RideBattleLib.LOGGER.debug("为玩家{}从槽位{}取出物品", player.getName().getString(), slotId);
-        PacketHandler.sendToServer(new ExtractItemPacket(player.getUUID(), slotId));
+        PacketDistributor.sendToServer(new ExtractItemPacket(player.getUUID(), slotId));
     }
 
     /**
@@ -132,7 +131,7 @@ public final class RiderManager {
     public static void returnDriverItems(Player player) {
         if (Config.DEVELOPER_MODE.get())
             RideBattleLib.LOGGER.debug("返还玩家驱动器物品{}", player.getName().getString());
-        PacketHandler.sendToServer(new ReturnItemsPacket());
+        PacketDistributor.sendToServer(new ReturnItemsPacket());
     }
 
     // ================ 吃瘪系统快捷方法 ================

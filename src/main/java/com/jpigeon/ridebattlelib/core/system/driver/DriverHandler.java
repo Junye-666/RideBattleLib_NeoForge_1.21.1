@@ -6,10 +6,12 @@ import com.jpigeon.ridebattlelib.api.RiderManager;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
-import com.jpigeon.ridebattlelib.core.system.henshin.*;
+import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderArmorRegistry;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
-import com.jpigeon.ridebattlelib.core.system.network.PacketHandler;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverActionPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,6 +25,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Map;
 import java.util.UUID;
@@ -97,7 +100,7 @@ public class DriverHandler {
                 RideBattleLib.LOGGER.debug("物品触发 - 玩家状态: 变身={}, 驱动器={}",
                         HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
             }
-            PacketHandler.sendToServer(new DriverActionPacket(player.getUUID()));
+            PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
         }
 
         // 强制恢复物品数量（防止NBT修改）
@@ -157,7 +160,7 @@ public class DriverHandler {
                     RideBattleLib.LOGGER.debug("自动触发 - 玩家状态: 变身={}, 驱动器={}",
                             HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
                 }
-                PacketHandler.sendToServer(new DriverActionPacket(player.getUUID()));
+                PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
             }
 
             event.setCanceled(true);

@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.HenshinContext;
 import com.jpigeon.ridebattlelib.api.RiderManager;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
@@ -20,7 +21,10 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import java.util.Objects;
 
 public class DriverActionManager {
-    public static final DriverActionManager INSTANCE = new DriverActionManager();
+    private static final DriverActionManager INSTANCE = new DriverActionManager();
+    public static DriverActionManager getInstance() {
+        return INSTANCE;
+    }
 
     public void prepareHenshin(Player player, ResourceLocation formId) {
         if (RiderManager.isTransformed(player)) return;
@@ -89,7 +93,7 @@ public class DriverActionManager {
             RideBattleLib.LOGGER.debug("完成变身序列: player={}, form={}", player.getName().getString(), formId);
         }
 
-        if (!HenshinSystem.INSTANCE.isTransformed(player)) {
+        if (!HenshinSystem.getInstance().isTransformed(player)) {
             proceedHenshin(player, Objects.requireNonNull(RiderConfig.findActiveDriverConfig(player)));
         } else {
             proceedFormSwitch(player, formId);
@@ -103,7 +107,7 @@ public class DriverActionManager {
 
         // 同步状态
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.INSTANCE.syncHenshinState(serverPlayer);
+            HenshinContext.DATA_SYNC.syncHenshinState(serverPlayer);
         }
     }
 
@@ -117,7 +121,7 @@ public class DriverActionManager {
             data.setPendingFormId(null);
 
             if (player instanceof ServerPlayer serverPlayer) {
-                SyncManager.INSTANCE.syncHenshinState(serverPlayer);
+                HenshinContext.DATA_SYNC.syncHenshinState(serverPlayer);
             }
         }
     }

@@ -31,12 +31,12 @@ public class PenaltyHandler {
         if (player.level().isClientSide()) return;
 
         // 强制解除
-        if (HenshinSystem.INSTANCE.isTransformed(player)) {
-            HenshinSystem.INSTANCE.unHenshin(player);
+        if (HenshinSystem.getInstance().isTransformed(player)) {
+            HenshinSystem.getInstance().unHenshin(player);
         }
 
-        if (!DriverSystem.INSTANCE.getDriverItems(player).isEmpty()){
-            DriverSystem.INSTANCE.returnItems(player);
+        if (!DriverSystem.getInstance().getDriverItems(player).isEmpty()){
+            DriverSystem.getInstance().returnItems(player);
         }
 
         player.removeTag("penalty_cooldown");

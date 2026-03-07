@@ -45,7 +45,7 @@ public class PenaltySystem implements IPenaltySystem {
     public static boolean shouldTriggerPenalty(Player player) {
         if (!Config.PENALTY_ENABLED.get()) return false;
         PenaltySystem instance = getInstance();
-        return HenshinSystem.INSTANCE.isTransformed(player) &&
+        return HenshinSystem.getInstance().isTransformed(player) &&
                 player.getHealth() <= instance.getPenaltyThreshold() &&
                 !instance.isInCooldown(player);
     }
@@ -55,7 +55,7 @@ public class PenaltySystem implements IPenaltySystem {
         if (player.level().isClientSide()) return;
 
         // 强制解除变身
-        HenshinSystem.INSTANCE.unHenshin(player);
+        HenshinSystem.getInstance().unHenshin(player);
 
         // 爆炸
         PenaltyEvent.Explosion explosion = new PenaltyEvent.Explosion(player);
@@ -72,15 +72,19 @@ public class PenaltySystem implements IPenaltySystem {
         NeoForge.EVENT_BUS.post(sound);
         if (!sound.isCanceled()) {
             // 播放爆炸音效
-            if (!player.level().isClientSide()) {
-                player.level().playSound(
+            Level level = player.level();
+            if (level.isClientSide()) {
+                level.playSound(
                         player,
                         player.getX(), player.getY(), player.getZ(),
                         SoundEvents.GENERIC_EXPLODE.value(),
                         SoundSource.PLAYERS,
                         1.0F,
-                        1.0F + player.level().random.nextFloat() * 0.2F
+                        1.0F + level.random.nextFloat() * 0.2F
                 );
+                level.playSound(null, player.blockPosition(),
+                        SoundEvents.ANVIL_LAND, SoundSource.PLAYERS,
+                        0.8F, 0.5F);
             }
         }
 

@@ -25,9 +25,7 @@ public class RiderArmorRegistry {
     }
 
     public static boolean isValidArmor(RiderConfig config, Item item) {
-        boolean b = item != Items.AIR && item != null;
-        if (item != config.getDriverItem()) b = true;
-        return b;
+        return item != null && item != Items.AIR && item != config.getDriverItem();
     }
 
     public static Set<Item> getAllArmor() {

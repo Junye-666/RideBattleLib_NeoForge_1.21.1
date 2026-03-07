@@ -1,5 +1,7 @@
 package com.jpigeon.ridebattlelib.core.system.event;
 
+import com.jpigeon.ridebattlelib.Config;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.TransformedData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
@@ -16,22 +18,22 @@ public class UnhenshinEvent extends Event {
     private final ResourceLocation formId;
     private final boolean isPenalty;
 
-    public UnhenshinEvent(Player player, ResourceLocation riderId, ResourceLocation formId, boolean isPenalty) {
+    public UnhenshinEvent(Player player, TransformedData data) {
         this.player = player;
-        this.riderId = riderId;
-        this.formId = formId;
-        this.isPenalty = isPenalty;
+        this.riderId = data.config().getRiderId();
+        this.formId = data.formId();
+        this.isPenalty = player.getHealth() == Config.PENALTY_THRESHOLD.get();
     }
 
     public static class Pre extends UnhenshinEvent implements ICancellableEvent {
-        public Pre(Player player, ResourceLocation riderId, ResourceLocation formId, boolean isPenalty) {
-            super(player, riderId, formId, isPenalty);
+        public Pre(Player player, TransformedData data) {
+            super(player, data);
         }
     }
 
     public static class Post extends UnhenshinEvent {
-        public Post(Player player, ResourceLocation riderId, ResourceLocation formId, boolean isPenalty) {
-            super(player, riderId, formId, isPenalty);
+        public Post(Player player, TransformedData data) {
+            super(player, data);
         }
     }
 

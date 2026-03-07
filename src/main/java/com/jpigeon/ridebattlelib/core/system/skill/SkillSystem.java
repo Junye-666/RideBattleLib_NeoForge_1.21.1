@@ -10,6 +10,7 @@ import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.TransformedData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -65,7 +66,7 @@ public class SkillSystem {
      */
     @Nullable
     public static FormConfig getActiveFormConfig(Player player) {
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
+        TransformedData data = HenshinSystem.getInstance().getTransformedData(player);
         if (data == null) return null;
 
         // 优先从玩家当前骑士获取形态配置
@@ -173,7 +174,7 @@ public class SkillSystem {
             RideBattleLib.LOGGER.debug("尝试触发当前技能");
         }
 
-        if (!HenshinSystem.INSTANCE.isTransformed(player)) {
+        if (!HenshinSystem.getInstance().isTransformed(player)) {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("触发技能失败: 玩家未变身");
             }
@@ -202,7 +203,7 @@ public class SkillSystem {
         }
 
         // 获取当前形态ID
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
+        TransformedData data = HenshinSystem.getInstance().getTransformedData(player);
         if (data == null) {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("触发技能失败: 无变身数据");
@@ -240,9 +241,9 @@ public class SkillSystem {
      * @return 是否成功触发
      */
     public static boolean triggerSkill(Player player, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
-        if (!HenshinSystem.INSTANCE.isTransformed(player)) return false;
+        if (!HenshinSystem.getInstance().isTransformed(player)) return false;
 
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
+        TransformedData data = HenshinSystem.getInstance().getTransformedData(player);
         if (data == null) return false;
 
         return triggerSkillEvent(player, data.formId(), skillId, type);
@@ -323,7 +324,7 @@ public class SkillSystem {
      * 轮转当前形态的技能
      */
     public static void rotateSkill(Player player) {
-        if (!HenshinSystem.INSTANCE.isTransformed(player)) return;
+        if (!HenshinSystem.getInstance().isTransformed(player)) return;
 
         RotateSkillEvent event = new RotateSkillEvent(player);
         NeoForge.EVENT_BUS.post(event);

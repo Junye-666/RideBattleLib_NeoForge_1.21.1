@@ -11,10 +11,10 @@ import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.TransformedData;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.CountdownManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.network.packet.*;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
@@ -65,7 +65,7 @@ public final class RiderManager {
      * @return 是否成功解除变身
      */
     public static boolean unTransform(Player player) {
-        if (HenshinSystem.INSTANCE.isTransformed(player)) {
+        if (HenshinSystem.getInstance().isTransformed(player)) {
             if (Config.DEVELOPER_MODE.get())
                 RideBattleLib.LOGGER.debug("尝试解除玩家{}变身", player.getName().getString());
             PacketDistributor.sendToServer(new UnhenshinPacket(player.getUUID()));
@@ -95,7 +95,7 @@ public final class RiderManager {
      */
     public static void completeHenshin(Player player) {
         if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("完成玩家{}变身序列", player.getName().getString());
-        DriverActionManager.INSTANCE.completeTransformation(player);
+        DriverActionManager.getInstance().completeTransformation(player);
     }
 
     // ================驱动器系统快捷方法 ================
@@ -140,7 +140,7 @@ public final class RiderManager {
      * 强制解除变身
      */
     public static void penaltyUntransform(Player player) {
-        if (HenshinSystem.INSTANCE.isTransformed(player)) {
+        if (HenshinSystem.getInstance().isTransformed(player)) {
             if (Config.DEVELOPER_MODE.get())
                 RideBattleLib.LOGGER.debug("强制解除玩家{}变身", player.getName().getString());
             PenaltySystem.PENALTY_SYSTEM.penaltyUnhenshin(player);
@@ -267,7 +267,7 @@ public final class RiderManager {
      */
     @Nullable
     public static ResourceLocation getCurrentFormId(Player player) {
-        HenshinSystem.TransformedData data = HenshinSystem.INSTANCE.getTransformedData(player);
+        TransformedData data = HenshinSystem.getInstance().getTransformedData(player);
         return data != null ? data.formId() : null;
     }
 
@@ -313,7 +313,7 @@ public final class RiderManager {
      * @return 玩家当前驱动器内物品列表
      */
     public static Map<ResourceLocation, ItemStack> getDriverItems(Player player) {
-        return DriverSystem.INSTANCE.getDriverItems(player);
+        return DriverSystem.getInstance().getDriverItems(player);
     }
 
     /**
@@ -350,7 +350,7 @@ public final class RiderManager {
      * 快捷检查变身状态
      */
     public static boolean isTransformed(Player player) {
-        return HenshinSystem.INSTANCE.isTransformed(player);
+        return HenshinSystem.getInstance().isTransformed(player);
     }
 
     /**
@@ -543,21 +543,21 @@ public final class RiderManager {
      * 强制刷新所有状态同步
      */
     public static void syncClientState(ServerPlayer player) {
-        SyncManager.INSTANCE.syncAllPlayerData(player);
+        HenshinContext.DATA_SYNC.syncAllPlayerData(player);
     }
 
     /**
      * 同步驱动器数据
      */
     public static void syncDriverData(ServerPlayer player) {
-        SyncManager.INSTANCE.syncDriverData(player);
+        HenshinContext.DATA_SYNC.syncDriverData(player);
     }
 
     /**
      * 同步变身状态
      */
     public static void syncHenshinState(ServerPlayer player) {
-        SyncManager.INSTANCE.syncHenshinState(player);
+        HenshinContext.DATA_SYNC.syncHenshinState(player);
     }
 
     // ================ 开发便捷方法 ================

@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
-import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.TransformedData;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,7 +17,11 @@ import java.util.List;
 import java.util.Map;
 
 public class ArmorManager {
-    public static final ArmorManager INSTANCE = new ArmorManager();
+    private static final ArmorManager INSTANCE = new ArmorManager();
+    public static ArmorManager getInstance() {
+        return INSTANCE;
+    }
+
     // 装备
     public void equipArmor(Player player, FormConfig form) {
         // 先设置通用装备（固定槽位）
@@ -54,7 +58,7 @@ public class ArmorManager {
     }
 
     // 恢复原始装备
-    public void restoreOriginalGear(Player player, HenshinSystem.TransformedData data) {
+    public void restoreOriginalGear(Player player, TransformedData data) {
         if (data == null || player == null) return;
 
         // 恢复所有槽位，包括空槽位

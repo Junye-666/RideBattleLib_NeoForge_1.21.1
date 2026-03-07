@@ -19,7 +19,10 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 
 public class EffectAndAttributeManager {
-    public static final EffectAndAttributeManager INSTANCE = new EffectAndAttributeManager();
+    private static final EffectAndAttributeManager INSTANCE = new EffectAndAttributeManager();
+    public static EffectAndAttributeManager getInstance() {
+        return INSTANCE;
+    }
 
     public void applyAttributesAndEffects(Player player, ResourceLocation formId) {
         FormConfig form = getFormConfig(player, formId);

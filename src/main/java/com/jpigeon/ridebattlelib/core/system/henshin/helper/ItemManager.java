@@ -10,8 +10,10 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 
 public class ItemManager {
-    public static final ItemManager INSTANCE = new ItemManager();
-
+    private static final ItemManager INSTANCE = new ItemManager();
+    public static ItemManager getInstance() {
+        return INSTANCE;
+    }
 
     public void grantFormItems(Player player, ResourceLocation formId) {
         FormConfig formConfig = getFormConfig(player, formId);

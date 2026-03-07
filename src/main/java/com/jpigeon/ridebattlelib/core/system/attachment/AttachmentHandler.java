@@ -2,10 +2,12 @@ package com.jpigeon.ridebattlelib.core.system.attachment;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.HenshinContext;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinHelper;
+import com.jpigeon.ridebattlelib.core.system.henshin.DefaultHenshinStrategy;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.TransformedData;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.skill.SkillSystem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -32,12 +34,12 @@ public class AttachmentHandler {
                 !player.getTags().contains("just_respawned")) {
 
             // 确保状态正确设置为 TRANSFORMED
-            HenshinSystem.INSTANCE.transitionToState(player, HenshinState.TRANSFORMED, null);
+            HenshinSystem.getInstance().transitionToState(player, HenshinState.TRANSFORMED, null);
 
             // 恢复变身状态
-            HenshinSystem.TransformedData transformedData = HenshinSystem.INSTANCE.getTransformedData(player);
+            TransformedData transformedData = HenshinSystem.getInstance().getTransformedData(player);
             if (transformedData != null) {
-                HenshinHelper.INSTANCE.restoreTransformedState(player, transformedData);
+                DefaultHenshinStrategy.INSTANCE.restoreTransformedState(player, transformedData);
                 if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("已恢复玩家 {} 的变身状态", player.getName().getString());
                 }
@@ -59,7 +61,7 @@ public class AttachmentHandler {
 
         if (player instanceof ServerPlayer serverPlayer) {
             // 使用统一的同步管理器
-            SyncManager.INSTANCE.syncAllPlayerData(serverPlayer);
+            HenshinContext.DATA_SYNC.syncAllPlayerData(serverPlayer);
         }
     }
 
@@ -100,8 +102,8 @@ public class AttachmentHandler {
 
         player.removeTag("penalty_cooldown");
 
-        if (HenshinSystem.INSTANCE.isTransformed(player)) {
-            HenshinSystem.INSTANCE.unHenshin(player);
+        if (HenshinSystem.getInstance().isTransformed(player)) {
+            HenshinSystem.getInstance().unHenshin(player);
         }
     }
 }

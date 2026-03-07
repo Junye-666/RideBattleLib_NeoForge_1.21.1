@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.HenshinContext;
 import com.jpigeon.ridebattlelib.api.IHenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
@@ -10,16 +11,15 @@ import com.jpigeon.ridebattlelib.core.system.driver.DriverSystem;
 import com.jpigeon.ridebattlelib.core.system.event.*;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.*;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.TransformedData;
 import com.jpigeon.ridebattlelib.core.system.network.packet.SyncHenshinStatePacket;
 import com.jpigeon.ridebattlelib.core.system.penalty.PenaltySystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
@@ -32,16 +32,12 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class HenshinSystem implements IHenshinSystem {
-    public static final HenshinSystem INSTANCE = new HenshinSystem();
-    public static final Map<UUID, Boolean> CLIENT_TRANSFORMED_CACHE = new ConcurrentHashMap<>();
-
-    public record TransformedData(
-            RiderConfig config,
-            ResourceLocation formId,
-            Map<EquipmentSlot, ItemStack> originalGear,
-            Map<ResourceLocation, ItemStack> driverSnapshot
-    ) {
+    private static final HenshinSystem INSTANCE = new HenshinSystem();
+    public static HenshinSystem getInstance() {
+        return INSTANCE;
     }
+
+    public static final Map<UUID, Boolean> CLIENT_TRANSFORMED_CACHE = new ConcurrentHashMap<>();
 
     @Override
     public void driverAction(Player player) {
@@ -51,7 +47,7 @@ public class HenshinSystem implements IHenshinSystem {
         }
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
-        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
+        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.getInstance().getDriverItems(player);
         ResourceLocation formId = config.matchForm(player, driverItems);
         if (formId == null) return;
         FormConfig formConfig = config.getActiveFormConfig(player);
@@ -76,7 +72,7 @@ public class HenshinSystem implements IHenshinSystem {
             ));
         } else if (player instanceof ServerPlayer serverPlayer) {
             // 服务端直接同步
-            SyncManager.INSTANCE.syncHenshinState(serverPlayer);
+            HenshinContext.DATA_SYNC.syncHenshinState(serverPlayer);
         }
 
         TransformedData oldData = getTransformedData(player);
@@ -86,13 +82,15 @@ public class HenshinSystem implements IHenshinSystem {
         if (formConfig.shouldPause()) {
             // 需要暂停的变身流程
             HenshinPauseEvent.Pre prePause = new HenshinPauseEvent.Pre(player, config.getRiderId(), formId);
-            NeoForge.EVENT_BUS.post(prePause);
-            if (prePause.isCanceled()) completeAndSendEvents(player, config, formId, oldFormId);
+            if (NeoForge.EVENT_BUS.post(prePause).isCanceled()) {
+                completeAndSendEvents(player, config, formId, oldFormId);
+                return;
+            }
 
             if (!isTransformed(player)) {
-                DriverActionManager.INSTANCE.prepareHenshin(player, formId);
+                DriverActionManager.getInstance().prepareHenshin(player, formId);
             } else if (oldFormId != null) {
-                    DriverActionManager.INSTANCE.prepareFormSwitch(player, oldFormId, formId);
+                DriverActionManager.getInstance().prepareFormSwitch(player, oldFormId, formId);
             }
 
             HenshinPauseEvent.Post postPause = new HenshinPauseEvent.Post(player, config.getRiderId(), formId);
@@ -107,16 +105,16 @@ public class HenshinSystem implements IHenshinSystem {
             HenshinEvent.Pre preHenshin = new HenshinEvent.Pre(player, config.getRiderId(), formId);
             NeoForge.EVENT_BUS.post(preHenshin);
             if (preHenshin.isCanceled()) {
-                DriverActionManager.INSTANCE.cancelHenshin(player);
+                DriverActionManager.getInstance().cancelHenshin(player);
             }
         } else {
             FormSwitchEvent.Pre preSwitch = new FormSwitchEvent.Pre(player, oldFormId, formId);
             NeoForge.EVENT_BUS.post(preSwitch);
             if (preSwitch.isCanceled()) {
-                DriverActionManager.INSTANCE.cancelHenshin(player);
+                DriverActionManager.getInstance().cancelHenshin(player);
             }
         }
-        DriverActionManager.INSTANCE.completeTransformation(player);
+        DriverActionManager.getInstance().completeTransformation(player);
     }
 
     @Override
@@ -124,7 +122,7 @@ public class HenshinSystem implements IHenshinSystem {
         RiderConfig config = RiderRegistry.getRider(riderId);
         if (config == null) return false;
 
-        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
+        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.getInstance().getDriverItems(player);
 
         // 如果没有装备辅助驱动器，则移除所有辅助槽位
         if (!config.hasAuxDriverEquipped(player)) {
@@ -155,12 +153,12 @@ public class HenshinSystem implements IHenshinSystem {
         }
 
         // 执行变身
-        HenshinHelper.INSTANCE.performHenshin(player, config, formId);
+        config.getHenshinStrategy().performHenshin(player, config, formId);
 
         transitionToState(player, HenshinState.TRANSFORMED, formId);
 
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.INSTANCE.syncTransformedState(serverPlayer);
+            HenshinContext.DATA_SYNC.syncTransformedState(serverPlayer);
         }
 
         // 触发变身回调事件
@@ -173,47 +171,19 @@ public class HenshinSystem implements IHenshinSystem {
     @Override
     public void unHenshin(Player player) {
         TransformedData data = getTransformedData(player);
+
         if (data != null) {
-            ResourceLocation riderId = data.config().getRiderId();
-            ResourceLocation formId = data.formId();
-            boolean isPenalty = player.getHealth() == Config.PENALTY_THRESHOLD.get();
-            UnhenshinEvent.Pre preUnHenshin = new UnhenshinEvent.Pre(player, riderId, formId, isPenalty);
-            NeoForge.EVENT_BUS.post(preUnHenshin);
-            if (preUnHenshin.isCanceled()) return;
+            RiderConfig config = data.config();
+            // 触发 Pre 事件（可取消）
+            UnhenshinEvent.Pre preUnHenshin = new UnhenshinEvent.Pre(player, data);
+            if (NeoForge.EVENT_BUS.post(preUnHenshin).isCanceled()) return;
 
-            // 先返还物品，再清除效果和装备
-            DriverSystem.INSTANCE.returnItems(player);
+            // 调用策略执行解除
+            config.getHenshinStrategy().unHenshin(player, data);
+            HenshinSystem.INSTANCE.transitionToState(player, HenshinState.IDLE, null);
 
-            // 清除效果
-            EffectAndAttributeManager.INSTANCE.removeAttributesAndEffects(player, data.formId());
-
-            // 恢复装备
-            ArmorManager.INSTANCE.restoreOriginalGear(player, data);
-
-            // 同步状态
-            ArmorManager.INSTANCE.syncEquipment(player);
-
-            // 数据清理（在返还物品之后）
-            HenshinHelper.INSTANCE.removeTransformed(player);
-
-            if (isPenalty) {
-                // 播放特殊解除音效
-                player.level().playSound(null, player.blockPosition(),
-                        SoundEvents.ANVIL_LAND, SoundSource.PLAYERS,
-                        0.8F, 0.5F);
-            }
-            if (player instanceof ServerPlayer serverPlayer) {
-                SyncManager.INSTANCE.syncTransformedState(serverPlayer);
-            }
-
-            // 移除给予的物品
-            ItemManager.INSTANCE.removeGrantedItems(player, data.formId());
-            transitionToState(player, HenshinState.IDLE, null);
-
-            //事件触发
-            UnhenshinEvent.Post postUnHenshin = new UnhenshinEvent.Post(player, riderId, formId, isPenalty);
-            NeoForge.EVENT_BUS.post(postUnHenshin);
-            RideBattleLib.LOGGER.info("玩家 {} 解除变身", player.getName().getString());
+            // 触发 Post 事件
+            NeoForge.EVENT_BUS.post(new UnhenshinEvent.Post(player, data));
         }
     }
 
@@ -229,7 +199,7 @@ public class HenshinSystem implements IHenshinSystem {
         if (config == null) return;
 
         // 确保只在装备了辅助驱动器时才匹配辅助槽位
-        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.INSTANCE.getDriverItems(player);
+        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.getInstance().getDriverItems(player);
         if (!config.hasAuxDriverEquipped(player)) {
             // 过滤掉辅助槽位
             driverItems = new HashMap<>(driverItems);
@@ -243,7 +213,7 @@ public class HenshinSystem implements IHenshinSystem {
         }
         ResourceLocation oldFormId = data.formId();
 
-        HenshinHelper.INSTANCE.performFormSwitch(player, newFormId);
+        config.getHenshinStrategy().performFormSwitch(player, newFormId);
 
         // 触发形态切换事件
         if (!newFormId.equals(oldFormId)) {
@@ -252,7 +222,7 @@ public class HenshinSystem implements IHenshinSystem {
         }
 
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.INSTANCE.syncTransformedState(serverPlayer);
+            HenshinContext.DATA_SYNC.syncTransformedState(serverPlayer);
         }
     }
 
@@ -295,7 +265,7 @@ public class HenshinSystem implements IHenshinSystem {
         player.setData(RiderAttachments.RIDER_DATA, newData);
 
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.INSTANCE.syncHenshinState(serverPlayer);
+            HenshinContext.DATA_SYNC.syncHenshinState(serverPlayer);
         }
 
         if (Config.DEBUG_MODE.get()) {

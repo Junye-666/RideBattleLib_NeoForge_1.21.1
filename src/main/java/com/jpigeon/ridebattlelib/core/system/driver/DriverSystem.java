@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.driver;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.HenshinContext;
 import com.jpigeon.ridebattlelib.api.IDriverSystem;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
@@ -10,7 +11,6 @@ import com.jpigeon.ridebattlelib.core.system.event.ReturnItemsEvent;
 import com.jpigeon.ridebattlelib.core.system.event.SlotExtractionEvent;
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataDiffPacket;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverDataSyncPacket;
 import net.minecraft.client.Minecraft;
@@ -23,7 +23,10 @@ import net.neoforged.neoforge.common.NeoForge;
 import java.util.*;
 
 public class DriverSystem implements IDriverSystem {
-    public static final DriverSystem INSTANCE = new DriverSystem();
+    private static final DriverSystem INSTANCE = new DriverSystem();
+    public static DriverSystem getInstance() {
+        return INSTANCE;
+    }
 
     //====================核心方法====================
 
@@ -39,7 +42,7 @@ public class DriverSystem implements IDriverSystem {
         if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("尝试插入物品 - 玩家: {}, 槽位: {}, 物品: {}, 变身状态: {}",
                     player.getName().getString(), slotId, stack.getItem(),
-                    HenshinSystem.INSTANCE.isTransformed(player));
+                    HenshinSystem.getInstance().isTransformed(player));
         }
 
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
@@ -89,7 +92,7 @@ public class DriverSystem implements IDriverSystem {
                     data.setAuxDriverItems(config.getRiderId(), auxItems);
 
                     if (player instanceof ServerPlayer serverPlayer) {
-                        SyncManager.INSTANCE.syncDriverData(serverPlayer);
+                        HenshinContext.DATA_SYNC.syncDriverData(serverPlayer);
                     }
 
                     ItemInsertionEvent.Post postEvent = new ItemInsertionEvent.Post(player, slotId, stack, config);
@@ -109,7 +112,7 @@ public class DriverSystem implements IDriverSystem {
         data.setAuxDriverItems(config.getRiderId(), auxItems);
 
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.INSTANCE.syncDriverData(serverPlayer);
+            HenshinContext.DATA_SYNC.syncDriverData(serverPlayer);
         }
 
         ItemInsertionEvent.Post postEvent = new ItemInsertionEvent.Post(player, slotId, stack, config);
@@ -226,7 +229,7 @@ public class DriverSystem implements IDriverSystem {
                 data.setDriverItems(config.getRiderId(), targetMap);
             }
             if (player instanceof ServerPlayer serverPlayer) {
-                SyncManager.INSTANCE.syncDriverData(serverPlayer);
+                HenshinContext.DATA_SYNC.syncDriverData(serverPlayer);
             }
             return false;
         }
@@ -242,7 +245,7 @@ public class DriverSystem implements IDriverSystem {
         }
 
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.INSTANCE.syncDriverData(serverPlayer);
+            HenshinContext.DATA_SYNC.syncDriverData(serverPlayer);
         }
 
         SlotExtractionEvent.Post postEvent = new SlotExtractionEvent.Post(player, slotId, extracted, config);

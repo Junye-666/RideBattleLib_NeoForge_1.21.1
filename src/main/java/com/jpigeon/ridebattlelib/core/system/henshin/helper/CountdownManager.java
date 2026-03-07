@@ -5,13 +5,12 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class CountdownManager {
     private static final CountdownManager INSTANCE = new CountdownManager();
-    private final List<CountdownTask> activeTasks = new ArrayList<>();
+    private final Queue<CountdownTask> activeTasks = new ConcurrentLinkedDeque<>();
 
     public static CountdownManager getInstance() {
         return INSTANCE;
@@ -34,33 +33,19 @@ public class CountdownManager {
     public void tick() {
         if (activeTasks.isEmpty()) return;
 
-        Iterator<CountdownTask> iterator = activeTasks.iterator();
-        int executedCount = 0;
-
-        while (iterator.hasNext()) {
-            CountdownTask task = iterator.next();
+        // 使用 removeIf 结合 lambda，一行搞定遍历、检查和删除
+        activeTasks.removeIf(task -> {
             task.remainingTicks--;
-
             if (task.remainingTicks <= 0) {
                 try {
-                    if (Config.DEBUG_MODE.get()) {
-                        RideBattleLib.LOGGER.debug("执行任务, 剩余任务数: {}", activeTasks.size() - 1);
-                    }
                     task.callback.run();
-                    executedCount++;
                 } catch (Exception e) {
                     RideBattleLib.LOGGER.error("任务执行失败: {}", e.getMessage());
-                } finally {
-                    iterator.remove();
                 }
+                return true; // 返回 true 表示从队列中移除
             }
-        }
-
-        if (executedCount > 0) {
-            if (Config.DEBUG_MODE.get()) {
-                RideBattleLib.LOGGER.debug("本轮执行了 {} 个任务", executedCount);
-            }
-        }
+            return false;
+        });
     }
 
     private static class CountdownTask {

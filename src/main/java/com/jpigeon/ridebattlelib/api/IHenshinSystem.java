@@ -1,6 +1,6 @@
 package com.jpigeon.ridebattlelib.api;
 
-import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.TransformedData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
@@ -49,5 +49,5 @@ public interface IHenshinSystem {
      * <p>Map<ResourceLocation, ItemStack> driverSnapshot
      */
     @Nullable
-    HenshinSystem.TransformedData getTransformedData(Player player);
+    TransformedData getTransformedData(Player player);
 }

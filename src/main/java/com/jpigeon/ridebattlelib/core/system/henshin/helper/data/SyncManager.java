@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.core.system.henshin.helper;
+package com.jpigeon.ridebattlelib.core.system.henshin.helper.data;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
@@ -18,7 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SyncManager {
-    public static final SyncManager INSTANCE = new SyncManager();
+    private static final SyncManager INSTANCE = new SyncManager();
+    public static SyncManager getInstance() {
+        return INSTANCE;
+    }
 
     /**
      * 同步玩家所有相关状态
@@ -69,7 +72,7 @@ public class SyncManager {
      * 同步变身状态
      */
     public void syncTransformedState(ServerPlayer player) {
-        boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
+        boolean isTransformed = HenshinSystem.getInstance().isTransformed(player);
         PacketDistributor.sendToPlayer(player, new TransformedStatePacket(player.getUUID(), isTransformed));
     }
 }

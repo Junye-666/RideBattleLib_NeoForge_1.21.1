@@ -3,6 +3,7 @@ package com.jpigeon.ridebattlelib.core.system.henshin.helper;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.HenshinContext;
 import com.jpigeon.ridebattlelib.core.system.form.DynamicFormConfig;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -34,6 +35,6 @@ public class DynamicHenshinManager {
         }
 
         // 确保盔甲立即生效
-        ArmorManager.INSTANCE.syncEquipment(player);
+        HenshinContext.ARMOR.syncEquipment(player);
     }
 }

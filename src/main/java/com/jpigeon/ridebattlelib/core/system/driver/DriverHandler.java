@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.core.system.driver;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.api.HenshinContext;
 import com.jpigeon.ridebattlelib.api.RiderManager;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
@@ -10,7 +11,7 @@ import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderArmorRegistry;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.SyncManager;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.data.SyncManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import com.jpigeon.ridebattlelib.core.system.network.packet.DriverActionPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -98,7 +99,7 @@ public class DriverHandler {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("检测到ITEM驱动方式");
                 RideBattleLib.LOGGER.debug("物品触发 - 玩家状态: 变身={}, 驱动器={}",
-                        HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                        HenshinSystem.getInstance().isTransformed(player), config.getRiderId());
             }
             PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
         }
@@ -112,7 +113,7 @@ public class DriverHandler {
     // 处理物品插入逻辑（原DriverHandler的功能）
     private static void handleItemInsertion(PlayerInteractEvent.RightClickItem event, Player player,
                                             ItemStack heldItem, RiderConfig config) {
-        boolean isTransformed = HenshinSystem.INSTANCE.isTransformed(player);
+        boolean isTransformed = HenshinSystem.getInstance().isTransformed(player);
 
         if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("右键插入物品 - 玩家: {}, 变身状态: {}, 骑士: {}",
@@ -126,7 +127,7 @@ public class DriverHandler {
 
         // 先尝试主驱动器槽位
         for (ResourceLocation slotId : config.getSlotDefinitions().keySet()) {
-            if (DriverSystem.INSTANCE.insertItem(player, slotId, itemToInsert)) {
+            if (DriverSystem.getInstance().insertItem(player, slotId, itemToInsert)) {
                 heldItem.shrink(1);
                 inserted = true;
                 break;
@@ -136,7 +137,7 @@ public class DriverHandler {
         // 再尝试辅助驱动器槽位
         if (!inserted && config.hasAuxDriverEquipped(player)) {
             for (ResourceLocation slotId : config.getAuxSlotDefinitions().keySet()) {
-                if (DriverSystem.INSTANCE.insertItem(player, slotId, itemToInsert)) {
+                if (DriverSystem.getInstance().insertItem(player, slotId, itemToInsert)) {
                     heldItem.shrink(1);
                     inserted = true;
                     break;
@@ -146,7 +147,7 @@ public class DriverHandler {
 
         if (inserted) {
             if (player instanceof ServerPlayer serverPlayer) {
-                SyncManager.INSTANCE.syncDriverData(serverPlayer);
+                HenshinContext.DATA_SYNC.syncDriverData(serverPlayer);
             }
 
             FormConfig formConfig = config.getActiveFormConfig(player);
@@ -158,7 +159,7 @@ public class DriverHandler {
             if (formConfig != null && formConfig.getTriggerType() == TriggerType.AUTO) {
                 if (Config.DEBUG_MODE.get()) {
                     RideBattleLib.LOGGER.debug("自动触发 - 玩家状态: 变身={}, 驱动器={}",
-                            HenshinSystem.INSTANCE.isTransformed(player), config.getRiderId());
+                            HenshinSystem.getInstance().isTransformed(player), config.getRiderId());
                 }
                 PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
             }

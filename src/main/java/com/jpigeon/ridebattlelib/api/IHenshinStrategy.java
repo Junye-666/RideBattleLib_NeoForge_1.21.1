@@ -21,7 +21,7 @@ public interface IHenshinStrategy {
     /**
      * 执行形态切换
      */
-    void performFormSwitch(Player player, ResourceLocation newFormId);
+    void performFormSwitch(Player player, TransformedData data, ResourceLocation newFormId);
 
     /**
      * 解除变身方法
@@ -32,11 +32,6 @@ public interface IHenshinStrategy {
      * 恢复变身状态 - 使用统一的数据结构
      */
     void restoreTransformedState(Player player, TransformedData data);
-
-    /**
-     * 移除变身状态
-     */
-    void removeTransformed(Player player);
 
     /**
      * 保存变身快照（内部使用）

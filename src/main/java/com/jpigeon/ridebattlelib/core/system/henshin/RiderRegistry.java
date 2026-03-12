@@ -7,15 +7,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 理解为管理所有被注册骑士的列表
  */
 public class RiderRegistry {
-    private static final Map<ResourceLocation, RiderConfig> RIDERS = new HashMap<>();
-    private static final Map<ResourceLocation, FormConfig> FORMS = new HashMap<>();
+    private static final Map<ResourceLocation, RiderConfig> RIDERS = new ConcurrentHashMap<>();
+    private static final Map<ResourceLocation, FormConfig> FORMS = new ConcurrentHashMap<>();
     // 添加映射：形态ID -> 所属骑士ID列表（一个形态可能被多个骑士使用）
-    private static final Map<ResourceLocation, Set<ResourceLocation>> FORM_TO_RIDERS = new HashMap<>();
+    private static final Map<ResourceLocation, Set<ResourceLocation>> FORM_TO_RIDERS = new ConcurrentHashMap<>();
 
     public static void registerRider(RiderConfig config) {
         RIDERS.put(config.getRiderId(), config);
@@ -85,7 +86,7 @@ public class RiderRegistry {
 
     // 获取所有注册的骑士
     public static Collection<RiderConfig> getRegisteredRiders() {
-        return RIDERS.values();
+        return Collections.unmodifiableCollection(RIDERS.values()); // 防止修改
     }
 
     // 获取所有已注册的形态

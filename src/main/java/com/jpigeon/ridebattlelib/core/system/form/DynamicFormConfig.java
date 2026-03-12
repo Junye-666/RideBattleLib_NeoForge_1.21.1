@@ -7,12 +7,10 @@ import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -20,6 +18,9 @@ import net.minecraft.world.item.Items;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -30,8 +31,8 @@ public class DynamicFormConfig extends FormConfig {
     private final Map<ResourceLocation, ItemStack> driverSnapshot;
     private boolean shouldPause = false;
 
-    private static final Map<ResourceLocation, FormConfig> DYNAMIC_FORMS = Collections.synchronizedMap(new WeakHashMap<>());
-    private static final Map<ResourceLocation, Long> LAST_USED = new HashMap<>();
+    private static final Map<ResourceLocation, FormConfig> DYNAMIC_FORMS = new ConcurrentHashMap<>();
+    private static final Map<ResourceLocation, Long> LAST_USED = new ConcurrentHashMap<>();
     private static final long UNLOAD_DELAY = 10 * 60 * 1000; // 10分钟未使用则卸载
 
     private static final Map<Item, Map<EquipmentSlot, Item>> ITEM_ARMOR_MAP = new HashMap<>();
@@ -42,6 +43,8 @@ public class DynamicFormConfig extends FormConfig {
     private final List<AttributeModifier> dynamicAttributes = new ArrayList<>();
     private final List<MobEffectInstance> dynamicEffects = new ArrayList<>();
     private final List<ItemStack> dynamicGrantedItems = new ArrayList<>();
+
+    private static final Map<EquipmentSlot, Item> DEFAULT_UNDERSUIT = new EnumMap<>(EquipmentSlot.class);
 
     static {
         // 设置槽位名称模式到盔甲槽位的映射
@@ -60,14 +63,19 @@ public class DynamicFormConfig extends FormConfig {
         SLOT_PATTERN_ARMOR_MAPPINGS.put("feet", EquipmentSlot.FEET);
         SLOT_PATTERN_ARMOR_MAPPINGS.put("boots", EquipmentSlot.FEET);
         SLOT_PATTERN_ARMOR_MAPPINGS.put("shoes", EquipmentSlot.FEET);
-    }
 
-    private static final Map<EquipmentSlot, Item> DEFAULT_UNDERSUIT = new EnumMap<>(EquipmentSlot.class);
-    static {
         DEFAULT_UNDERSUIT.put(EquipmentSlot.HEAD, Items.AIR);
         DEFAULT_UNDERSUIT.put(EquipmentSlot.CHEST, Items.AIR);
         DEFAULT_UNDERSUIT.put(EquipmentSlot.LEGS, Items.AIR);
         DEFAULT_UNDERSUIT.put(EquipmentSlot.FEET, Items.AIR);
+
+        scheduleCleanup();
+    }
+
+    private static void scheduleCleanup() {
+        // 使用 ScheduledExecutorService 定期执行清理
+        Executors.newSingleThreadScheduledExecutor()
+                .scheduleAtFixedRate(DynamicFormConfig::cleanupUnusedForms, 5, 5, TimeUnit.MINUTES);
     }
 
     public DynamicFormConfig(ResourceLocation formId, Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
@@ -76,15 +84,14 @@ public class DynamicFormConfig extends FormConfig {
         configureFromItems(config);
     }
 
-
-
     // ==================== 静态注册方法 ====================
 
     /**
      * 注册物品到盔甲的映射（支持指定槽位）
+     *
      * @param sourceItem 源物品
-     * @param armorSlot 盔甲槽位
-     * @param armorItem 对应的盔甲物品
+     * @param armorSlot  盔甲槽位
+     * @param armorItem  对应的盔甲物品
      */
     public static void registerItemArmor(Item sourceItem, EquipmentSlot armorSlot, Item armorItem) {
         ITEM_ARMOR_MAP.computeIfAbsent(sourceItem, k -> new HashMap<>())
@@ -232,7 +239,7 @@ public class DynamicFormConfig extends FormConfig {
     /**
      * 获取或创建动态形态
      */
-    public static FormConfig getOrCreateDynamicForm(Player player, RiderConfig config,
+    public static FormConfig getOrCreateDynamicForm(RiderConfig config,
                                                     Map<ResourceLocation, ItemStack> driverItems) {
         ResourceLocation formId = generateFormId(config.getRiderId(), driverItems);
 
@@ -243,39 +250,27 @@ public class DynamicFormConfig extends FormConfig {
                     .collect(Collectors.joining(", ")));
         }
 
-        // 检查缓存，使用同步块确保线程安全
-        synchronized (DYNAMIC_FORMS) {
-            if (DYNAMIC_FORMS.containsKey(formId)) {
-                LAST_USED.put(formId, System.currentTimeMillis());
-                return DYNAMIC_FORMS.get(formId);
-            }
-
-            // 创建新形态
-            FormConfig form = new DynamicFormConfig(formId, driverItems, config);
-            FormConfig baseForm = config.getForms(config.getBaseFormId());
-
-            if (baseForm != null) {
-                form.setTriggerType(baseForm.getTriggerType());
-                form.setShouldPause(baseForm.shouldPause());
-            } else {
-                form.setTriggerType(TriggerType.KEY);
-            }
-
-            DYNAMIC_FORMS.put(formId, form);
+        // 检查缓存
+        FormConfig existing = DYNAMIC_FORMS.get(formId);
+        if (existing != null) {
             LAST_USED.put(formId, System.currentTimeMillis());
-
-            // 触发清理任务
-            scheduleCleanupIfNeeded(player);
-
-            return form;
+            return existing;
         }
-    }
 
-    private static void scheduleCleanupIfNeeded(Player player) {
-        MinecraftServer server = player.getServer();
-        if (server != null && server.getTickCount() % 6000 == 0) { // 每5分钟检查一次
-            server.execute(DynamicFormConfig::cleanupUnusedForms);
+        // 创建新形态
+        FormConfig form = new DynamicFormConfig(formId, driverItems, config);
+        FormConfig baseForm = config.getForms(config.getBaseFormId());
+
+        if (baseForm != null) {
+            form.setTriggerType(baseForm.getTriggerType());
+            form.setShouldPause(baseForm.shouldPause());
+        } else {
+            form.setTriggerType(TriggerType.KEY);
         }
+
+        DYNAMIC_FORMS.put(formId, form);
+        LAST_USED.put(formId, System.currentTimeMillis());
+        return form;
     }
 
     /**

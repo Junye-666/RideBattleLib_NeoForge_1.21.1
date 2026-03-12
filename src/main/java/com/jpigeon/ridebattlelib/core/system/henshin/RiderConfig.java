@@ -287,7 +287,7 @@ public class RiderConfig {
                 RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
             }
             try {
-                FormConfig dynamicForm = DynamicFormConfig.getOrCreateDynamicForm(player, this, driverItems);
+                FormConfig dynamicForm = DynamicFormConfig.getOrCreateDynamicForm(this, driverItems);
                 return dynamicForm.getFormId();
             } catch (Exception e) {
                 RideBattleLib.LOGGER.error("动态形态创建失败", e);

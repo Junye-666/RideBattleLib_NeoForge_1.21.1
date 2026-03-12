@@ -69,12 +69,7 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
     }
 
     @Override
-    public void performFormSwitch(Player player, ResourceLocation newFormId) {
-        TransformedData data = HenshinSystem.getInstance().getTransformedData(player);
-        if (data == null) {
-            RideBattleLib.LOGGER.error("无法获取变身数据");
-            return;
-        }
+    public void performFormSwitch(Player player, TransformedData data, ResourceLocation newFormId) {
         ResourceLocation oldFormId = data.formId();
         FormConfig newForm = RiderRegistry.getForm(player, newFormId);
         if (newForm == null) {
@@ -116,9 +111,6 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
 
         // 同步状态
         HenshinContext.ARMOR.syncEquipment(player);
-
-        // 数据清理（在返还物品之后）
-        removeTransformed(player);
 
         if (player instanceof ServerPlayer serverPlayer) {
             HenshinContext.DATA_SYNC.syncTransformedState(serverPlayer);
@@ -217,22 +209,5 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
             saveTransformedSnapshot(player, config, data.formId(),
                     data.originalGear(), data.driverSnapshot());
         }
-    }
-
-    @Override
-    public void removeTransformed(Player player) {
-        RiderData oldData = player.getData(RiderAttachments.RIDER_DATA);
-
-        RiderData newData = new RiderData(
-                new HashMap<>(oldData.mainDriverItems),
-                new HashMap<>(oldData.auxDriverItems),
-                null,
-                oldData.getHenshinState(),
-                oldData.getPendingFormId(),
-                oldData.getPenaltyCooldownEnd(),
-                oldData.getCurrentSkillIndex()
-        );
-
-        player.setData(RiderAttachments.RIDER_DATA, newData);
     }
 }

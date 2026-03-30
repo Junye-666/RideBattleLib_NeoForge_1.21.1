@@ -1,0 +1,39 @@
+package com.jpigeon.ridebattlelib.server.system.helper;
+
+
+import com.jpigeon.ridebattlelib.Config;
+import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+
+public class DynamicHenshinManager {
+    // 应用动态盔甲
+    public static void applyDynamicArmor(Player player, DynamicFormConfig formConfig) {
+        if (Config.DEBUG_MODE.get()) {
+            RideBattleLib.LOGGER.debug("应用动态形态盔甲 - 头盔: {}, 胸甲: {}, 护腿: {}, 靴子: {}",
+                    formConfig.getHelmet(), formConfig.getChestplate(), formConfig.getLeggings(), formConfig.getBoots());
+        }
+
+        // 应用动态盔甲
+        if (formConfig.getHelmet() != Items.AIR) {
+            player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(formConfig.getHelmet()));
+        }
+        if (formConfig.getChestplate() != Items.AIR) {
+            player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(formConfig.getChestplate()));
+        }
+        if (formConfig.getLeggings() != Items.AIR) {
+            if (formConfig.getLeggings() != null) {
+                player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(formConfig.getLeggings()));
+            }
+        }
+        if (formConfig.getBoots() != Items.AIR) {
+            player.setItemSlot(EquipmentSlot.FEET, new ItemStack(formConfig.getBoots()));
+        }
+
+        // 确保盔甲立即生效
+        ArmorManager.getInstance().syncEquipment(player);
+    }
+}

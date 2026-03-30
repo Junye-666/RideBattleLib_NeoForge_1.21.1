@@ -1,11 +1,11 @@
 package com.jpigeon.ridebattlelib;
 
-import com.jpigeon.ridebattlelib.core.system.attachment.AttachmentHandler;
-import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
-import com.jpigeon.ridebattlelib.core.system.driver.DriverHandler;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.CountdownManager;
-import com.jpigeon.ridebattlelib.core.system.network.PacketHandler;
-import com.jpigeon.ridebattlelib.core.system.penalty.PenaltyHandler;
+import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
+import com.jpigeon.ridebattlelib.common.network.PacketHandler;
+import com.jpigeon.ridebattlelib.common.util.ScheduleUtils;
+import com.jpigeon.ridebattlelib.server.handler.AttachmentHandler;
+import com.jpigeon.ridebattlelib.server.handler.DriverHandler;
+import com.jpigeon.ridebattlelib.server.handler.PenaltyHandler;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -26,7 +26,7 @@ public class RideBattleLib {
         NeoForge.EVENT_BUS.register(DriverHandler.class);
         NeoForge.EVENT_BUS.register(AttachmentHandler.class);
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
-        NeoForge.EVENT_BUS.register(CountdownManager.getInstance());
+        NeoForge.EVENT_BUS.register(ScheduleUtils.getInstance());
         RiderAttachments.ATTACHMENTS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);

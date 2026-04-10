@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.common.api;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.client.cache.ClientTransformedCache;
 import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
@@ -360,7 +361,7 @@ public final class RideBattleAPI {
      * 快捷检查变身状态
      */
     public static boolean isTransformed(Player player) {
-        return HenshinUtils.isTransformed(player);
+        return ClientTransformedCache.isTransformed(player.getUUID()) || HenshinUtils.isTransformed(player);
     }
 
     /**

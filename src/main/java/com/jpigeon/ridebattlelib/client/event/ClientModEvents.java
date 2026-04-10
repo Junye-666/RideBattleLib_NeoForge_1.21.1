@@ -82,7 +82,7 @@ public class ClientModEvents {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("检测到技能键按下");
             }
-            if (!HenshinUtils.isTransformed(player)) return;
+            if (!ClientTransformedCache.isTransformed(player.getUUID())) return;
             // 蹲下时切换技能，否则触发当前技能
             if (player.isShiftKeyDown()) {
                 PacketDistributor.sendToServer(new RotateSkillPacket(player.getUUID()));

@@ -5,6 +5,7 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.client.cache.ClientDriverDataCache;
 import com.jpigeon.ridebattlelib.client.cache.ClientTransformedCache;
 import com.jpigeon.ridebattlelib.client.key.KeyBindings;
+import com.jpigeon.ridebattlelib.common.api.RideBattleAPI;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.network.packet.*;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
@@ -82,7 +83,7 @@ public class ClientModEvents {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("检测到技能键按下");
             }
-            if (!ClientTransformedCache.isTransformed(player.getUUID())) return;
+            if (!RideBattleAPI.isTransformed(player)) return;
             // 蹲下时切换技能，否则触发当前技能
             if (player.isShiftKeyDown()) {
                 PacketDistributor.sendToServer(new RotateSkillPacket(player.getUUID()));

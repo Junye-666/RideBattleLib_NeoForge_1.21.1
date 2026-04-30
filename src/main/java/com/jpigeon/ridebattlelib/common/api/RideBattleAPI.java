@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.common.api;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.client.cache.ClientDriverDataCache;
 import com.jpigeon.ridebattlelib.client.cache.ClientTransformedCache;
 import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
@@ -278,6 +279,9 @@ public final class RideBattleAPI {
      */
     @Nullable
     public static ResourceLocation getCurrentFormId(Player player) {
+        if (player.level().isClientSide()) {
+            return ClientTransformedCache.getCurrentFormId(player.getUUID());
+        }
         HenshinSessionData data = HenshinUtils.getSessionData(player);
         return data != null ? data.formId() : null;
     }
@@ -313,6 +317,9 @@ public final class RideBattleAPI {
      */
     @Nullable
     public static ResourceLocation getPendingForm(Player player) {
+        if (player.level().isClientSide()) {
+            return ClientTransformedCache.getPendingFormId(player.getUUID());
+        }
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         return data.getPendingFormId();
     }
@@ -324,6 +331,9 @@ public final class RideBattleAPI {
      * @return 玩家当前驱动器内物品列表
      */
     public static Map<ResourceLocation, ItemStack> getDriverItems(Player player) {
+        if (player.level().isClientSide()) {
+            return ClientDriverDataCache.getDriverItems(player.getUUID());
+        }
         return DriverSystem.getInstance().getDriverItems(player);
     }
 
@@ -361,13 +371,19 @@ public final class RideBattleAPI {
      * 快捷检查变身状态
      */
     public static boolean isTransformed(Player player) {
-        return ClientTransformedCache.isTransformed(player.getUUID()) || HenshinUtils.isTransformed(player);
+        if (player.level().isClientSide()) {
+            return ClientTransformedCache.isTransformed(player.getUUID());
+        }
+        return HenshinUtils.isTransformed(player);
     }
 
     /**
      * 检查玩家是否处于变身过程中
      */
     public static boolean isTransforming(Player player) {
+        if (player.level().isClientSide()) {
+            return ClientTransformedCache.getState(player.getUUID()) == HenshinState.TRANSFORMING;
+        }
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         return data.getState() == HenshinState.TRANSFORMING;
     }

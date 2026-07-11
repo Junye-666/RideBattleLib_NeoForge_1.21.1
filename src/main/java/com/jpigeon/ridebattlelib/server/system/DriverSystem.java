@@ -94,7 +94,7 @@ public class DriverSystem {
 
         // 同步
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.getInstance().syncDriverData(serverPlayer);
+            SyncManager.getInstance().syncDriverDiff(serverPlayer, slotId, finalStack);
         }
 
         NeoForge.EVENT_BUS.post(new ItemInsertionEvent.Post(player, slotId, finalStack, config));
@@ -139,7 +139,7 @@ public class DriverSystem {
 
         // 同步
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.getInstance().syncDriverData(serverPlayer);
+                SyncManager.getInstance().syncDriverDiff(serverPlayer, slotId, ItemStack.EMPTY);
         }
 
         // 归还物品
@@ -173,12 +173,7 @@ public class DriverSystem {
         NeoForge.EVENT_BUS.post(new ReturnItemsEvent.Post(player, config));
     }
 
-    private void returnItemToPlayer(Player player, ItemStack stack) {
-        if (!player.addItem(stack.copy())) {
-            player.drop(stack.copy(), false);
-        }
-    }
-//====================Getters====================
+    //====================Getters====================
     /**
      * 获取玩家当前驱动器所有物品（主+辅）
      */

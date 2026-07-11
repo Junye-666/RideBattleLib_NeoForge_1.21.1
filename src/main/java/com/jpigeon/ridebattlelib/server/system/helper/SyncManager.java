@@ -4,6 +4,7 @@ import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
+import com.jpigeon.ridebattlelib.common.network.packet.DriverDataDiffPacket;
 import com.jpigeon.ridebattlelib.common.network.packet.DriverDataSyncPacket;
 import com.jpigeon.ridebattlelib.common.network.packet.HenshinStateSyncPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -59,6 +60,16 @@ public class SyncManager {
                 player.getUUID(),
                 new HashMap<>(mainItems),
                 new HashMap<>(auxItems)
+        ));
+    }
+
+    public void syncDriverDiff(ServerPlayer player, ResourceLocation changedSlot, ItemStack newStack) {
+        Map<ResourceLocation, ItemStack> changes = new HashMap<>();
+        changes.put(changedSlot, newStack.copy());
+        PacketDistributor.sendToPlayer(player, new DriverDataDiffPacket(
+                player.getUUID(),
+                changes,
+                false
         ));
     }
 }

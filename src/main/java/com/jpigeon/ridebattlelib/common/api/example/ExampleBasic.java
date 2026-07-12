@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.common.api.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.api.RideBattleAPI;
+import com.jpigeon.ridebattlelib.common.api.builder.RiderBuilder;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.config.TriggerType;
@@ -38,6 +39,56 @@ public class ExampleBasic {
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "core_slot");
     private static final ResourceLocation TEST_ENERGY_SLOT =
             ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "energy_slot");
+
+    public static final RiderConfig builderAlpha = RiderBuilder.create(TEST_RIDER_ALPHA)
+            .driver(Items.IRON_LEGGINGS)
+            .auxDriver(Items.BRICK)
+            .slot(TEST_CORE_SLOT, List.of(Items.IRON_INGOT, Items.GOLD_INGOT), true, true)
+            .auxSlot(TEST_ENERGY_SLOT, List.of(Items.REDSTONE, Items.GLOWSTONE_DUST, Items.APPLE), true, false)
+            .form(TEST_FORM_BASE)
+                .armor(Items.IRON_HELMET,
+                    Items.IRON_CHESTPLATE,
+                    null,
+                    Items.IRON_BOOTS)
+                .requiredItem(TEST_CORE_SLOT, Items.IRON_INGOT)
+                .triggerType(TriggerType.KEY)
+                .attribute(ResourceLocation.withDefaultNamespace("generic.max_health"),
+                    8.0,
+                    AttributeModifier.Operation.ADD_VALUE)
+                .attribute(ResourceLocation.withDefaultNamespace("generic.movement_speed"),
+                    0.1,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
+                .effect(MobEffects.NIGHT_VISION, 0)
+                .effect(MobEffects.DIG_SPEED, 1)
+                .shouldPause(true)
+                .grantedItem(Items.IRON_SWORD)
+                .grantedItem(Items.SHIELD)
+                .allowsEmptyDriver(false)
+                .end()
+            .form(TEST_FORM_POWERED)
+                .armor(Items.GOLDEN_HELMET,
+                    Items.GOLDEN_CHESTPLATE,
+                    null,
+                    Items.GOLDEN_BOOTS)
+                .triggerType(TriggerType.AUTO)
+                .attribute(ResourceLocation.withDefaultNamespace("generic.max_health"),
+                    12.0,
+                    AttributeModifier.Operation.ADD_VALUE)
+                .attribute(ResourceLocation.withDefaultNamespace("generic.movement_speed"),
+                    0.2,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
+                .effect(MobEffects.DAMAGE_BOOST, 0)
+                .effect(MobEffects.NIGHT_VISION, 0)
+                .requiredItem(TEST_CORE_SLOT,
+                    Items.GOLD_INGOT)
+                .auxRequiredItem(TEST_ENERGY_SLOT,
+                    Items.REDSTONE)
+                .grantedItem(Items.NETHERITE_SWORD)
+                .skill(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_skill"))
+                .end()
+            .baseForm(TEST_FORM_BASE)
+            .allowDynamicForms(false)
+            .build(); // 直接使用.buildAndRegister及自动注册进游戏，无需更多操作
 
     // 定义RiderConfig
     public static final RiderConfig riderAlpha = new RiderConfig(TEST_RIDER_ALPHA)
@@ -129,6 +180,9 @@ public class ExampleBasic {
             .addSkill(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_skill"));
 
 
+    /*
+    * 手动注册法
+     */
     private static void registerAlphaRider() {
         // 将形态添加到骑士配置
         riderAlpha
@@ -138,13 +192,14 @@ public class ExampleBasic {
 
         alphaBaseForm.setAllowsEmptyDriver(false); // 指定驱动器物品的必要性
 
-        SkillSystem.registerSkill(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_skill"), Component.literal("MAN"), 20);
+
         // 注册骑士（核心步骤！）
         RiderRegistry.registerRider(riderAlpha);
     }
 
     public static void init() {
-        registerAlphaRider();
+        // registerAlphaRider();
+        SkillSystem.registerSkill(ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "test_skill"), Component.literal("MAN"), 20);
         registerPauseResumeHandler(); // 添加演示用的暂停/继续处理器
     }
 

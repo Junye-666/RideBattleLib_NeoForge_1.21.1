@@ -9,16 +9,12 @@ import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
 import com.jpigeon.ridebattlelib.common.event.FormSwitchEvent;
 import com.jpigeon.ridebattlelib.common.event.HenshinEvent;
-import com.jpigeon.ridebattlelib.common.network.packet.HenshinPacket;
-import com.jpigeon.ridebattlelib.common.network.packet.SwitchFormPacket;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
+import com.jpigeon.ridebattlelib.server.system.HenshinSystem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.network.PacketDistributor;
-
-import java.util.Objects;
 
 public class DriverActionManager {
     private static final DriverActionManager INSTANCE = new DriverActionManager();
@@ -62,22 +58,6 @@ public class DriverActionManager {
         }
     }
 
-    public void proceedHenshin(Player player, RiderConfig config) {
-        if (Config.DEBUG_MODE.get()) {
-            RideBattleLib.LOGGER.debug("使玩家 {} 继续变身 {}", player.getName().getString(), config.getRiderId());
-            RideBattleLib.LOGGER.debug("发送变身包: {}", config.getRiderId());
-        }
-        PacketDistributor.sendToServer(new HenshinPacket(player.getUUID(), config.getRiderId()));
-    }
-
-    public void proceedFormSwitch(Player player, ResourceLocation newFormId) {
-        if (Config.DEBUG_MODE.get()) {
-            RideBattleLib.LOGGER.debug("玩家 {} 进入形态切换阶段", player.getName());
-            RideBattleLib.LOGGER.debug("发送形态切换包: {}", newFormId);
-        }
-        PacketDistributor.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
-    }
-
     public void completeTransformation(Player player) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         ResourceLocation formId = data.getPendingFormId();
@@ -94,9 +74,14 @@ public class DriverActionManager {
         }
 
         if (!HenshinUtils.isTransformed(player)) {
-            proceedHenshin(player, Objects.requireNonNull(RiderConfig.findActiveDriverConfig(player)));
+            // 直接执行变身
+            RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+            if (config != null) {
+                HenshinSystem.getInstance().henshin(player, config.getRiderId());
+            }
         } else {
-            proceedFormSwitch(player, formId);
+            // 直接执行形态切换
+            HenshinSystem.getInstance().switchForm(player, formId);
         }
 
         RideBattleLib.LOGGER.info("玩家{}变身为 {}", player.getName().getString(), formId);

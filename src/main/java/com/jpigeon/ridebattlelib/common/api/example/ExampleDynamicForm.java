@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.common.api.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.common.api.builder.DynamicMappingBuilder;
 import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
@@ -67,7 +68,8 @@ public class ExampleDynamicForm {
         baseForm.setAllowsEmptyDriver(true);
 
         RiderRegistry.registerRider(riderBeta);
-        registerDynamicMappings();
+        // registerDynamicMappings();
+        buildDynamicMappings();
     }
 
     private static void registerDynamicMappings() {
@@ -99,6 +101,31 @@ public class ExampleDynamicForm {
                 null,
                 Items.CHAINMAIL_BOOTS
         ); // 底衣在不必要驱动器槽位所对应盔甲槽位未填充时出现
+    }
+
+    private static void buildDynamicMappings() {
+        DynamicMappingBuilder.forRider(TEST_RIDER_BETA)
+                .armor(Items.DIAMOND, EquipmentSlot.HEAD, Items.DIAMOND_HELMET)
+                .effects(Items.DIAMOND, MobEffects.JUMP, MobEffects.ABSORPTION)
+                .grantedItem(Items.DIAMOND, Items.DIAMOND_AXE)
+
+                .armor(Items.EMERALD, Items.TURTLE_HELMET)
+                .effect(Items.EMERALD, MobEffects.DAMAGE_RESISTANCE)
+                .grantedItem(Items.EMERALD, Items.GOLDEN_CARROT)
+
+                .armor(Items.REDSTONE, Items.IRON_CHESTPLATE)
+                .effect(Items.REDSTONE, MobEffects.DAMAGE_BOOST)
+
+                .armor(Items.GLOWSTONE_DUST, Items.GOLDEN_CHESTPLATE)
+                .effect(Items.GLOWSTONE_DUST, MobEffects.MOVEMENT_SPEED)
+
+                .undersuit(
+                        Items.SKELETON_SKULL,
+                        Items.CHAINMAIL_CHESTPLATE,
+                        null,
+                        Items.CHAINMAIL_BOOTS
+                )
+                .register();
     }
 
     public static void init() {

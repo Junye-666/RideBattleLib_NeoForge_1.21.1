@@ -1,7 +1,10 @@
 package com.jpigeon.ridebattlelib.common.util;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.Map;
@@ -63,8 +66,15 @@ public class ScheduleUtils {
         taskById.clear();
     }
 
+    @OnlyIn(Dist.DEDICATED_SERVER)
     @SubscribeEvent
     public void onServerTick(ServerTickEvent.Post event) {
+        tick();
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    @SubscribeEvent
+    public void onClientTick(ClientTickEvent.Post event) {
         tick();
     }
 

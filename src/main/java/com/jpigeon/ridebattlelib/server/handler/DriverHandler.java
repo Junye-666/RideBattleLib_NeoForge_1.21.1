@@ -39,13 +39,14 @@ public class DriverHandler {
     @SubscribeEvent
     public static void onItemRightClick(PlayerInteractEvent.RightClickItem event) {
         if (event.isCanceled()) return;
+        if (RiderRegistry.getRegisteredRiders().isEmpty()) return;
+
         Player player = event.getEntity();
         if (isInteractionOnCooldown(player)) {
             event.setCanceled(true);
             return;
         }
 
-        if (RiderRegistry.getRegisteredRiders().isEmpty()) return;
         if (event.getSide() != LogicalSide.SERVER) return;
 
         ItemStack heldItem = event.getItemStack();
@@ -161,7 +162,7 @@ public class DriverHandler {
                     RideBattleLib.LOGGER.debug("自动触发 - 玩家状态: 变身={}, 驱动器={}",
                             HenshinUtils.isTransformed(player), config.getRiderId());
                 }
-                PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
+                HenshinSystem.getInstance().driverAction(player);
             }
 
             event.setCanceled(true);

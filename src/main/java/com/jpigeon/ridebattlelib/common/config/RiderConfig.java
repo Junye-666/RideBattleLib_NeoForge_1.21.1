@@ -331,9 +331,6 @@ public class RiderConfig {
             if (data != null) {
                 RiderConfig config = RiderRegistry.getRider(data.riderId());
                 if (config != null) {
-                    if (Config.DEBUG_MODE.get()) {
-                        RideBattleLib.LOGGER.debug("从变身数据获取驱动器配置: {}", config.getRiderId());
-                    }
                     return config;
                 }
             }
@@ -342,9 +339,6 @@ public class RiderConfig {
         // 方法2：遍历所有骑士配置，调用实例方法检查
         for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
             if (config.isEquippedByPlayer(player)) {
-                if (Config.DEBUG_MODE.get()) {
-                    RideBattleLib.LOGGER.debug("从装备检查获取驱动器配置: {}", config.getRiderId());
-                }
                 return config;
             }
         }

@@ -45,7 +45,9 @@ import java.util.Map;
  * 所有方法均线程安全，可在客户端或服务端调用。
  */
 public final class RideBattleAPI {
-    private RideBattleAPI() {}
+    private RideBattleAPI() {
+    }
+
     private static final HenshinSystem HENSHIN_SYSTEM = HenshinSystem.getInstance();
     private static final DriverSystem DRIVER_SYSTEM = DriverSystem.getInstance();
     private static final ArmorManager ARMOR = ArmorManager.getInstance();
@@ -64,8 +66,13 @@ public final class RideBattleAPI {
      */
     public static boolean transform(Player player) {
         if (!isTransformed(player)) {
-            if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("尝试为玩家{}变身", player.getName().getString());
-            PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
+            if (Config.DEVELOPER_MODE.get())
+                RideBattleLib.LOGGER.debug("尝试为玩家{}变身", player.getName().getString());
+            if (player.level().isClientSide()) {
+                PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
+            } else {
+                getHenshinSystem().driverAction(player);
+            }
             return true;
         }
         return false;
@@ -81,7 +88,11 @@ public final class RideBattleAPI {
         if (HenshinUtils.isTransformed(player)) {
             if (Config.DEVELOPER_MODE.get())
                 RideBattleLib.LOGGER.debug("尝试解除玩家{}变身", player.getName().getString());
-            PacketDistributor.sendToServer(new UnhenshinPacket(player.getUUID()));
+            if (player.level().isClientSide()) {
+                PacketDistributor.sendToServer(new UnhenshinPacket(player.getUUID()));
+            } else {
+                getHenshinSystem().unHenshin(player);
+            }
             return true;
         }
         return false;
@@ -97,7 +108,11 @@ public final class RideBattleAPI {
         if (isTransformed(player) && getCurrentFormId(player) != newFormId) {
             if (Config.DEVELOPER_MODE.get())
                 RideBattleLib.LOGGER.debug("尝试切换玩家{}形态{}", player.getName().getString(), newFormId);
-            PacketDistributor.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
+            if (player.level().isClientSide()) {
+                PacketDistributor.sendToServer(new SwitchFormPacket(player.getUUID(), newFormId));
+            } else {
+                getHenshinSystem().switchForm(player, newFormId);
+            }
             return true;
         }
         return false;
@@ -106,6 +121,7 @@ public final class RideBattleAPI {
     /**
      * 快捷完成变身序列
      */
+    @OnlyIn(Dist.DEDICATED_SERVER)
     public static void completeHenshin(Player player) {
         if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("完成玩家{}变身序列", player.getName().getString());
         DriverActionManager.getInstance().completeTransformation(player);
@@ -118,7 +134,13 @@ public final class RideBattleAPI {
      * 注意：此方法不触发AUTO变身
      */
     public static void insertItemToSlot(Player player, ResourceLocation slotId, ItemStack stack) {
-        PacketDistributor.sendToServer(new InsertItemPacket(player.getUUID(), slotId, stack));
+        if (Config.DEVELOPER_MODE.get())
+            RideBattleLib.LOGGER.debug("为玩家{}往槽位{}存入物品{}", player.getName().getString(), slotId, stack.getDisplayName());
+        if (player.level().isClientSide()) {
+            PacketDistributor.sendToServer(new InsertItemPacket(player.getUUID(), slotId, stack));
+        } else {
+            getDriverSystem().insertItem(player, slotId, stack);
+        }
     }
 
     /**
@@ -135,7 +157,11 @@ public final class RideBattleAPI {
         if (getItemForSlot(player, slotId).isEmpty()) return;
         if (Config.DEVELOPER_MODE.get())
             RideBattleLib.LOGGER.debug("为玩家{}从槽位{}取出物品", player.getName().getString(), slotId);
-        PacketDistributor.sendToServer(new ExtractItemPacket(player.getUUID(), slotId));
+        if (player.level().isClientSide()) {
+            PacketDistributor.sendToServer(new ExtractItemPacket(player.getUUID(), slotId));
+        } else {
+            getDriverSystem().extractItem(player, slotId);
+        }
     }
 
     /**
@@ -144,7 +170,11 @@ public final class RideBattleAPI {
     public static void returnDriverItems(Player player) {
         if (Config.DEVELOPER_MODE.get())
             RideBattleLib.LOGGER.debug("返还玩家驱动器物品{}", player.getName().getString());
-        PacketDistributor.sendToServer(new ReturnItemsPacket());
+        if (player.level().isClientSide()) {
+            PacketDistributor.sendToServer(new ReturnItemsPacket());
+        } else {
+            getDriverSystem().returnItems(player);
+        }
     }
 
     // ================ 吃瘪系统快捷方法 ================
@@ -571,21 +601,21 @@ public final class RideBattleAPI {
      * 强制刷新所有状态同步
      */
     public static void syncClientState(ServerPlayer player) {
-        RideBattleAPI.DATA_SYNC.syncAllPlayerData(player);
+        getSyncManager().syncAllPlayerData(player);
     }
 
     /**
      * 同步驱动器数据
      */
     public static void syncDriverData(ServerPlayer player) {
-        RideBattleAPI.DATA_SYNC.syncDriverData(player);
+        getSyncManager().syncDriverData(player);
     }
 
     /**
      * 同步变身状态
      */
     public static void syncHenshinState(ServerPlayer player) {
-        RideBattleAPI.DATA_SYNC.syncHenshinState(player);
+        getSyncManager().syncHenshinState(player);
     }
 
     // ================ 开发便捷方法 ================
@@ -688,18 +718,23 @@ public final class RideBattleAPI {
     public static HenshinSystem getHenshinSystem() {
         return HENSHIN_SYSTEM;
     }
+
     public static DriverSystem getDriverSystem() {
         return DRIVER_SYSTEM;
     }
+
     public static ArmorManager getArmorManager() {
         return ARMOR;
     }
+
     public static EffectAndAttributeManager getEffectManager() {
         return EFFECTS;
     }
+
     public static ItemManager getItemManager() {
         return ITEMS;
     }
+
     public static SyncManager getSyncManager() {
         return DATA_SYNC;
     }

@@ -121,10 +121,13 @@ public final class RideBattleAPI {
     /**
      * 快捷完成变身序列
      */
-    @OnlyIn(Dist.DEDICATED_SERVER)
     public static void completeHenshin(Player player) {
         if (Config.DEVELOPER_MODE.get()) RideBattleLib.LOGGER.debug("完成玩家{}变身序列", player.getName().getString());
-        DriverActionManager.getInstance().completeTransformation(player);
+        if (player.level().isClientSide()) {
+            PacketDistributor.sendToServer(new CompleteHenshinPacket(player.getUUID()));
+        } else {
+            DriverActionManager.getInstance().completeTransformation(player);
+        }
     }
 
     // ================驱动器系统快捷方法 ================

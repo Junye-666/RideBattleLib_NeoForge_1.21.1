@@ -61,7 +61,7 @@ public class Config
                 .define("debugMode", false);
 
         DEVELOPER_MODE = BUILDER
-                .comment("为开发者提供的小一号日志，输出RiderManager日志")
+                .comment("为开发者提供的小一号日志，输出RideBattleAPI日志")
                 .define("developerMode", false);
 
         BUILDER.build();

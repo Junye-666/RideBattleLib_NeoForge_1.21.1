@@ -7,6 +7,7 @@
   "ridebattlelib.configuration.penaltyEnabled": "启用吃瘪",
   "ridebattlelib.configuration.penaltyThreshold": "吃瘪阈值",
   "ridebattlelib.configuration.cooldownDuration": "吃瘪冷却时间",
+  "ridebattlelib.configuration.penaltyReset": "吃瘪后回血",
   "ridebattlelib.configuration.knockbackStrength": "击退强度",
   "ridebattlelib.configuration.explosionPower": "吃瘪爆炸强度",
   "ridebattlelib.configuration.keyCooldown": "按键冷却毫秒",

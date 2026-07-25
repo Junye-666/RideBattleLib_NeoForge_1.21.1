@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.common.event;
+package com.jpigeon.ridebattlelib.server.event;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.ICancellableEvent;

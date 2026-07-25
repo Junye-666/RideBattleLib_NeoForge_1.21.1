@@ -1,24 +1,24 @@
-package com.jpigeon.ridebattlelib.common.event;
+package com.jpigeon.ridebattlelib.server.event;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.ICancellableEvent;
 
-public class HenshinPauseEvent extends Event {
+/**
+ * 变身事件
+ */
+public class HenshinEvent extends Event {
     private final Player player;
     private final ResourceLocation riderId;
     private final ResourceLocation formId;
 
-    public HenshinPauseEvent(Player player, ResourceLocation riderId, ResourceLocation formId) {
+    public HenshinEvent(Player player, ResourceLocation riderId, ResourceLocation formId) {
         this.player = player;
         this.riderId = riderId;
         this.formId = formId;
     }
 
-    /**
-     * 取消暂停以直接进行变身
-     */
     public static class Pre extends HenshinEvent implements ICancellableEvent {
         public Pre(Player player, ResourceLocation riderId, ResourceLocation formId) {
             super(player, riderId, formId);

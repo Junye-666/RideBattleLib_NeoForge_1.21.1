@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.common.event;
+package com.jpigeon.ridebattlelib.server.event;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;

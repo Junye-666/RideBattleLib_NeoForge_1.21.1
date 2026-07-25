@@ -2,7 +2,7 @@ package com.jpigeon.ridebattlelib.server.system.helper;
 
 import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
-import com.jpigeon.ridebattlelib.common.event.ItemGrantEvent;
+import com.jpigeon.ridebattlelib.server.event.ItemGrantEvent;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;

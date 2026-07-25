@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlelib.common.event;
+package com.jpigeon.ridebattlelib.server.event;
 
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import net.minecraft.world.entity.player.Player;

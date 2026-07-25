@@ -17,6 +17,7 @@ public record HenshinStateSyncPacket(
         UUID playerId,
         boolean isTransformed,
         HenshinState state,
+        ResourceLocation riderId,
         ResourceLocation currentFormId,
         ResourceLocation pendingFormId
 )
@@ -29,6 +30,7 @@ public record HenshinStateSyncPacket(
                     UUIDUtil.STREAM_CODEC, HenshinStateSyncPacket::playerId,
                     ByteBufCodecs.BOOL, HenshinStateSyncPacket::isTransformed,
                     ByteBufCodecs.fromCodec(HenshinState.CODEC), HenshinStateSyncPacket::state,
+                    PayloadUtils.nullableResourceLocation(), HenshinStateSyncPacket::riderId,
                     PayloadUtils.nullableResourceLocation(), HenshinStateSyncPacket::currentFormId,
                     PayloadUtils.nullableResourceLocation(), HenshinStateSyncPacket::pendingFormId,
                     HenshinStateSyncPacket::new

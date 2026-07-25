@@ -5,7 +5,7 @@ import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.api.IPenaltyStrategy;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
-import com.jpigeon.ridebattlelib.common.event.PenaltyEvent;
+import com.jpigeon.ridebattlelib.server.event.PenaltyEvent;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import com.jpigeon.ridebattlelib.server.system.PenaltySystem;
 import net.minecraft.ChatFormatting;

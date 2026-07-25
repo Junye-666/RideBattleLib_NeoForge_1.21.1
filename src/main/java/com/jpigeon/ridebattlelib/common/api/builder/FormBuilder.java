@@ -28,6 +28,13 @@ public class FormBuilder {
         this.form = new FormConfig(formId);
     }
 
+    /**
+     * 创建一个新的形态构建器
+     */
+    public static FormBuilder create(ResourceLocation formId) {
+        return new FormBuilder(null, formId);
+    }
+
     // ========== 盔甲 ==========
 
     public FormBuilder armor(@Nullable Item helmet, @Nullable Item chestplate, @Nullable Item leggings, @Nullable Item boots) {
@@ -111,14 +118,18 @@ public class FormBuilder {
      * 自动注册技能并添加到形态
      */
     public FormBuilder skill(String skillPath, int cooldownSeconds) {
-        return skill(skillPath, Component.literal(skillPath), cooldownSeconds);
-    }
-
-    public FormBuilder skill(String skillPath, Component displayName, int cooldownSeconds) {
         ResourceLocation skillId = ResourceLocation.fromNamespaceAndPath(
                 form.getFormId().getNamespace(),
                 form.getFormId().getPath() + "_" + skillPath
         );
+        return skill(skillId, cooldownSeconds);
+    }
+
+    /**
+     * 自动注册技能并添加到形态
+     */
+    public FormBuilder skill(ResourceLocation skillId, int cooldownSeconds) {
+        Component displayName = Component.translatable("skill." + skillId.getNamespace() + "." + skillId.getPath());
         SkillSystem.registerSkill(skillId, displayName, cooldownSeconds);
         form.addSkill(skillId);
         return this;
@@ -147,16 +158,25 @@ public class FormBuilder {
     // ========== 结束构建 ==========
 
     /**
-     * 结束形态构建，返回父 Builder
+     * 结束形态构建，返回父 Builder（仅当通过 RiderBuilder.form() 创建时可用）
+     *
+     * @throws IllegalStateException 如果独立构建时调用此方法
      */
     public RiderBuilder end() {
+        if (parent == null) {
+            throw new IllegalStateException(
+                    "This FormBuilder was created standalone (via FormBuilder.create). " +
+                            "Use .build() to get FormConfig, not .end()."
+            );
+        }
         parent.addFormBuilder(form.getFormId().getPath(), this);
         return parent;
     }
 
-    // ========== 内部方法 ==========
-
-    FormConfig build() {
+    /**
+     * 完成构建，返回 FormConfig 实例（独立构建时使用）
+     */
+    public FormConfig build() {
         return form;
     }
 }

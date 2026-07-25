@@ -1,7 +1,5 @@
 package com.jpigeon.ridebattlelib.common.api.builder;
 
-import com.jpigeon.ridebattlelib.Config;
-import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
@@ -23,8 +21,8 @@ public class RiderBuilder {
     private final ResourceLocation riderId;
     private final RiderConfig config;
     private final Map<String, FormBuilder> formBuilders = new LinkedHashMap<>();
+    private final List<FormConfig> directForms = new ArrayList<>();
     private String baseFormPath;
-    private boolean allowDynamic = false;
 
     private RiderBuilder(ResourceLocation riderId) {
         this.riderId = riderId;
@@ -88,6 +86,14 @@ public class RiderBuilder {
         return new FormBuilder(this, formId);
     }
 
+    /**
+     * 直接添加一个已经构建好的 FormConfig 到当前骑士中
+     */
+    public RiderBuilder form(FormConfig formConfig) {
+        this.directForms.add(formConfig);
+        return this;
+    }
+
     // ========== 骑士全局设置 ==========
 
     public RiderBuilder baseForm(String formPath) {
@@ -101,7 +107,6 @@ public class RiderBuilder {
     }
 
     public RiderBuilder allowDynamicForms(boolean allow) {
-        this.allowDynamic = allow;
         config.setAllowDynamicForms(allow);
         return this;
     }
@@ -139,29 +144,7 @@ public class RiderBuilder {
      * 构建并自动注册骑士到 RiderRegistry
      */
     public RiderConfig buildAndRegister() {
-        // 1. 构建所有形态
-        Map<String, FormConfig> builtForms = new HashMap<>();
-        for (Map.Entry<String, FormBuilder> entry : formBuilders.entrySet()) {
-            FormConfig form = entry.getValue().build();
-            config.addForm(form);
-            builtForms.put(entry.getKey(), form);
-        }
-
-        // 2. 基础形态为可选（只有明确指定且存在时才设置）
-        if (baseFormPath != null && builtForms.containsKey(baseFormPath)) {
-            config.setBaseForm(builtForms.get(baseFormPath).getFormId());
-        } else if (baseFormPath != null && Config.DEVELOPER_MODE.get()) {
-            // 如果指定了但不存在，给出警告但不阻断构建
-            RideBattleLib.LOGGER.warn("Base form '{}' not found, skipping. Available forms: {}", baseFormPath, builtForms.keySet());
-        }
-        // 未指定 baseFormPath 时，config 中的 baseFormId 保持 null
-
-        // 3. 验证驱动器物品
-        if (config.getDriverItem() == null || config.getDriverItem() == Items.AIR) {
-            throw new IllegalStateException("Driver item is required! Call .driver() before building.");
-        }
-
-        // 4. 注册
+        RiderConfig config = this.build();
         RiderRegistry.registerRider(config);
         return config;
     }
@@ -170,7 +153,7 @@ public class RiderBuilder {
      * 构建但不注册，返回 RiderConfig（用于手动控制注册时机）
      */
     public RiderConfig build() {
-        // 构建所有形态
+        // 构建链式形态
         Map<String, FormConfig> builtForms = new HashMap<>();
         for (Map.Entry<String, FormBuilder> entry : formBuilders.entrySet()) {
             FormConfig form = entry.getValue().build();
@@ -178,6 +161,13 @@ public class RiderBuilder {
             builtForms.put(entry.getKey(), form);
         }
 
+        // 合并独立构建的形态（新增）
+        for (FormConfig form : directForms) {
+            config.addForm(form);
+            builtForms.put(form.getFormId().getPath(), form);
+        }
+
+        // 验证基础形态
         if (baseFormPath == null || !builtForms.containsKey(baseFormPath)) {
             throw new IllegalStateException(
                     "Base form '" + baseFormPath + "' not found! Available forms: " + builtForms.keySet()
@@ -185,6 +175,7 @@ public class RiderBuilder {
         }
         config.setBaseForm(builtForms.get(baseFormPath).getFormId());
 
+        // 验证驱动器
         if (config.getDriverItem() == null || config.getDriverItem() == Items.AIR) {
             throw new IllegalStateException("Driver item is required! Call .driver() before building.");
         }

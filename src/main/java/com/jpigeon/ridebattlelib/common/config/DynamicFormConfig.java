@@ -275,31 +275,79 @@ public class DynamicFormConfig extends FormConfig {
      * 生成动态形态ID
      */
     private static ResourceLocation generateFormId(ResourceLocation riderId,
-                                                   Map<ResourceLocation, ItemStack> driverItems) {
+                                             Map<ResourceLocation, ItemStack> driverItems) {
         String baseId = riderId.getPath().replace("kamen_rider_", "");
-        Set<String> itemParts = new LinkedHashSet<>();
+        Set<String> itemPaths = new LinkedHashSet<>();
 
         for (ItemStack stack : driverItems.values()) {
             if (!stack.isEmpty()) {
-                ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-                String trimmedId = trimCommonSuffix(itemId.getPath());
-                itemParts.add(trimmedId);
+                itemPaths.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath());
             }
         }
 
-        String formPath = baseId + "_" + String.join("_", itemParts);
+        // 如果只有 0 或 1 个物品，直接保留原名
+        if (itemPaths.size() <= 1) {
+            String suffix = itemPaths.isEmpty() ? "empty" : itemPaths.iterator().next();
+            return ResourceLocation.fromNamespaceAndPath(riderId.getNamespace(), baseId + "_" + suffix);
+        }
+
+        // 动态查找所有物品路径的最长公共后缀
+        String commonSuffix = findLongestCommonSuffix(itemPaths);
+
+        // 如果公共后缀长度 >= 2（防止把 "a" 和 "b" 的公共后缀 "" 误删），且不为空，则裁剪
+        if (commonSuffix.length() >= 2) {
+            Set<String> trimmedPaths = new LinkedHashSet<>();
+            for (String path : itemPaths) {
+                // 如果路径以该后缀结尾，则移除；否则保留原样（防止异常情况）
+                if (path.endsWith(commonSuffix)) {
+                    trimmedPaths.add(path.substring(0, path.length() - commonSuffix.length()));
+                } else {
+                    trimmedPaths.add(path);
+                }
+            }
+            itemPaths = trimmedPaths;
+        }
+
+        // 组装最终 ID
+        String formPath = baseId + "_" + String.join("_", itemPaths);
         return ResourceLocation.fromNamespaceAndPath(riderId.getNamespace(), formPath);
     }
 
-    private static String trimCommonSuffix(String itemId) {
-        String[] suffixes = {"_memory", "_medal", "_switch", "_lock", "_gashat",
-                "_card", "_full_bottle", "_watch", "_fantasy_book", "_buckle"};
-        for (String suffix : suffixes) {
-            if (itemId.endsWith(suffix)) {
-                return itemId.substring(0, itemId.length() - suffix.length());
+    /**
+     * 查找一组字符串中共同的最长后缀，例如:
+     * <p>
+     * ["iron_ingot", "gold_ingot"] -> "_ingot"
+     * <p>
+     *       ["diamond_sword", "netherite_sword"] -> "_sword"
+     */
+    private static String findLongestCommonSuffix(Set<String> strings) {
+        if (strings.isEmpty()) return "";
+
+        String first = strings.iterator().next();
+        String bestSuffix = "";
+
+        // 从第一个下划线开始扫描，确保我们找的是“分类词”
+        int firstUnderscore = first.indexOf('_');
+        if (firstUnderscore == -1) return "";
+
+        for (int i = firstUnderscore; i < first.length(); i++) {
+            String suffix = first.substring(i);
+            // 只考虑以下划线开头的后缀，且长度至少为2（避免误删单字符）
+            if (!suffix.startsWith("_") || suffix.length() < 2) continue;
+
+            boolean allEndWith = true;
+            for (String s : strings) {
+                if (!s.endsWith(suffix)) {
+                    allEndWith = false;
+                    break;
+                }
+            }
+            // 只保留长度更长的匹配项
+            if (allEndWith && suffix.length() > bestSuffix.length()) {
+                bestSuffix = suffix;
             }
         }
-        return itemId;
+        return bestSuffix;
     }
 
     /**

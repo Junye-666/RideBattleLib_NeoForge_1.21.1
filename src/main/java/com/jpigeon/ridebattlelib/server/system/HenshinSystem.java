@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.server.system;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.common.api.RideBattleAPI;
 import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
@@ -9,16 +10,17 @@ import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.data.HenshinState;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
-import com.jpigeon.ridebattlelib.server.event.*;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import com.jpigeon.ridebattlelib.common.util.RiderUtils;
+import com.jpigeon.ridebattlelib.server.event.*;
 import com.jpigeon.ridebattlelib.server.system.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.server.system.helper.SyncManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
@@ -26,16 +28,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class HenshinSystem {
     private static final HenshinSystem INSTANCE = new HenshinSystem();
+
     public static HenshinSystem getInstance() {
         return INSTANCE;
     }
-
-    public static final Map<UUID, Boolean> CLIENT_TRANSFORMED_CACHE = new ConcurrentHashMap<>();
 
     public void driverAction(Player player) {
         if (player.level().isClientSide()) {
@@ -55,12 +54,18 @@ public class HenshinSystem {
         NeoForge.EVENT_BUS.post(driverEvent);
         if (driverEvent.isCanceled()) return;
 
+        // 声明式变身音效
+        // 有则播，无则无。
+        SoundEvent henshinSound = formConfig.getHenshinSound();
+        if (henshinSound != null) {
+            RideBattleAPI.playPublicSound(player, henshinSound);
+        }
+
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         data.setPendingFormId(formId);
         if (data.getState() != HenshinState.TRANSFORMING) {
             data.setState(HenshinState.TRANSFORMING);
         }
-        // 同步状态
         syncState(player);
 
         HenshinSessionData oldData = HenshinUtils.getSessionData(player);
@@ -84,7 +89,25 @@ public class HenshinSystem {
             HenshinPauseEvent.Post postPause = new HenshinPauseEvent.Post(player, config.getRiderId(), formId);
             NeoForge.EVENT_BUS.post(postPause);
         } else {
-            completeAndSendEvents(player, config, formId, oldFormId);
+            int autoTicks = formConfig.getAutoCompleteTicks();
+            if (autoTicks > 0) {
+                // 延迟自动完成路径
+                if (!HenshinUtils.isTransformed(player)) {
+                    DriverActionManager.getInstance().prepareHenshin(player, formId);
+                } else if (oldFormId != null) {
+                    DriverActionManager.getInstance().prepareFormSwitch(player, oldFormId, formId);
+                }
+
+                // 双重检查：Pre 事件若被取消，pendingFormId 已被 cancelHenshin 清空。
+                // 此时不再调度，避免 completeTransformation 收到 null 后打 ERROR 日志。
+                if (data.getPendingFormId() != null) {
+                    RideBattleAPI.scheduleTicks(autoTicks, () ->
+                            DriverActionManager.getInstance().completeTransformation(player));
+                }
+            } else {
+                // 立即完成
+                completeAndSendEvents(player, config, formId, oldFormId);
+            }
         }
     }
 
@@ -94,12 +117,14 @@ public class HenshinSystem {
             NeoForge.EVENT_BUS.post(preHenshin);
             if (preHenshin.isCanceled()) {
                 DriverActionManager.getInstance().cancelHenshin(player);
+                return;
             }
         } else {
             FormSwitchEvent.Pre preSwitch = new FormSwitchEvent.Pre(player, oldFormId, formId);
             NeoForge.EVENT_BUS.post(preSwitch);
             if (preSwitch.isCanceled()) {
                 DriverActionManager.getInstance().cancelHenshin(player);
+                return;
             }
         }
         DriverActionManager.getInstance().completeTransformation(player);

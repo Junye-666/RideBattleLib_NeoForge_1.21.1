@@ -25,6 +25,7 @@ import net.neoforged.fml.LogicalSide;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -197,6 +198,10 @@ public class DriverHandler {
         }
     }
 
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        LAST_INTERACTION_TIME.remove(event.getEntity().getUUID());
+    }
 
     private static boolean isRiderDriverSlot(RiderConfig config, EquipmentSlot slot) {
         return slot.equals(config.getDriverSlot());

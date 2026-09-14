@@ -4,18 +4,17 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.client.cache.ClientDriverDataCache;
 import com.jpigeon.ridebattlelib.client.cache.ClientTransformedCache;
-import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.data.HenshinState;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
-import com.jpigeon.ridebattlelib.server.event.SkillEvent;
 import com.jpigeon.ridebattlelib.common.network.packet.*;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import com.jpigeon.ridebattlelib.common.util.ScheduleUtils;
+import com.jpigeon.ridebattlelib.server.event.SkillEvent;
 import com.jpigeon.ridebattlelib.server.system.DriverSystem;
 import com.jpigeon.ridebattlelib.server.system.HenshinSystem;
 import com.jpigeon.ridebattlelib.server.system.PenaltySystem;
@@ -328,20 +327,7 @@ public final class RideBattleAPI {
      */
     @Nullable
     public static FormConfig getFormConfig(Player player, ResourceLocation formId) {
-        // 优先从玩家当前骑士获取
-        FormConfig form = RiderRegistry.getForm(player, formId);
-
-        if (form == null) {
-            // 回退到动态形态
-            form = DynamicFormConfig.getDynamicForm(formId);
-        }
-
-        if (form == null && Config.DEBUG_MODE.get()) {
-            RideBattleLib.LOGGER.debug("未找到形态配置: {} (玩家: {})", formId,
-                    player.getName().getString());
-        }
-
-        return form;
+        return RiderRegistry.getForm(player, formId);
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.jpigeon.ridebattlelib.server.system.helper;
 
-import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.server.event.ItemGrantEvent;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
@@ -16,14 +15,14 @@ public class ItemManager {
     }
 
     public void grantFormItems(Player player, ResourceLocation formId) {
-        FormConfig formConfig = getFormConfig(player, formId);
+        FormConfig formConfig = RiderRegistry.getForm(player, formId);
         if (formConfig != null) {
             grantFormItemsInternal(player, formConfig);
         }
     }
 
     public void removeGrantedItems(Player player, ResourceLocation formId) {
-        FormConfig formConfig = getFormConfig(player, formId);
+        FormConfig formConfig = RiderRegistry.getForm(player, formId);
         if (formConfig != null) {
             removeGrantedItemsInternal(player, formConfig);
         }
@@ -67,17 +66,5 @@ public class ItemManager {
                 }
             }
         }
-    }
-
-    private FormConfig getFormConfig(Player player, ResourceLocation formId) {
-        // 优先从玩家当前骑士获取
-        FormConfig form = RiderRegistry.getForm(player, formId);
-
-        // 如果没找到，尝试动态形态
-        if (form == null) {
-            form = DynamicFormConfig.getDynamicForm(formId);
-        }
-
-        return form;
     }
 }

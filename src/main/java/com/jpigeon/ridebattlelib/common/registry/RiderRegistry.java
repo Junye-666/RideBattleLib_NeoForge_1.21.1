@@ -2,6 +2,7 @@ package com.jpigeon.ridebattlelib.common.registry;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import net.minecraft.resources.ResourceLocation;
@@ -61,7 +62,11 @@ public class RiderRegistry {
         }
 
         // 如果没有特定骑士的配置，则使用通用版本
-        return getForm(formId);
+        FormConfig form = getForm(formId);
+        if (form != null) return form;
+
+        // 动态形态回退
+        return DynamicFormConfig.getDynamicForm(formId);
     }
 
     // 原有的基础方法（向后兼容）

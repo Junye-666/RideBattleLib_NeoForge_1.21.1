@@ -6,6 +6,7 @@ import com.jpigeon.ridebattlelib.server.system.SkillSystem;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
@@ -152,6 +153,22 @@ public class FormBuilder {
 
     public FormBuilder shouldPause(boolean pause) {
         form.setShouldPause(pause);
+        return this;
+    }
+
+    public FormBuilder henshinSound(SoundEvent sound) {
+        form.setHenshinSound(sound);
+        return this;
+    }
+
+    public FormBuilder autoCompleteT(int ticks) {
+        form.setAutoCompleteTicks(ticks);
+        return this;
+    }
+
+    public FormBuilder autoCompleteS(float seconds) {
+        int ticks = (int) (seconds * 20);
+        form.setAutoCompleteTicks(ticks);
         return this;
     }
 

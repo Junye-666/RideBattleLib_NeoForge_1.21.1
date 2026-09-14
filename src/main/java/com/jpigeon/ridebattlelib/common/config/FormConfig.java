@@ -7,6 +7,7 @@ import com.jpigeon.ridebattlelib.common.data.RiderData;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -41,6 +42,9 @@ public class FormConfig {
     private final List<ItemStack> grantedItems = new ArrayList<>();
     private boolean allowsEmptyDriver = false;
     private boolean shouldPause = false;
+    @Nullable
+    private SoundEvent henshinSound = null;
+    private int autoCompleteTicks = 0;
     private final List<ResourceLocation> skillIds = new ArrayList<>();
 
     public FormConfig(ResourceLocation formId) {
@@ -51,10 +55,11 @@ public class FormConfig {
 
     /**
      * 设置形态对应盔甲
-     * @param helmet 头盔
+     *
+     * @param helmet     头盔
      * @param chestplate 胸甲
-     * @param leggings 腿甲（可无）
-     * @param boots （靴子）
+     * @param leggings   腿甲（可无）
+     * @param boots      （靴子）
      */
     public FormConfig setArmor(@Nullable Item helmet, @Nullable Item chestplate, @Nullable Item leggings, @Nullable Item boots) {
         this.helmet = helmet != null ? helmet : Items.AIR;
@@ -83,6 +88,7 @@ public class FormConfig {
 
     /**
      * 触发变身方式
+     *
      * @param type KEY/ITEM/AUTO
      */
     public FormConfig setTriggerType(TriggerType type) {
@@ -92,9 +98,10 @@ public class FormConfig {
 
     /**
      * 属性修饰符
+     *
      * @param attributeId 可在Attributes.java中找到相应ResourceLocation
-     * @param amount 修改值
-     * @param operation 修改方式
+     * @param amount      修改值
+     * @param operation   修改方式
      */
     public FormConfig addAttribute(ResourceLocation attributeId, double amount,
                                    AttributeModifier.Operation operation) {
@@ -112,9 +119,10 @@ public class FormConfig {
 
     /**
      * 状态效果
-     * @param effect MobEffects中获取
-     * @param duration 持续时间
-     * @param amplifier 等级：0为1级
+     *
+     * @param effect        MobEffects中获取
+     * @param duration      持续时间
+     * @param amplifier     等级：0为1级
      * @param hideParticles 是否隐藏粒子效果
      */
     public FormConfig addEffect(Holder<MobEffect> effect, int duration,
@@ -127,10 +135,11 @@ public class FormConfig {
 
     /**
      * 快速方法
-     * @param effect MobEffects中获取
+     *
+     * @param effect    MobEffects中获取
      * @param amplifier 等级：0为1级
      */
-    public FormConfig addEffect(Holder<MobEffect> effect, int amplifier){
+    public FormConfig addEffect(Holder<MobEffect> effect, int amplifier) {
         return addEffect(effect, 114514, amplifier, true);
     }
 
@@ -182,10 +191,34 @@ public class FormConfig {
         return this;
     }
 
+    /**
+     * 设置变身/形态切换瞬间自动播放的音效。
+     * <p>
+     * 写了就播，无则无。
+     *
+     * @param sound 音效事件；传 null 表示不自动播放
+     */
+    public FormConfig setHenshinSound(@Nullable SoundEvent sound) {
+        this.henshinSound = sound;
+        return this;
+    }
 
+    /**
+     * 设置自动完成变身所需的 tick 数。
+     * <p>
+     * 仅在 {@link #shouldPause()} 为 false 时生效。为 true 时该值被忽略，
+     * 变身将完全进入待机阶段等待外部触发 {@code completeHenshin}。
+     *
+     * @param ticks 自动完成延迟；{@code <= 0} 表示立即完成
+     */
+    public FormConfig setAutoCompleteTicks(int ticks) {
+        this.autoCompleteTicks = ticks;
+        return this;
+    }
 
     /**
      * 为形态赋予技能
+     *
      * @param skillId 你注册的技能ID
      */
     public FormConfig addSkill(ResourceLocation skillId) {
@@ -374,6 +407,15 @@ public class FormConfig {
         return shouldPause;
     }
 
+    @Nullable
+    public SoundEvent getHenshinSound() {
+        return henshinSound;
+    }
+
+    public int getAutoCompleteTicks() {
+        return autoCompleteTicks;
+    }
+
     public boolean hasAuxRequirements() {
         return !auxRequiredItems.isEmpty();
     }
@@ -406,6 +448,7 @@ public class FormConfig {
 
     /**
      * 创建此FormConfig的深度副本
+     *
      * @param newFormId 新副本的形态ID（可以为null，使用原ID）
      * @return 深度副本FormConfig
      */
@@ -420,6 +463,8 @@ public class FormConfig {
         copy.triggerType = this.triggerType;
         copy.allowsEmptyDriver = this.allowsEmptyDriver;
         copy.shouldPause = this.shouldPause;
+        copy.henshinSound = this.henshinSound;
+        copy.autoCompleteTicks = this.autoCompleteTicks;
 
         // 深度复制集合
         copy.attributes.addAll(new ArrayList<>(this.attributes));
@@ -448,6 +493,8 @@ public class FormConfig {
         copy.boots = this.boots;
         copy.triggerType = this.triggerType;
         copy.shouldPause = this.shouldPause;
+        copy.henshinSound = this.henshinSound;
+        copy.autoCompleteTicks = this.autoCompleteTicks;
 
         // 深度复制集合
         copy.attributes.addAll(new ArrayList<>(this.attributes));

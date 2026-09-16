@@ -1,14 +1,11 @@
 package com.jpigeon.ridebattlelib.common.network.packet;
 
-import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.common.network.RBLPacket;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,11 +13,10 @@ import java.util.UUID;
 
 public record DriverDataDiffPacket(
         UUID playerId,
-        Map<ResourceLocation, ItemStack> changes,
-        boolean fullSync
-) implements CustomPacketPayload {
+        Map<ResourceLocation, ItemStack> changes
+) implements RBLPacket {
 
-    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_diff_sync");
+    public static final ResourceLocation ID = RBLPacket.ofPath("driver_diff_sync");
 
     public static final Type<DriverDataDiffPacket> TYPE = new Type<>(ID);
 
@@ -30,8 +26,6 @@ public record DriverDataDiffPacket(
                     DriverDataDiffPacket::playerId,
                     createChangesCodec(),
                     DriverDataDiffPacket::changes,
-                    ByteBufCodecs.BOOL,
-                    DriverDataDiffPacket::fullSync,
                     DriverDataDiffPacket::new
             );
 
@@ -70,5 +64,7 @@ public record DriverDataDiffPacket(
     }
 
     @Override
-    public @NotNull Type<?> type() { return TYPE; }
+    public ResourceLocation id() {
+        return ID;
+    }
 }

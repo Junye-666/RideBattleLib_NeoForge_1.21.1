@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.network.PacketHandler;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
-import com.jpigeon.ridebattlelib.common.util.ScheduleUtils;
 import com.jpigeon.ridebattlelib.server.handler.AttachmentHandler;
 import com.jpigeon.ridebattlelib.server.handler.DriverHandler;
 import com.jpigeon.ridebattlelib.server.handler.PenaltyHandler;
@@ -29,7 +28,6 @@ public class RideBattleLib {
         NeoForge.EVENT_BUS.register(DriverHandler.class);
         NeoForge.EVENT_BUS.register(AttachmentHandler.class);
         NeoForge.EVENT_BUS.register(PenaltyHandler.class);
-        NeoForge.EVENT_BUS.register(ScheduleUtils.getInstance());
         RiderAttachments.ATTACHMENTS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);

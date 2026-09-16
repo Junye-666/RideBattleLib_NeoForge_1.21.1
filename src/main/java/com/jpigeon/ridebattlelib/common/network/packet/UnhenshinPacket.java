@@ -1,28 +1,25 @@
 package com.jpigeon.ridebattlelib.common.network.packet;
 
-import com.jpigeon.ridebattlelib.RideBattleLib;
-import net.minecraft.core.UUIDUtil;
+import com.jpigeon.ridebattlelib.common.network.RBLPacket;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
+public final class UnhenshinPacket implements RBLPacket {
+    private UnhenshinPacket() {
+    }
 
-public record UnhenshinPacket(UUID playerId) implements CustomPacketPayload {
-    public static final ResourceLocation ID =
-            ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "unhenshin");
+    public static final ResourceLocation ID = RBLPacket.ofPath("unhenshin");
+
+    public static final UnhenshinPacket INSTANCE = new UnhenshinPacket();
 
     public static final StreamCodec<RegistryFriendlyByteBuf, UnhenshinPacket> STREAM_CODEC =
-            StreamCodec.composite(
-                    UUIDUtil.STREAM_CODEC,
-                    UnhenshinPacket::playerId,
-                    UnhenshinPacket::new
-            );
+            StreamCodec.unit(INSTANCE);
 
     public static final Type<UnhenshinPacket> TYPE = new Type<>(ID);
 
     @Override
-    public @NotNull Type<?> type() { return TYPE; }
+    public ResourceLocation id() {
+        return ID;
+    }
 }

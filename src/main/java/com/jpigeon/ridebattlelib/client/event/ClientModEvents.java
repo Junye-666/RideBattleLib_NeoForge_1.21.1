@@ -6,7 +6,6 @@ import com.jpigeon.ridebattlelib.client.cache.ClientDriverDataCache;
 import com.jpigeon.ridebattlelib.client.cache.ClientTransformedCache;
 import com.jpigeon.ridebattlelib.client.key.KeyBindings;
 import com.jpigeon.ridebattlelib.common.api.RideBattleAPI;
-import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.network.packet.*;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import net.minecraft.client.Minecraft;
@@ -59,25 +58,21 @@ public class ClientModEvents {
         setKeyPressCooldown(player);
 
         if (KeyBindings.DRIVER_KEY.consumeClick()) {
-            RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-            if (config == null) return;
-
             if (Config.DEBUG_MODE.get()) {
-                RideBattleLib.LOGGER.debug("按键触发 - 玩家状态: 变身={}, 驱动器={}", HenshinUtils.isTransformed(player), config.getRiderId());
+                RideBattleLib.LOGGER.debug("按键触发 - 玩家状态: 变身={}", HenshinUtils.isTransformed(player));
             }
-            PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
-
+            PacketDistributor.sendToServer(DriverActionPacket.INSTANCE);
         }
         if (KeyBindings.UNHENSHIN_KEY.consumeClick()) {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("发送解除变身数据包");
             }
-            PacketDistributor.sendToServer(new UnhenshinPacket(player.getUUID()));
+            PacketDistributor.sendToServer(UnhenshinPacket.INSTANCE);
         }
 
         if (KeyBindings.RETURN_ITEMS_KEY.consumeClick()) {
             // 触发物品返还
-            PacketDistributor.sendToServer(new ReturnItemsPacket());
+            PacketDistributor.sendToServer(ReturnItemsPacket.INSTANCE);
         }
 
         if (KeyBindings.SKILL_KEY.consumeClick()) {
@@ -87,9 +82,9 @@ public class ClientModEvents {
             if (!RideBattleAPI.isTransformed(player)) return;
             // 蹲下时切换技能，否则触发当前技能
             if (player.isShiftKeyDown()) {
-                PacketDistributor.sendToServer(new RotateSkillPacket(player.getUUID()));
+                PacketDistributor.sendToServer(RotateSkillPacket.INSTANCE);
             } else {
-                PacketDistributor.sendToServer(new TriggerSkillPacket(player.getUUID()));
+                PacketDistributor.sendToServer(TriggerSkillPacket.INSTANCE);
             }
         }
     }

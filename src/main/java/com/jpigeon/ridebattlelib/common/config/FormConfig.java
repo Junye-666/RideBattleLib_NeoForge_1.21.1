@@ -140,7 +140,7 @@ public class FormConfig {
      * @param amplifier 等级：0为1级
      */
     public FormConfig addEffect(Holder<MobEffect> effect, int amplifier) {
-        return addEffect(effect, 114514, amplifier, true);
+        return addEffect(effect, -1, amplifier, true);
     }
 
     /**

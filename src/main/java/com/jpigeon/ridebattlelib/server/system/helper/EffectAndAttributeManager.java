@@ -2,8 +2,8 @@ package com.jpigeon.ridebattlelib.server.system.helper;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
+import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;

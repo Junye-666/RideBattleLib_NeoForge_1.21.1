@@ -2,14 +2,14 @@ package com.jpigeon.ridebattlelib.common.config;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.client.cache.ClientTransformedCache;
 import com.jpigeon.ridebattlelib.common.api.IHenshinStrategy;
 import com.jpigeon.ridebattlelib.common.api.IPenaltyStrategy;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
-import com.jpigeon.ridebattlelib.server.event.FindRiderConfigEvent;
-import com.jpigeon.ridebattlelib.server.event.FormOverrideEvent;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import com.jpigeon.ridebattlelib.common.util.RiderUtils;
+import com.jpigeon.ridebattlelib.server.event.FindRiderConfigEvent;
 import com.jpigeon.ridebattlelib.server.strategy.DefaultHenshinStrategy;
 import com.jpigeon.ridebattlelib.server.strategy.DefaultPenaltyStrategy;
 import com.jpigeon.ridebattlelib.server.system.DriverSystem;
@@ -23,7 +23,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -57,6 +56,7 @@ public class RiderConfig {
 
     /**
      * 初始化时需要传入骑士Id
+     *
      * @param riderId ResourceLocation
      */
     public RiderConfig(ResourceLocation riderId) {
@@ -130,6 +130,7 @@ public class RiderConfig {
 
     /**
      * 为骑士添加形态
+     *
      * @param form 你注册的形态Config
      */
     public RiderConfig addForm(FormConfig form) {
@@ -142,6 +143,7 @@ public class RiderConfig {
 
     /**
      * 设置基础形态
+     *
      * @param formId 你注册形态Config中的形态ID
      */
     public void setBaseForm(ResourceLocation formId) {
@@ -151,9 +153,10 @@ public class RiderConfig {
     }
 
     //====================动态适配方法====================
+
     /**
      * 添加骑士基础属性修饰符（动态形态时的统一修饰符）
-      */
+     */
     public RiderConfig addBaseAttribute(ResourceLocation attributeId, double amount,
                                         AttributeModifier.Operation operation) {
         baseAttributes.add(new AttributeModifier(attributeId, amount, operation));
@@ -172,7 +175,7 @@ public class RiderConfig {
     /**
      * 快速方法
      */
-    public RiderConfig addBaseEffect(Holder<MobEffect> effect, int amplifier){
+    public RiderConfig addBaseEffect(Holder<MobEffect> effect, int amplifier) {
         return addBaseEffect(effect, 114514, amplifier, true);
     }
 
@@ -185,14 +188,15 @@ public class RiderConfig {
     }
 
     /**
-     *  设置自定义变身逻辑
+     * 设置自定义变身逻辑
      */
     public RiderConfig setHenshinStrategy(IHenshinStrategy strategy) {
         this.henshinStrategy = strategy;
         return this;
     }
+
     /**
-     *  设置自定义吃瘪逻辑
+     * 设置自定义吃瘪逻辑
      */
     public RiderConfig setPenaltyStrategy(IPenaltyStrategy strategy) {
         this.penaltyStrategy = strategy;
@@ -200,124 +204,28 @@ public class RiderConfig {
     }
 
     //====================内部方法====================
-    // 形态匹配
-    public ResourceLocation matchForm(Player player, Map<ResourceLocation, ItemStack> driverItems) {
-        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
-        if (config == null) return null;
-        FormOverrideEvent overrideEvent = new FormOverrideEvent(player, driverItems, null);
-        NeoForge.EVENT_BUS.post(overrideEvent);
-
-        if (overrideEvent.isCanceled()) {
-            RideBattleLib.LOGGER.debug("被FormOverrideEvent取消，跳过形态匹配");
-            return RiderUtils.NULL;
-        }
-
-        ResourceLocation overrideForm = overrideEvent.getOverrideForm();
-        if (overrideForm != null) {
-            RideBattleLib.LOGGER.debug("形态被覆盖为: {}", overrideForm);
-            return overrideForm;
-        }
-
-        if (isDriverEmpty(driverItems)) {
-            if (baseFormId != null && forms.containsKey(baseFormId) &&
-                    forms.get(baseFormId).allowsEmptyDriver()) {
-                if (Config.DEBUG_MODE.get()){
-                    RideBattleLib.LOGGER.debug("使用允许空驱动器的基础形态: {}", baseFormId);
-                }
-                return baseFormId;
-            } else {
-                RideBattleLib.LOGGER.warn("驱动器为空，且没有允许空驱动器的基础形态");
-                return RiderUtils.NULL;
-            }
-        }
-        if (Config.DEBUG_MODE.get()) {
-            RideBattleLib.LOGGER.debug("开始匹配形态，玩家: {}", player.getName().getString());
-            RideBattleLib.LOGGER.debug("当前驱动器内容: {}", driverItems);
-        }
-
-
-        // 先检查是否所有“必需槽位”都有有效物品
-        for (ResourceLocation slotId : requiredSlots) {
-            DriverSlotDefinition slot = getSlotDefinition(slotId);
-            if (slot == null) continue;
-
-            ItemStack stack = driverItems.get(slotId);
-            if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
-                if (Config.DEBUG_MODE.get()) {
-                    RideBattleLib.LOGGER.debug("必需槽位 {} 为空", slotId);
-                }
-                return RiderUtils.NULL; // 必需槽位不能为空
-            }
-        }
-
-        // 检查辅助必需槽位
-        for (ResourceLocation slotId : auxRequiredSlots) {
-            DriverSlotDefinition slot = getAuxSlotDefinition(slotId);
-            if (slot == null) continue;
-
-            ItemStack stack = driverItems.get(slotId);
-            if ((stack == null || stack.isEmpty()) && slot.isRequired()) {
-                if (Config.DEBUG_MODE.get()) {
-                    RideBattleLib.LOGGER.debug("辅助必需槽位 {} 为空", slotId);
-                }
-                return RiderUtils.NULL; // 辅助必需槽位不能为空
-            }
-        }
-
-        // 尝试匹配所有形态
-        for (FormConfig formConfig : forms.values()) {
-            boolean mainMatches = formConfig.matchesMainSlots(driverItems, config);
-            boolean auxMatches = true;
-
-            // 检查形态是否有辅助槽位要求
-            boolean formHasAuxRequirements = !formConfig.getAuxRequiredItems().isEmpty();
-
-            if (formHasAuxRequirements) {
-                // 形态要求辅助槽位：必须装备辅助驱动器且槽位匹配
-                if (hasAuxDriverEquipped(player)) {
-                    auxMatches = formConfig.matchesAuxSlots(driverItems, config);
-                } else {
-                    auxMatches = false; // 未装备辅助驱动器但形态要求→不匹配
-                    if (Config.DEBUG_MODE.get()) {
-                        RideBattleLib.LOGGER.debug("形态{}需要辅助驱动器，但玩家未装备", formConfig.getFormId());
-                    }
-                }
-            }
-
-            if (mainMatches && auxMatches) {
-                ResourceLocation formId = formConfig.getFormId();
-                if (Config.DEBUG_MODE.get()) {
-                    RideBattleLib.LOGGER.debug("匹配到的形态ID: {}", formId);
-                }
-                return formId;
-            }
-        }
-
-        if (this.allowsDynamicForms()) {
-            if (Config.DEBUG_MODE.get()) {
-                RideBattleLib.LOGGER.debug("未找到预设形态，尝试创建动态形态");
-            }
-            try {
-                FormConfig dynamicForm = DynamicFormConfig.getOrCreateDynamicForm(this, driverItems);
-                return dynamicForm.getFormId();
-            } catch (Exception e) {
-                RideBattleLib.LOGGER.error("动态形态创建失败", e);
-            }
-        } else {
-            if (Config.DEBUG_MODE.get()) {
-                RideBattleLib.LOGGER.debug("该骑士不支持动态形态，跳过动态形态生成");
-            }
-        }
-        RideBattleLib.LOGGER.warn("未找到匹配形态，且没有允许空驱动器的基础形态");
-        return RiderUtils.NULL;
-    }
-
-    //====================Getter方法====================
 
     /**
      * 通过玩家变身状态和装备查找激活的驱动器配置
      */
     public static RiderConfig findActiveDriverConfig(Player player) {
+        if (player == null) return null;
+
+        // 客户端：走缓存
+        if (player.level().isClientSide()) {
+            ResourceLocation cachedRider = ClientTransformedCache.getRiderId(player.getUUID());
+            if (cachedRider != null) {
+                return RiderRegistry.getRider(cachedRider);
+            }
+            // 未变身时，仍需检查装备（右键交互等场景）
+            // 但避免每次都遍历：先查缓存里的 driver 物品，再遍历
+            for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
+                if (config.isEquippedByPlayer(player)) return config;
+            }
+            return null;
+        }
+
+        // 服务端：走遍历
         FindRiderConfigEvent event = new FindRiderConfigEvent(player);
         if (event.isCanceled()) return null;
         if (event.getConfig() != null) {
@@ -325,22 +233,18 @@ public class RiderConfig {
             return event.getConfig();
         }
 
-        // 方法1：首先检查玩家是否处于变身状态，从变身数据中获取配置
+        // 变身数据中获取配置
         if (HenshinUtils.isTransformed(player)) {
             HenshinSessionData data = HenshinUtils.getSessionData(player);
             if (data != null) {
                 RiderConfig config = RiderRegistry.getRider(data.riderId());
-                if (config != null) {
-                    return config;
-                }
+                if (config != null) return config;
             }
         }
 
-        // 方法2：遍历所有骑士配置，调用实例方法检查
+        // 实例方法检查
         for (RiderConfig config : RiderRegistry.getRegisteredRiders()) {
-            if (config.isEquippedByPlayer(player)) {
-                return config;
-            }
+            if (config.isEquippedByPlayer(player)) return config;
         }
 
         if (Config.DEBUG_MODE.get()) {
@@ -374,20 +278,26 @@ public class RiderConfig {
     /**
      * 快捷获取FormConfig
      */
-    public FormConfig getActiveFormConfig(Player player) {
-        Map<ResourceLocation, ItemStack> driverItems = DriverSystem.getInstance().getDriverItems(player);
-        ResourceLocation formId = matchForm(player, driverItems);
-
-        // 优先检查预设形态
-        if (forms.containsKey(formId)) {
-            return forms.get(formId);
+    public @Nullable FormConfig getActiveFormConfig(Player player) {
+        // 客户端：走缓存
+        if (player.level().isClientSide()) {
+            ResourceLocation formId = ClientTransformedCache.getCurrentFormId(player.getUUID());
+            if (formId == null) return null;
+            return RiderRegistry.getForm(player, formId);
         }
-
-        // 处理动态形态
-        return DynamicFormConfig.getDynamicForm(formId);
+        // 服务端：从 session 读（不再每次 matchForm！）
+        HenshinSessionData session = HenshinUtils.getSessionData(player);
+        if (session != null) {
+            return RiderRegistry.getForm(player, session.formId());
+        }
+        // 未变身：需要匹配
+        Map<ResourceLocation, ItemStack> items = DriverSystem.getInstance().getDriverItems(player);
+        ResourceLocation formId = FormMatchEngine.match(player, this, items);
+        if (formId == null || formId.equals(RiderUtils.NULL)) return null;
+        return RiderRegistry.getForm(player, formId);
     }
 
-
+    //====================Getter方法====================
     //获取骑士Id
     public ResourceLocation getRiderId() {
         return riderId;
@@ -417,6 +327,10 @@ public class RiderConfig {
         return Collections.unmodifiableSet(requiredSlots);
     }
 
+    public Set<ResourceLocation> getAuxRequiredSlots() {
+        return Collections.unmodifiableSet(auxRequiredSlots);
+    }
+
     //获取槽位定义
     public DriverSlotDefinition getSlotDefinition(ResourceLocation slotId) {
         return slotDefinitions.get(slotId);
@@ -432,7 +346,7 @@ public class RiderConfig {
         return forms.get(formId);
     }
 
-    public Map<ResourceLocation, FormConfig> getForms(){
+    public Map<ResourceLocation, FormConfig> getForms() {
         return forms;
     }
 

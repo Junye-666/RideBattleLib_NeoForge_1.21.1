@@ -1,11 +1,6 @@
 package com.jpigeon.ridebattlelib.common.util;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.Map;
 import java.util.UUID;
@@ -17,11 +12,14 @@ public class ScheduleUtils {
     private final ConcurrentLinkedQueue<ScheduledTask> tasks = new ConcurrentLinkedQueue<>();
     private final Map<UUID, ScheduledTask> taskById = new ConcurrentHashMap<>();
 
-    public static ScheduleUtils getInstance() { return INSTANCE; }
+    public static ScheduleUtils getInstance() {
+        return INSTANCE;
+    }
 
     /**
      * 调度一个一次性延迟任务
-     * @param ticks 延迟 tick 数
+     *
+     * @param ticks    延迟 tick 数
      * @param callback 任务回调
      * @return 任务 ID，可用于取消
      */
@@ -34,8 +32,9 @@ public class ScheduleUtils {
 
     /**
      * 调度一个周期性任务，重复执行直到取消
+     *
      * @param intervalTicks 执行间隔 tick 数
-     * @param callback 任务回调
+     * @param callback      任务回调
      * @return 任务 ID，可用于取消
      */
     public UUID scheduleRepeatingTask(int intervalTicks, Runnable callback) {
@@ -47,6 +46,7 @@ public class ScheduleUtils {
 
     /**
      * 取消一个任务
+     *
      * @param taskId 任务 ID
      * @return 是否成功取消（任务存在且尚未执行）
      */
@@ -66,20 +66,10 @@ public class ScheduleUtils {
         taskById.clear();
     }
 
-    @OnlyIn(Dist.DEDICATED_SERVER)
-    @SubscribeEvent
-    public void onServerTick(ServerTickEvent.Post event) {
-        tick();
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent.Post event) {
-        tick();
-    }
-
-    private void tick() {
-        // 使用迭代器遍历并移除已完成的非周期性任务，周期性任务保留
+    /**
+     * 驱动任务执行。此方法不注册任何事件，由外部根据侧别调用。
+     */
+    public void tick() {
         tasks.removeIf(task -> {
             task.remainingTicks--;
             if (task.remainingTicks <= 0) {
@@ -89,12 +79,11 @@ public class ScheduleUtils {
                     RideBattleLib.LOGGER.error("ScheduleUtils 任务出错: {}", e.getMessage());
                 }
                 if (task.repeating) {
-                    // 周期性任务重置计数
                     task.remainingTicks = task.interval;
-                    return false; // 不移除
+                    return false;
                 } else {
                     taskById.remove(task.id);
-                    return true; // 一次性任务移除
+                    return true;
                 }
             }
             return false;

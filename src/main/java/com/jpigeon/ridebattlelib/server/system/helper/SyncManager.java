@@ -79,8 +79,7 @@ public class SyncManager {
         changes.put(changedSlot, newStack.copy());
         PacketDistributor.sendToPlayer(player, new DriverDataDiffPacket(
                 player.getUUID(),
-                changes,
-                false
+                changes
         ));
     }
 }

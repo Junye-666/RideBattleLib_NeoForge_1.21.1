@@ -2,12 +2,16 @@ package com.jpigeon.ridebattlelib.common.registry;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
+import com.jpigeon.ridebattlelib.client.cache.ClientTransformedCache;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
+import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormCache;
+import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
+import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,25 +52,28 @@ public class RiderRegistry {
             return getForm(formId); // 降级到基础方法
         }
 
-        RiderConfig activeConfig = RiderConfig.findActiveDriverConfig(player);
-        if (activeConfig != null) {
-            // 首先从玩家当前骑士配置中查找
-            FormConfig riderForm = activeConfig.getForms().get(formId);
-            if (riderForm != null) {
-                if (Config.DEBUG_MODE.get()) {
-                    RideBattleLib.LOGGER.debug("从玩家 {} 的骑士 {} 获取形态 {}",
-                            player.getName().getString(), activeConfig.getRiderId(), formId);
+        ResourceLocation activeRider = player.level().isClientSide()
+                ? ClientTransformedCache.getRiderId(player.getUUID())
+                : activeRiderId(player);
+        if (activeRider != null) {
+            Set<ResourceLocation> owners = FORM_TO_RIDERS.get(formId);
+            if (owners != null && owners.contains(activeRider)) {
+                RiderConfig config = RIDERS.get(activeRider);
+                if (config != null) {
+                    FormConfig f = config.getForms(formId);
+                    if (f != null) return f;
                 }
-                return riderForm;
             }
         }
 
-        // 如果没有特定骑士的配置，则使用通用版本
-        FormConfig form = getForm(formId);
-        if (form != null) return form;
+        FormConfig f = FORMS.get(formId);
+        if (f != null) return f;
+        return DynamicFormCache.get(formId);
+    }
 
-        // 动态形态回退
-        return DynamicFormConfig.getDynamicForm(formId);
+    private static @Nullable ResourceLocation activeRiderId(Player player) {
+        HenshinSessionData session = HenshinUtils.getSessionData(player);
+        return session != null ? session.riderId() : null;
     }
 
     // 原有的基础方法（向后兼容）

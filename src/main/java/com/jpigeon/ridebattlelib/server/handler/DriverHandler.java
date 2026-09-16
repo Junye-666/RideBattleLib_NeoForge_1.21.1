@@ -3,14 +3,17 @@ package com.jpigeon.ridebattlelib.server.handler;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
+import com.jpigeon.ridebattlelib.common.config.FormMatchEngine;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.config.TriggerType;
+import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormCache;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
 import com.jpigeon.ridebattlelib.common.network.packet.DriverActionPacket;
 import com.jpigeon.ridebattlelib.common.registry.RiderArmorRegistry;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
+import com.jpigeon.ridebattlelib.common.util.RiderUtils;
 import com.jpigeon.ridebattlelib.server.system.DriverSystem;
 import com.jpigeon.ridebattlelib.server.system.HenshinSystem;
 import com.jpigeon.ridebattlelib.server.system.helper.SyncManager;
@@ -29,6 +32,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -103,7 +107,7 @@ public class DriverHandler {
                 RideBattleLib.LOGGER.debug("物品触发 - 玩家状态: 变身={}, 驱动器={}",
                         HenshinUtils.isTransformed(player), config.getRiderId());
             }
-            PacketDistributor.sendToServer(new DriverActionPacket(player.getUUID()));
+            PacketDistributor.sendToServer(DriverActionPacket.INSTANCE);
         }
 
         // 强制恢复物品数量（防止NBT修改）
@@ -152,22 +156,27 @@ public class DriverHandler {
                 SyncManager.getInstance().syncDriverData(serverPlayer);
             }
 
-            FormConfig formConfig = config.getActiveFormConfig(player);
-            if (formConfig != null && Config.DEBUG_MODE.get()) {
-                RideBattleLib.LOGGER.debug("形态触发类型: {}", formConfig.getTriggerType());
-            }
-
-            // 添加 null 检查
-            if (formConfig != null && formConfig.getTriggerType() == TriggerType.AUTO) {
-                if (Config.DEBUG_MODE.get()) {
-                    RideBattleLib.LOGGER.debug("自动触发 - 玩家状态: 变身={}, 驱动器={}",
-                            HenshinUtils.isTransformed(player), config.getRiderId());
-                }
+            TriggerType upcoming = resolveUpcomingTriggerType(player, config);
+            if (upcoming == TriggerType.AUTO) {
                 HenshinSystem.getInstance().driverAction(player);
             }
 
             event.setCanceled(true);
         }
+    }
+
+    private static TriggerType resolveUpcomingTriggerType(Player player, RiderConfig config) {
+        Map<ResourceLocation, ItemStack> items = DriverSystem.getInstance().getDriverItems(player);
+        if (!config.hasAuxDriverEquipped(player)) {
+            items = new HashMap<>(items);
+            items.keySet().removeAll(config.getAuxSlotDefinitions().keySet());
+        }
+        ResourceLocation formId = FormMatchEngine.match(player, config, items);
+        if (formId == null || formId.equals(RiderUtils.NULL)) return TriggerType.KEY;
+
+        FormConfig form = RiderRegistry.getForm(player, formId);
+        if (form == null) form = DynamicFormCache.get(formId);
+        return form != null ? form.getTriggerType() : TriggerType.KEY;
     }
 
     @SubscribeEvent

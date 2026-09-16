@@ -1,25 +1,20 @@
 package com.jpigeon.ridebattlelib.common.network.packet;
 
-import com.jpigeon.ridebattlelib.RideBattleLib;
-import net.minecraft.core.UUIDUtil;
+import com.jpigeon.ridebattlelib.common.network.RBLPacket;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.sounds.SoundEvent;
 
-import java.util.UUID;
+public record SoundPacket(SoundEvent sound, float volume, float pitch) implements RBLPacket {
 
-public record SoundPacket(UUID playerId, ResourceLocation soundId, float volume, float pitch) implements CustomPacketPayload {
-
-    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "play_sound");
-
+    public static final ResourceLocation ID = RBLPacket.ofPath("play_sound");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SoundPacket> STREAM_CODEC =
             StreamCodec.composite(
-                    UUIDUtil.STREAM_CODEC, SoundPacket::playerId,
-                    ResourceLocation.STREAM_CODEC, SoundPacket::soundId,
+                    SoundEvent.DIRECT_STREAM_CODEC, SoundPacket::sound,
                     ByteBufCodecs.FLOAT, SoundPacket::volume,
                     ByteBufCodecs.FLOAT, SoundPacket::pitch,
                     SoundPacket::new
@@ -29,5 +24,7 @@ public record SoundPacket(UUID playerId, ResourceLocation soundId, float volume,
     public static final CustomPacketPayload.Type<SoundPacket> TYPE = new CustomPacketPayload.Type<>(ID);
 
     @Override
-    public @NotNull CustomPacketPayload.Type<?> type() { return TYPE; }
+    public ResourceLocation id() {
+        return null;
+    }
 }

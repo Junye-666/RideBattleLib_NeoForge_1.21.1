@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlelib.server.system.helper;
 
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
-import com.jpigeon.ridebattlelib.server.event.ItemGrantEvent;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
+import com.jpigeon.ridebattlelib.server.event.ItemGrantEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

@@ -8,7 +8,7 @@ import net.neoforged.bus.api.ICancellableEvent;
 /**
  * 返还物品事件
  */
-public class ReturnItemsEvent extends Event implements ICancellableEvent {
+public class ReturnItemsEvent extends Event {
     private final Player player;
     private final RiderConfig config;
 
@@ -25,7 +25,7 @@ public class ReturnItemsEvent extends Event implements ICancellableEvent {
         return config;
     }
 
-    public static class Pre extends ReturnItemsEvent {
+    public static class Pre extends ReturnItemsEvent implements ICancellableEvent{
         public Pre(Player player, RiderConfig config) {
             super(player, config);
         }

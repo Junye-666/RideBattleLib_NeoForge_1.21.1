@@ -3,7 +3,7 @@ package com.jpigeon.ridebattlelib.server.system.helper;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
+import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormConfig;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

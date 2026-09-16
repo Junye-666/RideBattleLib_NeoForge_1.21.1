@@ -1,13 +1,11 @@
 package com.jpigeon.ridebattlelib.common.network.packet;
 
-import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.common.network.RBLPacket;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,9 +15,9 @@ public record DriverDataSyncPacket(
         UUID playerId,
         Map<ResourceLocation, ItemStack> mainItems,
         Map<ResourceLocation, ItemStack> auxItems
-) implements CustomPacketPayload {
+) implements RBLPacket {
 
-    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "driver_sync");
+    public static final ResourceLocation ID = RBLPacket.ofPath("driver_sync");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, DriverDataSyncPacket> STREAM_CODEC =
             StreamCodec.composite(
@@ -57,5 +55,7 @@ public record DriverDataSyncPacket(
     public static final Type<DriverDataSyncPacket> TYPE = new Type<>(ID);
 
     @Override
-    public @NotNull Type<?> type() { return TYPE; }
+    public ResourceLocation id() {
+        return ID;
+    }
 }

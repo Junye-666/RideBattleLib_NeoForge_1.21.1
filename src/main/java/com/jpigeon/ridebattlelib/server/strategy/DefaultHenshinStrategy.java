@@ -3,9 +3,10 @@ package com.jpigeon.ridebattlelib.server.strategy;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.api.IHenshinStrategy;
-import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
+import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormCache;
+import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
@@ -37,7 +38,7 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
         // 获取形态配置（支持动态形态）
         FormConfig formConfig = RiderRegistry.getForm(formId);
         if (formConfig == null) {
-            formConfig = DynamicFormConfig.getDynamicForm(formId);
+            formConfig = DynamicFormCache.get(formId);
         }
 
         if (formConfig == null) {
@@ -78,7 +79,7 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
         ResourceLocation oldFormId = data.formId();
         FormConfig newForm = RiderRegistry.getForm(player, newFormId);
         if (newForm == null) {
-            newForm = DynamicFormConfig.getDynamicForm(newFormId);
+            newForm = DynamicFormCache.get(newFormId);
         }
 
         if (newForm == null) return;

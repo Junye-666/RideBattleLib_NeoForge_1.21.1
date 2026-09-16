@@ -2,7 +2,6 @@ package com.jpigeon.ridebattlelib.common.api.example;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.api.builder.DynamicMappingBuilder;
-import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.config.TriggerType;
@@ -11,7 +10,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.List;
@@ -70,37 +68,6 @@ public class ExampleDynamicForm {
         RiderRegistry.registerRider(riderBeta);
         // registerDynamicMappings();
         buildDynamicMappings();
-    }
-
-    private static void registerDynamicMappings() {
-        // 钻石 -> 钻石头盔 + 跳跃提升 + 伤害吸收
-        DynamicFormConfig.registerItemArmor(Items.DIAMOND, EquipmentSlot.HEAD, Items.DIAMOND_HELMET); // 完整方法，可定义盔甲槽位
-        DynamicFormConfig.registerItemEffect(Items.DIAMOND, MobEffects.JUMP);
-        DynamicFormConfig.registerItemEffect(Items.DIAMOND, MobEffects.ABSORPTION);
-        DynamicFormConfig.registerItemGrantedItems(Items.DIAMOND, new ItemStack(Items.DIAMOND_AXE)
-        );
-
-        // 绿宝石 -> 龟头 + 抗性效果
-        DynamicFormConfig.registerItemArmor(Items.EMERALD, Items.TURTLE_HELMET); // 快捷方法，系统自行寻找对应盔甲槽位
-        DynamicFormConfig.registerItemEffect(Items.EMERALD, MobEffects.DAMAGE_RESISTANCE);
-        DynamicFormConfig.registerItemGrantedItems(Items.EMERALD, new ItemStack(Items.GOLDEN_CARROT));
-
-        // 红石 -> 铁胸甲 + 伤害提升
-        DynamicFormConfig.registerItemArmor(Items.REDSTONE, Items.IRON_CHESTPLATE);
-        DynamicFormConfig.registerItemEffect(Items.REDSTONE, MobEffects.DAMAGE_BOOST);
-
-        // 萤石粉 -> 金甲 + 速度效果
-        DynamicFormConfig.registerItemArmor(Items.GLOWSTONE_DUST, Items.GOLDEN_CHESTPLATE);
-        DynamicFormConfig.registerItemEffect(Items.GLOWSTONE_DUST, MobEffects.MOVEMENT_SPEED);
-
-        // 为骑士注册底衣
-        DynamicFormConfig.registerRiderUndersuit(
-                TEST_RIDER_BETA, // 传入RiderId
-                Items.SKELETON_SKULL,
-                Items.CHAINMAIL_CHESTPLATE,
-                null,
-                Items.CHAINMAIL_BOOTS
-        ); // 底衣在不必要驱动器槽位所对应盔甲槽位未填充时出现
     }
 
     private static void buildDynamicMappings() {

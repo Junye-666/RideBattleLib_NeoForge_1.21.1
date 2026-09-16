@@ -2,21 +2,24 @@ package com.jpigeon.ridebattlelib.server.system;
 
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import com.jpigeon.ridebattlelib.common.config.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
+import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormCache;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
-import com.jpigeon.ridebattlelib.server.event.RotateSkillEvent;
-import com.jpigeon.ridebattlelib.server.event.SkillEvent;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
+import com.jpigeon.ridebattlelib.server.event.RotateSkillEvent;
+import com.jpigeon.ridebattlelib.server.event.SkillEvent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -73,7 +76,7 @@ public class SkillSystem {
         FormConfig form = RiderRegistry.getForm(player, data.formId());
         if (form == null) {
             // 尝试动态形态
-            form = DynamicFormConfig.getDynamicForm(data.formId());
+            form = DynamicFormCache.get(data.formId());
         }
 
         if (form == null && Config.DEBUG_MODE.get()) {
@@ -386,6 +389,14 @@ public class SkillSystem {
 
         if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("清除玩家 {} 的技能冷却", playerId);
+        }
+    }
+
+    @EventBusSubscriber(modid = RideBattleLib.MODID)
+    public static final class SkillSystemCleanupHandler {
+        @SubscribeEvent
+        public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+            SkillSystem.clearPlayerCooldowns(event.getEntity().getUUID());
         }
     }
 }

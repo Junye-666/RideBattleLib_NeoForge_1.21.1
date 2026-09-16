@@ -1,22 +1,15 @@
 package com.jpigeon.ridebattlelib.common.network.packet;
 
-import com.jpigeon.ridebattlelib.RideBattleLib;
-import net.minecraft.core.UUIDUtil;
+import com.jpigeon.ridebattlelib.common.network.RBLPacket;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
-
-public record InsertItemPacket(UUID playerId, ResourceLocation slotId, ItemStack stack) implements CustomPacketPayload {
-    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RideBattleLib.MODID, "insert_item");
+public record InsertItemPacket(ResourceLocation slotId, ItemStack stack) implements RBLPacket {
+    public static final ResourceLocation ID = RBLPacket.ofPath("insert_item");
 
     public static final StreamCodec<RegistryFriendlyByteBuf, InsertItemPacket> STREAM_CODEC = StreamCodec.composite(
-            UUIDUtil.STREAM_CODEC,
-            InsertItemPacket::playerId,
             ResourceLocation.STREAM_CODEC,
             InsertItemPacket::slotId,
             ItemStack.OPTIONAL_STREAM_CODEC,
@@ -27,5 +20,7 @@ public record InsertItemPacket(UUID playerId, ResourceLocation slotId, ItemStack
     public static final Type<InsertItemPacket> TYPE = new Type<>(ID);
 
     @Override
-    public @NotNull Type<?> type() { return TYPE; }
+    public ResourceLocation id() {
+        return ID;
+    }
 }

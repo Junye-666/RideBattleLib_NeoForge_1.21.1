@@ -17,12 +17,20 @@ public class RiderArmorRegistry {
         RIDER_DRIVERS.add(config.getDriverItem());
         if (config.getAuxDriverItem() != null) RIDER_DRIVERS.add(config.getAuxDriverItem());
 
-        for (FormConfig formConfig : config.getForms().values()){
+        for (FormConfig formConfig : config.getForms().values()) {
             if (isValidArmor(config, formConfig.getHelmet())) RIDER_ARMORS.add(formConfig.getHelmet());
             if (isValidArmor(config, formConfig.getChestplate())) RIDER_ARMORS.add(formConfig.getChestplate());
             if (isValidArmor(config, formConfig.getLeggings())) RIDER_ARMORS.add(formConfig.getLeggings());
             if (isValidArmor(config, formConfig.getBoots())) RIDER_ARMORS.add(formConfig.getBoots());
         }
+    }
+
+    public static boolean isRiderArmor(Item item) {
+        return RIDER_ARMORS.contains(item);
+    }
+
+    public static boolean isRiderDriver(Item item) {
+        return RIDER_DRIVERS.contains(item);
     }
 
     public static boolean isValidArmor(RiderConfig config, Item item) {
@@ -32,6 +40,7 @@ public class RiderArmorRegistry {
     public static Set<Item> getAllArmor() {
         return Collections.unmodifiableSet(RIDER_ARMORS);
     }
+
     public static Set<Item> getAllDriver() {
         return Collections.unmodifiableSet(RIDER_DRIVERS);
     }

@@ -20,13 +20,7 @@ public final class ClientDriverDataCache {
         AUX_ITEMS.put(playerId, new HashMap<>(items));
     }
 
-    public static void applyChanges(UUID playerId, Map<ResourceLocation, ItemStack> changes, boolean fullSync) {
-        if (fullSync) {
-            // 全量同步，直接替换主驱动器数据（假设全量包仅含主驱动器）
-            setMainItems(playerId, changes);
-            return;
-        }
-
+    public static void applyChanges(UUID playerId, Map<ResourceLocation, ItemStack> changes) {
         // 增量更新（需要区分主辅，此处简化，假设所有槽位属于主驱动器）
         Map<ResourceLocation, ItemStack> main = MAIN_ITEMS.computeIfAbsent(playerId, k -> new HashMap<>());
         Map<ResourceLocation, ItemStack> aux = AUX_ITEMS.computeIfAbsent(playerId, k -> new HashMap<>());

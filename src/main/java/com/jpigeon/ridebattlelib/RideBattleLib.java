@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib;
 
+import com.jpigeon.ridebattlelib.common.api.registry.RiderPackRegistry;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.network.PacketHandler;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
@@ -37,6 +38,8 @@ public class RideBattleLib {
         RideBattleLib.LOGGER.info("请确保骑士初始化在CommonSetup中哦~");
         // ExampleBasic.init();
         // ExampleDynamicForm.init();
+
+        event.enqueueWork(RiderPackRegistry::initCommon);
 
         event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {
             if (config.getDriverItem() == null) {

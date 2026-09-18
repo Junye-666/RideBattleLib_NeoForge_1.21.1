@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.client;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import com.jpigeon.ridebattlelib.common.api.registry.RiderPackRegistry;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -19,5 +20,6 @@ public class RideBattleLibClient {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
+        RiderPackRegistry.initClient();
     }
 }

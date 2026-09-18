@@ -43,9 +43,15 @@ public interface IRiderClientHandler {
     }
 
     /**
-     * 对应 {@link ItemInsertionEvent.Post} / {@link SlotExtractionEvent.Post}
+     * 对应 {@link ItemInsertionEvent.Post}
      */
-    default void onDriverChanged(@NotNull ClientRiderContext ctx) {
+    default void onDriverItemInserted(@NotNull ClientRiderContext ctx) {
+    }
+
+    /**
+     * 对应 {@link SlotExtractionEvent.Post}
+     */
+    default void onDriverItemExtracted(@NotNull ClientRiderContext ctx) {
     }
 
     /**

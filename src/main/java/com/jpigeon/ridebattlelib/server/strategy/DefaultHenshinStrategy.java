@@ -104,7 +104,7 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
             ItemManager.getInstance().grantFormItems(player, newFormId);
 
             // 更新数据
-            HenshinUtils.saveTransformedSnapshot(player, RiderRegistry.getRider(data.riderId()), newFormId, data.originalGear(), currentDriver);
+            HenshinUtils.updateSessionForm(player, newFormId, currentDriver);
         }
     }
 

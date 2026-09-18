@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,14 +32,14 @@ public final class ClientRiderSyncManager {
             // 读取旧状态（必须在 update 之前）
             boolean wasTransformed = ClientTransformedCache.isTransformed(playerId);
             ResourceLocation oldFormId = ClientTransformedCache.getCurrentFormId(playerId);
-            ResourceLocation oldRiderId = ClientTransformedCache.getRiderId(playerId);   // 1.1 新增
+            ResourceLocation oldRiderId = ClientTransformedCache.getRiderId(playerId);
 
             // 写新状态
             ClientTransformedCache.update(
                     playerId,
                     p.isTransformed(),
                     p.state(),
-                    p.riderId(),          // 1.1 新增参数
+                    p.riderId(),
                     p.currentFormId(),
                     p.pendingFormId()
             );
@@ -106,18 +107,28 @@ public final class ClientRiderSyncManager {
             if (config == null) return;
             ItemStack driver = local.getItemBySlot(config.getDriverSlot());
 
-            ClientRiderContext ctx = new ClientRiderContext(
-                    local,
-                    driver,
-                    riderId,
-                    ClientTransformedCache.getCurrentFormId(p.playerId()),
-                    ClientTransformedCache.getPendingFormId(p.playerId()),
-                    p.changes(),
-                    null,
-                    ClientRiderContext.ChangeType.DRIVER_CHANGE
-            );
+            for (Map.Entry<ResourceLocation, ItemStack> entry : p.changes().entrySet()) {
+                ResourceLocation slotId = entry.getKey();
+                ItemStack stack = entry.getValue();
 
-            ClientRiderDispatcher.dispatch(riderId, h -> h.onDriverChanged(ctx));
+                ClientRiderContext ctx = new ClientRiderContext(
+                        local,
+                        driver,
+                        riderId,
+                        ClientTransformedCache.getCurrentFormId(p.playerId()),
+                        ClientTransformedCache.getPendingFormId(p.playerId()),
+                        Map.of(slotId, stack),   // 只带这一条
+                        null,
+                        ClientRiderContext.ChangeType.DRIVER_CHANGE
+                );
+
+                // 精确分发
+                if (stack.isEmpty()) {
+                    ClientRiderDispatcher.dispatch(riderId, h -> h.onDriverItemExtracted(ctx));
+                } else {
+                    ClientRiderDispatcher.dispatch(riderId, h -> h.onDriverItemInserted(ctx));
+                }
+            }
         });
     }
 

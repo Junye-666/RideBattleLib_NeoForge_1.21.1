@@ -89,6 +89,28 @@ public class HenshinUtils {
         EffectAndAttributeManager.getInstance().applyAttributesAndEffects(player, formId);
     }
 
+    public static void updateSessionForm(Player player, ResourceLocation newFormId,
+                                         Map<ResourceLocation, ItemStack> driverSnapshot) {
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
+        HenshinSessionData old = data.getSessionData();
+        if (old == null) return;
+
+        Map<ResourceLocation, ItemStack> filteredDriver = new HashMap<>();
+        driverSnapshot.forEach((slot, stack) -> {
+            if (!stack.isEmpty()) {
+                filteredDriver.put(slot, stack.copy());
+            }
+        });
+
+        HenshinSessionData updated = new HenshinSessionData(
+                old.riderId(),
+                newFormId,
+                old.originalGear(),   // 保留变身初期快照，不再覆盖
+                filteredDriver
+        );
+        data.startHenshinSession(updated);
+    }
+
     /**
      * 清除变身数据（解除时调用）
      */

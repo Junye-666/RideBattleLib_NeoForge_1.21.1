@@ -10,10 +10,13 @@ import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 理解为管理所有被注册骑士的列表
@@ -24,8 +27,18 @@ public class RiderRegistry {
     // 添加映射：形态ID -> 所属骑士ID列表（一个形态可能被多个骑士使用）
     private static final Map<ResourceLocation, Set<ResourceLocation>> FORM_TO_RIDERS = new ConcurrentHashMap<>();
 
+    private static final Map<Item, List<RiderConfig>> DRIVER_ITEM_INDEX = new ConcurrentHashMap<>();
+
     public static void registerRider(RiderConfig config) {
         RIDERS.put(config.getRiderId(), config);
+
+        Item driverItem = config.getDriverItem();
+        if (driverItem != null && driverItem != Items.AIR) {
+            DRIVER_ITEM_INDEX
+                    .computeIfAbsent(driverItem, k -> new CopyOnWriteArrayList<>())
+                    .add(config);
+        }
+
         RiderArmorRegistry.registerRiderArmor(config);
         // 注册所有形态，并建立形态到骑士的映射
         for (FormConfig form : config.getForms().values()) {
@@ -95,6 +108,10 @@ public class RiderRegistry {
     // 获取骑士配置
     public static RiderConfig getRider(ResourceLocation riderId) {
         return RIDERS.get(riderId);
+    }
+
+    public static List<RiderConfig> getRidersByDriver(Item item) {
+        return DRIVER_ITEM_INDEX.getOrDefault(item, Collections.emptyList());
     }
 
     // 获取所有注册的骑士

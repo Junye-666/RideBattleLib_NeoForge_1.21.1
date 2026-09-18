@@ -12,7 +12,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import javax.annotation.Nullable;
 import java.util.Map;
 
-// ridebattlelib/rider/FormMatchEngine.java
+
 public final class FormMatchEngine {
     private FormMatchEngine() {}
 

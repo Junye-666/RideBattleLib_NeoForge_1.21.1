@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib.server.system.helper;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
-import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormConfig;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -42,29 +41,12 @@ public class EffectAndAttributeManager {
     private void applyAttributesAndEffects(Player player, FormConfig form) {
         applyAttributes(player, form);
         applyEffects(player, form);
-        // 确保动态形态的效果被应用
-        if (form instanceof DynamicFormConfig) {
-            for (MobEffectInstance effect : form.getEffects()) {
-                // 避免重复添加
-                if (!player.hasEffect(effect.getEffect())) {
-                    player.addEffect(new MobEffectInstance(effect));
-                }
-            }
-        }
     }
 
     // 移除属性和效果
     private void removeAttributesAndEffects(Player player, FormConfig form) {
         removeAttributes(player, form);
         removeEffects(player, form);
-        if (form instanceof DynamicFormConfig) {
-            for (MobEffectInstance effect : form.getEffects()) {
-                // 避免重复添加
-                if (!player.hasEffect(effect.getEffect())) {
-                    player.removeEffect(effect.getEffect());
-                }
-            }
-        }
     }
 
     // 效果应用

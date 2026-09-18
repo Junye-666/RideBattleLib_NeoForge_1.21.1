@@ -25,6 +25,6 @@ public record SoundPacket(SoundEvent sound, float volume, float pitch) implement
 
     @Override
     public ResourceLocation id() {
-        return null;
+        return ID;
     }
 }

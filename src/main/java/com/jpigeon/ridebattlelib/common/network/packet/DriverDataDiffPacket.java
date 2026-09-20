@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlelib.common.network.packet;
 
 import com.jpigeon.ridebattlelib.common.network.RBLPacket;
+import com.jpigeon.ridebattlelib.common.util.PayloadUtils;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 public record DriverDataDiffPacket(
         UUID playerId,
+        ResourceLocation riderId,
         Map<ResourceLocation, ItemStack> changes
 ) implements RBLPacket {
 
@@ -24,6 +26,8 @@ public record DriverDataDiffPacket(
             StreamCodec.composite(
                     UUIDUtil.STREAM_CODEC,
                     DriverDataDiffPacket::playerId,
+                    PayloadUtils.nullableResourceLocation(),
+                    DriverDataDiffPacket::riderId,
                     createChangesCodec(),
                     DriverDataDiffPacket::changes,
                     DriverDataDiffPacket::new

@@ -58,11 +58,11 @@ public class DriverSystem {
 
         ItemStack finalStack = preEvent.getStack().copyWithCount(1);
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-
+        ResourceLocation riderId = config.getRiderId();
         // 获取当前骑士的驱动器物品映射（深拷贝）
         Map<ResourceLocation, ItemStack> targetMap = isAux ?
-                new HashMap<>(data.getAuxDriverItems().getOrDefault(config.getRiderId(), new HashMap<>())) :
-                new HashMap<>(data.getMainDriverItems().getOrDefault(config.getRiderId(), new HashMap<>()));
+                new HashMap<>(data.getAuxDriverItems().getOrDefault(riderId, new HashMap<>())) :
+                new HashMap<>(data.getMainDriverItems().getOrDefault(riderId, new HashMap<>()));
 
         // 检查槽位是否被占用
         if (targetMap.containsKey(slotId) && !targetMap.get(slotId).isEmpty()) {
@@ -71,8 +71,8 @@ public class DriverSystem {
                 extractItem(player, slotId); // 这会归还旧物品并更新数据
                 // 重新获取更新后的目标Map
                 targetMap = isAux ?
-                        new HashMap<>(data.getAuxDriverItems().getOrDefault(config.getRiderId(), new HashMap<>())) :
-                        new HashMap<>(data.getMainDriverItems().getOrDefault(config.getRiderId(), new HashMap<>()));
+                        new HashMap<>(data.getAuxDriverItems().getOrDefault(riderId, new HashMap<>())) :
+                        new HashMap<>(data.getMainDriverItems().getOrDefault(riderId, new HashMap<>()));
                 targetMap.put(slotId, finalStack);
             } else {
                 return false;
@@ -84,17 +84,17 @@ public class DriverSystem {
         // 保存更新后的数据
         if (isAux) {
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> aux = new HashMap<>(data.getAuxDriverItems());
-            aux.put(config.getRiderId(), targetMap);
+            aux.put(riderId, targetMap);
             data.setAuxDriverItems(aux);
         } else {
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> main = new HashMap<>(data.getMainDriverItems());
-            main.put(config.getRiderId(), targetMap);
+            main.put(riderId, targetMap);
             data.setMainDriverItems(main);
         }
 
         // 同步
         if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.getInstance().syncDriverDiff(serverPlayer, slotId, finalStack);
+            SyncManager.getInstance().syncDriverDiff(serverPlayer, riderId, slotId, finalStack);
         }
 
         NeoForge.EVENT_BUS.post(new ItemInsertionEvent.Post(player, slotId, finalStack, config));
@@ -107,10 +107,11 @@ public class DriverSystem {
 
         boolean isAux = config.getAuxSlotDefinitions().containsKey(slotId);
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
+        ResourceLocation riderId = config.getRiderId();
 
         Map<ResourceLocation, ItemStack> targetMap = isAux ?
-                new HashMap<>(data.getAuxDriverItems().getOrDefault(config.getRiderId(), new HashMap<>())) :
-                new HashMap<>(data.getMainDriverItems().getOrDefault(config.getRiderId(), new HashMap<>()));
+                new HashMap<>(data.getAuxDriverItems().getOrDefault(riderId, new HashMap<>())) :
+                new HashMap<>(data.getMainDriverItems().getOrDefault(riderId, new HashMap<>()));
 
         if (!targetMap.containsKey(slotId) || targetMap.get(slotId).isEmpty()) {
             return ItemStack.EMPTY;
@@ -129,17 +130,17 @@ public class DriverSystem {
         // 保存更新后的数据
         if (isAux) {
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> aux = new HashMap<>(data.getAuxDriverItems());
-            aux.put(config.getRiderId(), targetMap);
+            aux.put(riderId, targetMap);
             data.setAuxDriverItems(aux);
         } else {
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> main = new HashMap<>(data.getMainDriverItems());
-            main.put(config.getRiderId(), targetMap);
+            main.put(riderId, targetMap);
             data.setMainDriverItems(main);
         }
 
         // 同步
         if (player instanceof ServerPlayer serverPlayer) {
-                SyncManager.getInstance().syncDriverDiff(serverPlayer, slotId, ItemStack.EMPTY);
+                SyncManager.getInstance().syncDriverDiff(serverPlayer, riderId, slotId, ItemStack.EMPTY);
         }
 
         // 归还物品
@@ -182,14 +183,14 @@ public class DriverSystem {
         if (config == null) return new HashMap<>();
 
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-
+        ResourceLocation riderId = config.getRiderId();
         // 主驱动器
-        Map<ResourceLocation, ItemStack> main = data.getMainDriverItems().getOrDefault(config.getRiderId(), new HashMap<>());
+        Map<ResourceLocation, ItemStack> main = data.getMainDriverItems().getOrDefault(riderId, new HashMap<>());
         Map<ResourceLocation, ItemStack> all = new HashMap<>(main);
 
         // 辅助驱动器（仅当装备时）
         if (config.hasAuxDriverEquipped(player)) {
-            Map<ResourceLocation, ItemStack> aux = data.getAuxDriverItems().getOrDefault(config.getRiderId(), new HashMap<>());
+            Map<ResourceLocation, ItemStack> aux = data.getAuxDriverItems().getOrDefault(riderId, new HashMap<>());
             all.putAll(aux);
         }
 

@@ -1,82 +1,88 @@
 package com.jpigeon.ridebattlelib.common.util;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
+import net.minecraft.client.Minecraft;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class ScheduleUtils {
+public final class ScheduleUtils {
     private static final ScheduleUtils INSTANCE = new ScheduleUtils();
-    private final ConcurrentLinkedQueue<ScheduledTask> tasks = new ConcurrentLinkedQueue<>();
+
+    private final ConcurrentLinkedQueue<ScheduledTask> clientTasks = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<ScheduledTask> serverTasks = new ConcurrentLinkedQueue<>();
     private final Map<UUID, ScheduledTask> taskById = new ConcurrentHashMap<>();
+
+    private ScheduleUtils() {
+    }
 
     public static ScheduleUtils getInstance() {
         return INSTANCE;
     }
 
+    // ===== 调度 =====
+
     /**
-     * 调度一个一次性延迟任务
-     *
-     * @param ticks    延迟 tick 数
-     * @param callback 任务回调
-     * @return 任务 ID，可用于取消
+     * 自动判定逻辑侧
      */
     public UUID scheduleTask(int ticks, Runnable callback) {
-        ScheduledTask task = new ScheduledTask(ticks, callback);
-        tasks.add(task);
+        return scheduleTask(ticks, callback, currentSide());
+    }
+
+    public UUID scheduleTask(int ticks, Runnable callback, Side side) {
+        ScheduledTask task = new ScheduledTask(ticks, callback, false);
+        (side == Side.CLIENT ? clientTasks : serverTasks).add(task);
+        taskById.put(task.id, task);
+        return task.id;
+    }
+
+    public UUID scheduleRepeatingTask(int intervalTicks, Runnable callback, Side side) {
+        ScheduledTask task = new ScheduledTask(intervalTicks, callback, true);
+        (side == Side.CLIENT ? clientTasks : serverTasks).add(task);
         taskById.put(task.id, task);
         return task.id;
     }
 
     /**
-     * 调度一个周期性任务，重复执行直到取消
-     *
-     * @param intervalTicks 执行间隔 tick 数
-     * @param callback      任务回调
-     * @return 任务 ID，可用于取消
+     * 默认按当前侧
      */
     public UUID scheduleRepeatingTask(int intervalTicks, Runnable callback) {
-        ScheduledTask task = new ScheduledTask(intervalTicks, callback, true);
-        tasks.add(task);
-        taskById.put(task.id, task);
-        return task.id;
+        return scheduleRepeatingTask(intervalTicks, callback, currentSide());
     }
 
-    /**
-     * 取消一个任务
-     *
-     * @param taskId 任务 ID
-     * @return 是否成功取消（任务存在且尚未执行）
-     */
     public boolean cancelTask(UUID taskId) {
         ScheduledTask task = taskById.remove(taskId);
-        if (task != null) {
-            return tasks.remove(task);
-        }
-        return false;
+        if (task == null) return false;
+        return clientTasks.remove(task) | serverTasks.remove(task);
     }
 
-    /**
-     * 取消所有任务
-     */
     public void cancelAllTasks() {
-        tasks.clear();
+        clientTasks.clear();
+        serverTasks.clear();
         taskById.clear();
     }
 
-    /**
-     * 驱动任务执行。此方法不注册任何事件，由外部根据侧别调用。
-     */
-    public void tick() {
-        tasks.removeIf(task -> {
+    // ===== Tick =====
+
+    public void tickClient() {
+        tickQueue(clientTasks);
+    }
+
+    public void tickServer() {
+        tickQueue(serverTasks);
+    }
+
+    private void tickQueue(ConcurrentLinkedQueue<ScheduledTask> queue) {
+        queue.removeIf(task -> {
             task.remainingTicks--;
             if (task.remainingTicks <= 0) {
                 try {
                     task.callback.run();
                 } catch (Exception e) {
-                    RideBattleLib.LOGGER.error("ScheduleUtils 任务出错: {}", e.getMessage());
+                    RideBattleLib.LOGGER.error("ScheduleUtils 任务出错: {}", e.getMessage(), e);
                 }
                 if (task.repeating) {
                     task.remainingTicks = task.interval;
@@ -90,19 +96,28 @@ public class ScheduleUtils {
         });
     }
 
-    /**
-     * 内部任务类
-     */
+    // ===== 侧别判定 =====
+
+    public enum Side {CLIENT, SERVER}
+
+    private static Side currentSide() {
+        if (FMLEnvironment.dist.isDedicatedServer()) return Side.SERVER;
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.isSameThread()) return Side.CLIENT;
+        } catch (Throwable ignored) {
+        }
+        return Side.SERVER;
+    }
+
+    // ===== 内部 =====
+
     private static class ScheduledTask {
         final UUID id;
         final int interval;
         int remainingTicks;
         final Runnable callback;
         final boolean repeating;
-
-        ScheduledTask(int ticks, Runnable callback) {
-            this(ticks, callback, false);
-        }
 
         ScheduledTask(int ticks, Runnable callback, boolean repeating) {
             this.id = UUID.randomUUID();

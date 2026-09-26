@@ -14,5 +14,4 @@ public class RotateSkillEvent extends Event implements ICancellableEvent {
     public Player getPlayer() {
         return player;
     }
-
 }

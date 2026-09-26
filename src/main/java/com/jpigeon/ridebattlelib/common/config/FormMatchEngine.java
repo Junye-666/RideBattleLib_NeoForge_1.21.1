@@ -14,7 +14,8 @@ import java.util.Map;
 
 
 public final class FormMatchEngine {
-    private FormMatchEngine() {}
+    private FormMatchEngine() {
+    }
 
     public static @Nullable ResourceLocation match(
             Player player, RiderConfig config, Map<ResourceLocation, ItemStack> items) {

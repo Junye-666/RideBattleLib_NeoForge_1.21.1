@@ -83,28 +83,23 @@ public class AttachmentHandler {
         Player player = event.getEntity();
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
-        // 清除所有标记
         player.removeTag("just_respawned");
         player.removeTag("penalty_cooldown");
 
-        // 如果玩家处于变身状态，强制解除（但不清除驱动器物品）
         if (data.getSessionData() != null) {
-            // 注意：这里不应该调用 unHenshin，因为 unHenshin 会调用策略并可能清空数据
-            // 但为了安全，直接结束会话并清除效果即可（但最好通过策略清理）
-            // 直接调用策略的 unHenshin 方法，但需要构造 TransformedData
-            // 为了简化，我们直接清除会话数据，然后通过事件通知客户端
-            data.endHenshinSession();
-            data.setState(HenshinState.IDLE);
-            data.setPendingFormId(null);
-            // 同时需要从玩家身上移除盔甲和效果，但策略的 unHenshin 会做这些
-            // 这里为了安全，直接调用 unHenshin 方法（但注意 unHenshin 会使用 sessionData）
-            // 因为 sessionData 还存在，我们可以获取它
+            // 走标准 unHenshin，让策略清理装备/效果/归还物品
             HenshinSystem.getInstance().unHenshin(player);
         }
 
-        // 确保同步
-        if (player instanceof ServerPlayer serverPlayer) {
-            SyncManager.getInstance().syncAllPlayerData(serverPlayer);
+        // 兜底：若 unHenshin 因 guard 未清理 session，则强制清空
+        if (data.getSessionData() != null) {
+            data.endHenshinSession();
+        }
+        data.setState(HenshinState.IDLE);
+        data.setPendingFormId(null);
+
+        if (player instanceof ServerPlayer sp) {
+            SyncManager.getInstance().syncAllPlayerData(sp);
         }
     }
 
@@ -143,12 +138,9 @@ public class AttachmentHandler {
         if (newData.isInPenaltyCooldown()) {
             newPlayer.addTag("penalty_cooldown");
         }
-
-        // 清理原始玩家的技能冷却（可选，避免残留）
-        // SkillSystem.clearAllSkillCooldowns(newPlayer);
     }
 
-    // 深拷贝工具方法（与 RiderData 内部一致，这里复用）
+    // 深拷贝工具方法
     private static Map<ResourceLocation, Map<ResourceLocation, ItemStack>> deepCopyMap(
             Map<ResourceLocation, Map<ResourceLocation, ItemStack>> original) {
         Map<ResourceLocation, Map<ResourceLocation, ItemStack>> copy = new HashMap<>();

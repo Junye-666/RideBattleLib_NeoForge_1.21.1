@@ -11,6 +11,6 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 public final class ScheduleUtilsServer {
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
-        ScheduleUtils.getInstance().tick();
+        ScheduleUtils.getInstance().tickServer();
     }
 }

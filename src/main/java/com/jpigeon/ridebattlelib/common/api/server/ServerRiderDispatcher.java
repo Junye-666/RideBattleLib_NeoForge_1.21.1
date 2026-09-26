@@ -2,10 +2,14 @@ package com.jpigeon.ridebattlelib.common.api.server;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
+import com.jpigeon.ridebattlelib.common.network.packet.SkillSyncPacket;
 import com.jpigeon.ridebattlelib.server.event.*;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -13,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 @EventBusSubscriber(modid = RideBattleLib.MODID)
-public final class ServerRiderDispatchers {
+public final class ServerRiderDispatcher {
     private static final Map<ResourceLocation, IRiderServerHandler> HANDLERS = new ConcurrentHashMap<>();
 
     public static void register(IRiderServerHandler handler) {
@@ -68,6 +72,27 @@ public final class ServerRiderDispatchers {
     @SubscribeEvent
     public static void onExtract(SlotExtractionEvent.Post event) {
         dispatch(event.getConfig().getRiderId(), h -> h.onExtract(event));
+    }
+
+    @SubscribeEvent
+    public static void onSkillPre(SkillEvent.Pre event) {
+        RiderConfig config = RiderConfig.findActiveDriverConfig(event.getPlayer());
+        if (config == null) return;
+        dispatch(config.getRiderId(), h -> h.onSkillPre(event));
+    }
+
+    @SubscribeEvent
+    public static void onSkillPost(SkillEvent.Post event) {
+        Player player = event.getPlayer();
+        RiderConfig config = RiderConfig.findActiveDriverConfig(player);
+        if (config == null) return;
+        if (player instanceof ServerPlayer sp) {
+            PacketDistributor.sendToPlayer(
+                    sp,
+                    new SkillSyncPacket(sp.getUUID(), config.getRiderId(), event.getSkillId())
+            );
+        }
+        dispatch(config.getRiderId(), h -> h.onSkillPost(event));
     }
 
     public static void dispatch(ResourceLocation riderId, Consumer<IRiderServerHandler> action) {

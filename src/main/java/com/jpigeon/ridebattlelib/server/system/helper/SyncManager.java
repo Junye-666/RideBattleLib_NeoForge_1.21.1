@@ -18,6 +18,7 @@ import java.util.Map;
 
 public class SyncManager {
     private static final SyncManager INSTANCE = new SyncManager();
+
     public static SyncManager getInstance() {
         return INSTANCE;
     }

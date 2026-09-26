@@ -9,6 +9,7 @@ import com.jpigeon.ridebattlelib.common.data.HenshinState;
 import com.jpigeon.ridebattlelib.common.network.packet.DriverDataDiffPacket;
 import com.jpigeon.ridebattlelib.common.network.packet.DriverDataSyncPacket;
 import com.jpigeon.ridebattlelib.common.network.packet.HenshinStateSyncPacket;
+import com.jpigeon.ridebattlelib.common.network.packet.SkillSyncPacket;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -133,16 +134,19 @@ public final class ClientRiderSyncManager {
     }
 
     // ========== 技能同步 ==========
-    public static void applySkill(ResourceLocation riderId, ResourceLocation skillId) {
+    public static void applySkill(SkillSyncPacket packet) {
         Minecraft.getInstance().execute(() -> {
             LocalPlayer local = Minecraft.getInstance().player;
             if (local == null) return;
+            if (!local.getUUID().equals(packet.playerId())) return;
+            ResourceLocation riderId = packet.riderId();
 
             RiderConfig config = riderId != null ? RiderRegistry.getRider(riderId) : null;
             ItemStack driver = config != null
                     ? local.getItemBySlot(config.getDriverSlot())
                     : ItemStack.EMPTY;
 
+            ResourceLocation skillId = packet.skillId();
             ClientRiderContext ctx = new ClientRiderContext(
                     local,
                     driver,

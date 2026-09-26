@@ -42,4 +42,13 @@ public interface IRiderServerHandler {
 
     default void onExtract(@NotNull SlotExtractionEvent.Post event) {
     }
+
+    /**
+     * 技能监听
+     */
+    default void onSkillPre(@NotNull SkillEvent.Pre event) {
+    }
+
+    default void onSkillPost(@NotNull SkillEvent.Post event) {
+    }
 }

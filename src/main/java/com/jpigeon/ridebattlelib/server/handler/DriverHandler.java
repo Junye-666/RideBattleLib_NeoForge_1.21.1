@@ -223,5 +223,4 @@ public class DriverHandler {
     private static boolean isRiderDriver(ItemStack stack) {
         return RiderArmorRegistry.getAllDriver().contains(stack.getItem());
     }
-
 }

@@ -37,12 +37,11 @@ public class ItemManager {
                 NeoForge.EVENT_BUS.post(preGrant);
                 if (preGrant.isCanceled()) return;
 
+                ItemGrantEvent.Post postGrant = new ItemGrantEvent.Post(player, preGrant.getStack().copy(), form);
                 if (!player.addItem(preGrant.getStack().copy())) {
                     player.drop(preGrant.getStack().copy(), false);
-
-                    ItemGrantEvent.Post postGrant = new ItemGrantEvent.Post(player, preGrant.getStack().copy(), form);
-                    NeoForge.EVENT_BUS.post(postGrant);
                 }
+                NeoForge.EVENT_BUS.post(postGrant);
             }
         }
     }

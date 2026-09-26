@@ -16,7 +16,7 @@ public class RiderAttachments {
             ATTACHMENTS.register(
                     "rider_data",
                     () -> AttachmentType.builder(() -> new RiderData())
-                            .serialize(RiderData.CODEC)
+                            .serialize(RiderData.CODEC.fieldOf("rider_data").codec())
                             .copyOnDeath()
                             .build()
             );

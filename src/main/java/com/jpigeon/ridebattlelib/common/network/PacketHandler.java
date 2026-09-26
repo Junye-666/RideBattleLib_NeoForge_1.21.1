@@ -56,6 +56,8 @@ public class PacketHandler {
                         (payload, ctx) -> ClientRiderSyncManager.applyDriverData(payload))
                 .playToClient(DriverDataDiffPacket.TYPE, DriverDataDiffPacket.STREAM_CODEC,
                         (payload, ctx) -> ClientRiderSyncManager.applyDriverDiff(payload))
+                .playToClient(SkillSyncPacket.TYPE, SkillSyncPacket.STREAM_CODEC,
+                        (payload, ctx) -> ClientRiderSyncManager.applySkill(payload))
         ;
     }
 }

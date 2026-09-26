@@ -19,8 +19,12 @@ import java.util.Map;
 
 public class ArmorManager {
     private static final ArmorManager INSTANCE = new ArmorManager();
+
     public static ArmorManager getInstance() {
         return INSTANCE;
+    }
+
+    private ArmorManager() {
     }
 
     // 装备

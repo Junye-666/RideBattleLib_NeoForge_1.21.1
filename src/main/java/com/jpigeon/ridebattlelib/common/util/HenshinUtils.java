@@ -79,7 +79,7 @@ public class HenshinUtils {
         FormConfig formConfig = RiderRegistry.getForm(player, formId);
         if (formConfig != null) {
             if (formConfig instanceof DynamicFormConfig dynamic) {
-                DynamicHenshinManager.applyDynamicArmor(player, dynamic);
+                DynamicHenshinManager.getInstance().applyDynamicArmor(player, dynamic);
             } else {
                 ArmorManager.getInstance().equipArmor(player, formConfig);
             }

@@ -19,8 +19,12 @@ import net.minecraft.world.entity.player.Player;
 
 public class EffectAndAttributeManager {
     private static final EffectAndAttributeManager INSTANCE = new EffectAndAttributeManager();
+
     public static EffectAndAttributeManager getInstance() {
         return INSTANCE;
+    }
+
+    private EffectAndAttributeManager() {
     }
 
     public void applyAttributesAndEffects(Player player, ResourceLocation formId) {

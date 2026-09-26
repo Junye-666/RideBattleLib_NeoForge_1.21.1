@@ -6,7 +6,9 @@ import com.jpigeon.ridebattlelib.common.data.RiderData;
 import net.minecraft.world.entity.player.Player;
 
 public class PenaltySystem {
-    private PenaltySystem(){}
+    private PenaltySystem() {
+    }
+
     private static final PenaltySystem PENALTY_SYSTEM = new PenaltySystem();
 
     public static PenaltySystem getInstance() {

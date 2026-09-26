@@ -20,25 +20,15 @@ public final class ClientDriverDataCache {
         AUX_ITEMS.put(playerId, new HashMap<>(items));
     }
 
-    public static void applyChanges(UUID playerId, Map<ResourceLocation, ItemStack> changes) {
-        // 增量更新（需要区分主辅，此处简化，假设所有槽位属于主驱动器）
-        Map<ResourceLocation, ItemStack> main = MAIN_ITEMS.computeIfAbsent(playerId, k -> new HashMap<>());
-        Map<ResourceLocation, ItemStack> aux = AUX_ITEMS.computeIfAbsent(playerId, k -> new HashMap<>());
+    public static void applyChanges(UUID playerId, boolean isAux,
+                                    Map<ResourceLocation, ItemStack> changes) {
+        Map<ResourceLocation, ItemStack> target = isAux
+                ? AUX_ITEMS.computeIfAbsent(playerId, k -> new HashMap<>())
+                : MAIN_ITEMS.computeIfAbsent(playerId, k -> new HashMap<>());
 
-        for (Map.Entry<ResourceLocation, ItemStack> entry : changes.entrySet()) {
-            ResourceLocation slotId = entry.getKey();
-            ItemStack newStack = entry.getValue();
-
-            // 根据槽位是否存在于主缓存来决定更新哪一边
-            // 注意：如果同一个 slotId 在两边都不存在，默认放到主驱动器（或根据你的业务逻辑处理）
-            if (main.containsKey(slotId) || !aux.containsKey(slotId)) {
-                // 如果主中有，或者辅助中没有（防止主没有但辅助有的覆盖），优先更新主
-                if (newStack.isEmpty()) main.remove(slotId);
-                else main.put(slotId, newStack);
-            } else if (aux.containsKey(slotId)) {
-                if (newStack.isEmpty()) aux.remove(slotId);
-                else aux.put(slotId, newStack);
-            }
+        for (var entry : changes.entrySet()) {
+            if (entry.getValue().isEmpty()) target.remove(entry.getKey());
+            else target.put(entry.getKey(), entry.getValue());
         }
     }
 

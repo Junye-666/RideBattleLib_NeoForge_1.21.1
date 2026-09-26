@@ -22,22 +22,31 @@ public final class DynamicFormCache {
     }
 
     private static final Map<ResourceLocation, FormConfig> DYNAMIC_FORMS = new ConcurrentHashMap<>();
-    private static final Map<ResourceLocation, Long> LAST_USED = new ConcurrentHashMap<>();
-    private static final long UNLOAD_DELAY = 10 * 60 * 1000L;
+    private static final Map<ResourceLocation, Long> LAST_USED_TICK = new ConcurrentHashMap<>();
 
-    // ========== 主入口：拿/建 ==========
-    public static FormConfig getOrCreate(RiderConfig config, Map<ResourceLocation, ItemStack> items) {
+    /**
+     * 10 分钟 = 12000 ticks
+     */
+    private static final long UNLOAD_DELAY_TICKS = 10L * 60L * 20L;
+    /**
+     * 每 5 分钟跑一次清理
+     */
+    private static final long CLEANUP_INTERVAL_TICKS = 5L * 60L * 20L;
+
+    // ===== 主入口 =====
+
+    public static FormConfig getOrCreate(RiderConfig config,
+                                         Map<ResourceLocation, ItemStack> items,
+                                         long nowTick) {
         ResourceLocation formId = DynamicFormGenerator.generateId(config.getRiderId(), items);
 
         FormConfig cached = DYNAMIC_FORMS.get(formId);
         if (cached != null) {
-            LAST_USED.put(formId, System.currentTimeMillis());
+            LAST_USED_TICK.put(formId, nowTick);
             return cached;
         }
 
         FormConfig form = DynamicFormGenerator.generate(formId, items, config);
-
-        // 从 baseForm 继承 triggerType / shouldPause
         FormConfig base = config.getForms(config.getBaseFormId());
         if (base != null) {
             form.setTriggerType(base.getTriggerType());
@@ -47,7 +56,7 @@ public final class DynamicFormCache {
         }
 
         DYNAMIC_FORMS.put(formId, form);
-        LAST_USED.put(formId, System.currentTimeMillis());
+        LAST_USED_TICK.put(formId, nowTick);
         return form;
     }
 
@@ -56,17 +65,17 @@ public final class DynamicFormCache {
         return DYNAMIC_FORMS.get(formId);
     }
 
-    // ========== 清理 ==========
-    public static void cleanup() {
-        long now = System.currentTimeMillis();
+    // ===== 清理 =====
+
+    public static void cleanup(long nowTick) {
         Iterator<Map.Entry<ResourceLocation, FormConfig>> it = DYNAMIC_FORMS.entrySet().iterator();
         int removed = 0;
         while (it.hasNext()) {
             var entry = it.next();
-            long last = LAST_USED.getOrDefault(entry.getKey(), 0L);
-            if (now - last > UNLOAD_DELAY) {
+            long last = LAST_USED_TICK.getOrDefault(entry.getKey(), 0L);
+            if (nowTick - last > UNLOAD_DELAY_TICKS) {
                 it.remove();
-                LAST_USED.remove(entry.getKey());
+                LAST_USED_TICK.remove(entry.getKey());
                 removed++;
             }
         }
@@ -75,13 +84,13 @@ public final class DynamicFormCache {
         }
     }
 
-    // ========== 事件订阅（原内部类剥离） ==========
     @EventBusSubscriber(modid = RideBattleLib.MODID)
     public static final class CleanupHandler {
         @SubscribeEvent
         public static void onServerTick(ServerTickEvent.Post e) {
-            if (e.getServer().getTickCount() % 6000 != 0) return;
-            cleanup();
+            long tick = e.getServer().getTickCount();
+            if (tick % CLEANUP_INTERVAL_TICKS != 0) return;
+            cleanup(tick);
         }
     }
 }

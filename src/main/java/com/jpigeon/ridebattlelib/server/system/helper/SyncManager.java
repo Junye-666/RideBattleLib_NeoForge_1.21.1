@@ -23,6 +23,9 @@ public class SyncManager {
         return INSTANCE;
     }
 
+    private SyncManager() {
+    }
+
     /**
      * 同步玩家所有相关状态
      */
@@ -76,13 +79,10 @@ public class SyncManager {
     }
 
     public void syncDriverDiff(ServerPlayer player, ResourceLocation riderId,
-                               ResourceLocation changedSlot, ItemStack newStack) {
+                               boolean isAux, ResourceLocation changedSlot, ItemStack newStack) {
         Map<ResourceLocation, ItemStack> changes = new HashMap<>();
         changes.put(changedSlot, newStack.copy());
         PacketDistributor.sendToPlayer(player, new DriverDataDiffPacket(
-                player.getUUID(),
-                riderId,
-                changes
-        ));
+                player.getUUID(), riderId, isAux, changes));
     }
 }

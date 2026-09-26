@@ -54,7 +54,7 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("应用动态形态盔甲");
             }
-            DynamicHenshinManager.applyDynamicArmor(player, (DynamicFormConfig) formConfig);
+            DynamicHenshinManager.getInstance().applyDynamicArmor(player, (DynamicFormConfig) formConfig);
         } else {
             if (Config.DEBUG_MODE.get()) {
                 RideBattleLib.LOGGER.debug("应用普通形态盔甲");
@@ -90,7 +90,7 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
         // 装备新盔甲
         if (needsUpdate) {
             if (newForm instanceof DynamicFormConfig dynamicForm) {
-                DynamicHenshinManager.applyDynamicArmor(player, dynamicForm);
+                DynamicHenshinManager.getInstance().applyDynamicArmor(player, dynamicForm);
             } else {
                 ArmorManager.getInstance().equipArmor(player, newForm);
             }

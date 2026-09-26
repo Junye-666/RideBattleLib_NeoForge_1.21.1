@@ -54,6 +54,7 @@ public class SkillSystem {
 
     /**
      * 获取玩家当前形态的技能列表
+     *
      * @param player 玩家
      * @return 技能ID列表，无技能则返回空列表
      */
@@ -64,6 +65,7 @@ public class SkillSystem {
 
     /**
      * 获取玩家当前形态配置
+     *
      * @param player 玩家
      * @return 当前形态配置，未找到则返回null
      */
@@ -89,6 +91,7 @@ public class SkillSystem {
 
     /**
      * 获取当前选中的技能ID
+     *
      * @param player 玩家
      * @return 当前技能ID，无技能则返回null
      */
@@ -104,7 +107,7 @@ public class SkillSystem {
 
     public static int getSkillCooldown(ResourceLocation skillId) {
         Long cooldownMs = SKILL_COOLDOWN_MAP.get(skillId);
-        return cooldownMs != null ? (int)(cooldownMs / 1000) : 0;
+        return cooldownMs != null ? (int) (cooldownMs / 1000) : 0;
     }
 
     public static boolean isSkillOnCooldown(Player player, ResourceLocation skillId) {
@@ -125,7 +128,7 @@ public class SkillSystem {
         if (cooldownEnd == null) return 0;
 
         long remaining = cooldownEnd - System.currentTimeMillis();
-        return remaining > 0 ? (int)((remaining + 999) / 1000) : 0;
+        return remaining > 0 ? (int) ((remaining + 999) / 1000) : 0;
     }
 
     public static void startSkillCooldown(Player player, ResourceLocation skillId) {
@@ -137,7 +140,7 @@ public class SkillSystem {
                 .put(skillId, System.currentTimeMillis() + cooldownMs);
 
         if (Config.DEBUG_MODE.get()) {
-            int cooldownSeconds = (int)(cooldownMs / 1000);
+            int cooldownSeconds = (int) (cooldownMs / 1000);
             RideBattleLib.LOGGER.debug("为玩家 {} 的技能 {} 设置冷却: {}秒",
                     player.getName().getString(), skillId, cooldownSeconds);
         }
@@ -228,7 +231,8 @@ public class SkillSystem {
 
     /**
      * 触发指定技能（简化版本）
-     * @param player 玩家
+     *
+     * @param player  玩家
      * @param skillId 技能ID
      * @return 是否成功触发
      */
@@ -238,9 +242,10 @@ public class SkillSystem {
 
     /**
      * 触发指定技能
-     * @param player 玩家
+     *
+     * @param player  玩家
      * @param skillId 技能ID
-     * @param type 触发类型
+     * @param type    触发类型
      * @return 是否成功触发
      */
     public static boolean triggerSkill(Player player, ResourceLocation skillId, SkillEvent.SkillTriggerType type) {
@@ -254,10 +259,11 @@ public class SkillSystem {
 
     /**
      * 触发指定形态的技能
-     * @param player 玩家
-     * @param formId 形态ID
+     *
+     * @param player  玩家
+     * @param formId  形态ID
      * @param skillId 技能ID
-     * @param type 触发类型
+     * @param type    触发类型
      * @return 是否成功触发
      */
     public static boolean triggerSkill(Player player, ResourceLocation formId,

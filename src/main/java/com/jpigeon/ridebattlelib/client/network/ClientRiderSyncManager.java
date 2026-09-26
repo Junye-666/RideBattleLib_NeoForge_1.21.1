@@ -97,7 +97,7 @@ public final class ClientRiderSyncManager {
 
     public static void applyDriverDiff(DriverDataDiffPacket p) {
         Minecraft.getInstance().execute(() -> {
-            ClientDriverDataCache.applyChanges(p.playerId(), p.changes());
+            ClientDriverDataCache.applyChanges(p.playerId(), p.isAux(), p.changes());
 
             LocalPlayer local = Minecraft.getInstance().player;
             if (local == null || !local.getUUID().equals(p.playerId())) return;

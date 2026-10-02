@@ -14,10 +14,12 @@ import com.jpigeon.ridebattlelib.server.strategy.DefaultHenshinStrategy;
 import com.jpigeon.ridebattlelib.server.strategy.DefaultPenaltyStrategy;
 import com.jpigeon.ridebattlelib.server.system.DriverSystem;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -157,8 +159,20 @@ public class RiderConfig {
     /**
      * 添加骑士基础属性修饰符（动态形态时的统一修饰符）
      */
+    public RiderConfig addBaseAttribute(Holder<Attribute> attribute, double amount,
+                                        AttributeModifier.Operation operation) {
+        ResourceLocation id = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
+        if (id == null) return this;
+        return addBaseAttribute(id, amount, operation);
+    }
+
+    public RiderConfig addBaseAttribute(Holder<Attribute> attribute, double amount) {
+        return addBaseAttribute(attribute, amount, AttributeModifier.Operation.ADD_VALUE);
+    }
+
     public RiderConfig addBaseAttribute(ResourceLocation attributeId, double amount,
                                         AttributeModifier.Operation operation) {
+        // 基础属性保持（动态形态生成会用到）
         baseAttributes.add(new AttributeModifier(attributeId, amount, operation));
         return this;
     }

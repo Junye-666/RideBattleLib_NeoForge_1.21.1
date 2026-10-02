@@ -37,9 +37,6 @@ public final class DefaultHenshinStrategy implements IHenshinStrategy {
 
         // 获取形态配置（支持动态形态）
         FormConfig formConfig = RiderRegistry.getForm(formId);
-        if (formConfig == null) {
-            formConfig = DynamicFormCache.get(formId);
-        }
 
         if (formConfig == null) {
             RideBattleLib.LOGGER.warn("尝试变身为未知形态: {}", formId);

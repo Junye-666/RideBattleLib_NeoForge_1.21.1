@@ -1,7 +1,6 @@
 package com.jpigeon.ridebattlelib.common.util;
 
 import com.jpigeon.ridebattlelib.RideBattleLib;
-import net.minecraft.client.Minecraft;
 import net.neoforged.fml.loading.FMLEnvironment;
 
 import java.util.Map;
@@ -102,12 +101,7 @@ public final class ScheduleUtils {
 
     private static Side currentSide() {
         if (FMLEnvironment.dist.isDedicatedServer()) return Side.SERVER;
-        try {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.isSameThread()) return Side.CLIENT;
-        } catch (Throwable ignored) {
-        }
-        return Side.SERVER;
+        return Side.CLIENT;
     }
 
     // ===== 内部 =====

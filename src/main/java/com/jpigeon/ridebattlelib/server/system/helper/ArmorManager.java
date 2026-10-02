@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib.server.system.helper;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
-import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.server.level.ServerPlayer;
@@ -66,20 +65,14 @@ public class ArmorManager {
     public void restoreOriginalGear(Player player, HenshinSessionData data) {
         if (data == null || player == null) return;
 
-        // 恢复所有槽位，包括空槽位
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR &&
-                    slot != RiderRegistry.getRider(data.riderId()).getDriverSlot()) {
+            if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) continue;
 
-                ItemStack original = data.originalGear().get(slot);
+            ItemStack original = data.originalGear().get(slot);
 
-                // 如果原始装备为空，则清空槽位
-                if (original == null || original.isEmpty()) {
-                    player.setItemSlot(slot, ItemStack.EMPTY);
-                } else {
-                    player.setItemSlot(slot, original);
-                }
-            }
+            player.setItemSlot(slot, (original == null || original.isEmpty())
+                    ? ItemStack.EMPTY
+                    : original.copy());
         }
         syncEquipment(player);
     }

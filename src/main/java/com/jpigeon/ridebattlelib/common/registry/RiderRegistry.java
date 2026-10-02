@@ -8,6 +8,8 @@ import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormCache;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
+import com.jpigeon.ridebattlelib.server.system.SkillSystem;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -40,9 +42,10 @@ public class RiderRegistry {
         }
 
         RiderArmorRegistry.registerRiderArmor(config);
-        // 注册所有形态，并建立形态到骑士的映射
+
         for (FormConfig form : config.getForms().values()) {
             registerFormForRider(form, config.getRiderId());
+            flushPendingSkills(form);   // ← 新增
         }
     }
 
@@ -62,7 +65,7 @@ public class RiderRegistry {
     // 获取形态配置（优先检查玩家当前骑士）
     public static FormConfig getForm(Player player, ResourceLocation formId) {
         if (player == null) {
-            return getForm(formId); // 降级到基础方法
+            return getForm(formId);
         }
 
         ResourceLocation activeRider = player.level().isClientSide()
@@ -79,9 +82,21 @@ public class RiderRegistry {
             }
         }
 
-        FormConfig f = FORMS.get(formId);
-        if (f != null) return f;
-        return DynamicFormCache.get(formId);
+        return getForm(formId);
+    }
+
+    /**
+     * 将形态声明的 pending 技能注册到 SkillSystem。
+     * 如果同一个技能被多个形态声明（不同冷却），后注册的会覆盖先注册的 —— 这是预期行为，
+     * 使用者应该保证同一技能 ID 的冷却时间一致。
+     */
+    private static void flushPendingSkills(FormConfig form) {
+        for (Map.Entry<ResourceLocation, Integer> e : form.getPendingSkillCooldowns().entrySet()) {
+            ResourceLocation skillId = e.getKey();
+            Component name = form.getPendingSkillNames()
+                    .getOrDefault(skillId, Component.literal(skillId.toString()));
+            SkillSystem.registerSkill(skillId, name, e.getValue());
+        }
     }
 
     private static @Nullable ResourceLocation activeRiderId(Player player) {
@@ -89,9 +104,17 @@ public class RiderRegistry {
         return session != null ? session.riderId() : null;
     }
 
-    // 原有的基础方法（向后兼容）
+    /**
+     * 基础查询（向后兼容）：先查静态表，再查动态缓存。
+     * <p>
+     * 若调用方有 Player 上下文且希望"优先玩家当前骑士的 form"，用
+     * {@link #getForm(Player, ResourceLocation)}。
+     */
     public static FormConfig getForm(ResourceLocation formId) {
-        return FORMS.get(formId);
+        if (formId == null) return null;
+        FormConfig f = FORMS.get(formId);
+        if (f != null) return f;
+        return DynamicFormCache.get(formId);
     }
 
     // 检查形态是否属于特定骑士

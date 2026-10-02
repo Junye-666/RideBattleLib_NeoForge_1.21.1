@@ -9,7 +9,6 @@ import com.jpigeon.ridebattlelib.common.config.TriggerType;
 import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormCache;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
-import com.jpigeon.ridebattlelib.common.network.packet.DriverActionPacket;
 import com.jpigeon.ridebattlelib.common.registry.RiderArmorRegistry;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
@@ -30,7 +29,6 @@ import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -91,8 +89,7 @@ public class DriverHandler {
     }
 
     // 处理触发物品逻辑
-    private static void handleTriggerItem(PlayerInteractEvent.RightClickItem event, Player player,
-                                          ItemStack heldItem, RiderConfig config) {
+    private static void handleTriggerItem(PlayerInteractEvent.RightClickItem event, Player player, ItemStack heldItem, RiderConfig config) {
         // 取消事件传播，避免物品被消耗
         event.setCanceled(true);
 
@@ -107,7 +104,7 @@ public class DriverHandler {
                 RideBattleLib.LOGGER.debug("物品触发 - 玩家状态: 变身={}, 驱动器={}",
                         HenshinUtils.isTransformed(player), config.getRiderId());
             }
-            PacketDistributor.sendToServer(DriverActionPacket.INSTANCE);
+            HenshinSystem.getInstance().driverAction(player);
         }
 
         // 强制恢复物品数量（防止NBT修改）

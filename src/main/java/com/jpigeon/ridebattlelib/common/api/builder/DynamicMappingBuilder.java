@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlelib.common.api.builder;
 
+import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicMappingRegistry;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
@@ -138,11 +139,26 @@ public class DynamicMappingBuilder {
      * <p>
      * 注意：此方法应在 FMLClientSetupEvent 或 CommonSetupEvent 中调用
      */
+    private boolean registered = false;
+
     public void register() {
-        for (Runnable task : registrations) {
-            task.run();
+        if (registered) {
+            RideBattleLib.LOGGER.warn("DynamicMappingBuilder 已被注册，忽略重复调用");
+            return;
         }
-        registrations.clear(); // 防止重复注册（但保留清空后无法再次调用）
+        registered = true;
+        for (Runnable task : registrations) {
+            try {
+                task.run();
+            } catch (Exception e) {
+                RideBattleLib.LOGGER.error("DynamicMapping 注册项执行失败", e);
+            }
+        }
+        registrations.clear();
+    }
+
+    public boolean isRegistered() {
+        return registered;
     }
 
     /**

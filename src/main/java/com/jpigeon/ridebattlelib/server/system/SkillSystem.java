@@ -3,7 +3,6 @@ package com.jpigeon.ridebattlelib.server.system;
 import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
-import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormCache;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
@@ -76,10 +75,6 @@ public class SkillSystem {
 
         // 优先从玩家当前骑士获取形态配置
         FormConfig form = RiderRegistry.getForm(player, data.formId());
-        if (form == null) {
-            // 尝试动态形态
-            form = DynamicFormCache.get(data.formId());
-        }
 
         if (form == null && Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug("未找到玩家 {} 的形态配置: {}",

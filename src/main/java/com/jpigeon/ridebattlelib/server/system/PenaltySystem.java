@@ -30,11 +30,11 @@ public class PenaltySystem {
     public void penaltyUnhenshin(Player player) {
         if (player.level().isClientSide()) return;
 
-        // 强制解除变身
-        HenshinSystem.getInstance().unHenshin(player);
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
+        // 强制解除变身
+        HenshinSystem.getInstance().unHenshin(player, true);
 
         // 设生命值为安全值
         player.setHealth(config.getPenaltyStrategy().getResetHealth());

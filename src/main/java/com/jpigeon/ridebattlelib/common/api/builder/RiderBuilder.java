@@ -7,6 +7,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -22,7 +23,7 @@ public class RiderBuilder {
     private final RiderConfig config;
     private final Map<String, FormBuilder> formBuilders = new LinkedHashMap<>();
     private final List<FormConfig> directForms = new ArrayList<>();
-    private String baseFormPath;
+    private ResourceLocation baseFormId;
 
     private RiderBuilder(ResourceLocation riderId) {
         this.riderId = riderId;
@@ -96,13 +97,8 @@ public class RiderBuilder {
 
     // ========== 骑士全局设置 ==========
 
-    public RiderBuilder baseForm(String formPath) {
-        this.baseFormPath = formPath;
-        return this;
-    }
-
     public RiderBuilder baseForm(ResourceLocation formId) {
-        this.baseFormPath = formId.getPath();
+        this.baseFormId = formId;
         return this;
     }
 
@@ -117,14 +113,14 @@ public class RiderBuilder {
     }
 
     // ========== 基础属性/效果（整个骑士生效） ==========
-
-    public RiderBuilder baseAttribute(ResourceLocation attributeId, double amount) {
-        config.addBaseAttribute(attributeId, amount, AttributeModifier.Operation.ADD_VALUE);
+    public RiderBuilder baseAttribute(Holder<Attribute> attribute, double amount) {
+        config.addBaseAttribute(attribute, amount, AttributeModifier.Operation.ADD_VALUE);
         return this;
     }
 
-    public RiderBuilder baseAttribute(ResourceLocation attributeId, double amount, AttributeModifier.Operation operation) {
-        config.addBaseAttribute(attributeId, amount, operation);
+    public RiderBuilder baseAttribute(Holder<Attribute> attribute, double amount,
+                                      AttributeModifier.Operation operation) {
+        config.addBaseAttribute(attribute, amount, operation);
         return this;
     }
 
@@ -153,34 +149,39 @@ public class RiderBuilder {
      * 构建但不注册，返回 RiderConfig（用于手动控制注册时机）
      */
     public RiderConfig build() {
-        // 构建链式形态
-        Map<String, FormConfig> builtForms = new HashMap<>();
-        for (Map.Entry<String, FormBuilder> entry : formBuilders.entrySet()) {
-            FormConfig form = entry.getValue().build();
-            config.addForm(form);
-            builtForms.put(entry.getKey(), form);
-        }
+        try {
+            Map<String, FormConfig> builtForms = new HashMap<>();
+            for (Map.Entry<String, FormBuilder> entry : formBuilders.entrySet()) {
+                FormConfig form = entry.getValue().build();
+                config.addForm(form);
+                builtForms.put(entry.getKey(), form);
+            }
+            for (FormConfig form : directForms) {
+                config.addForm(form);
+                builtForms.put(form.getFormId().getPath(), form);
+            }
+            if (baseFormId == null) {
+                throw new IllegalStateException(
+                        "骑士 " + riderId + " 未调用 .baseForm(...)。已注册形态: " + builtForms.keySet());
+            }
 
-        // 合并独立构建的形态（新增）
-        for (FormConfig form : directForms) {
-            config.addForm(form);
-            builtForms.put(form.getFormId().getPath(), form);
-        }
+            boolean found = builtForms.values().stream().anyMatch(f -> f.getFormId().equals(baseFormId));
 
-        // 验证基础形态
-        if (baseFormPath == null || !builtForms.containsKey(baseFormPath)) {
-            throw new IllegalStateException(
-                    "Base form '" + baseFormPath + "' not found! Available forms: " + builtForms.keySet()
-            );
-        }
-        config.setBaseForm(builtForms.get(baseFormPath).getFormId());
+            if (!found) {
+                throw new IllegalStateException(
+                        "骑士 " + riderId + " 的 baseForm '" + baseFormId + "' 未找到！可选: " + builtForms.keySet());
+            }
+            config.setBaseForm(baseFormId);
 
-        // 验证驱动器
-        if (config.getDriverItem() == null || config.getDriverItem() == Items.AIR) {
-            throw new IllegalStateException("Driver item is required! Call .driver() before building.");
+            if (config.getDriverItem() == null || config.getDriverItem() == Items.AIR) {
+                throw new IllegalStateException("骑士 " + riderId + " 缺少驱动器，调用 .driver(...) 再构建");
+            }
+            return config;
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("骑士 " + riderId + " 构建失败", e);
         }
-
-        return config;
     }
 
     // ========== 内部方法 ==========

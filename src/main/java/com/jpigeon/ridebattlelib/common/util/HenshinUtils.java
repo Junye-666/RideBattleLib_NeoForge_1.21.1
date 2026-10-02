@@ -38,14 +38,11 @@ public class HenshinUtils {
                                                Map<ResourceLocation, ItemStack> driverSnapshot) {
         if (config == null) return;
 
-        // 过滤空栈
+        // 保留所有槽位（包括空槽），否则解除时无法正确清空形态盔甲
         Map<EquipmentSlot, ItemStack> filteredGear = new EnumMap<>(EquipmentSlot.class);
-        originalGear.forEach((slot, stack) -> {
-            if (!stack.isEmpty()) {
-                filteredGear.put(slot, stack.copy());
-            }
-        });
+        originalGear.forEach((slot, stack) -> filteredGear.put(slot, stack.copy()));
 
+        // driverSnapshot 继续过滤空栈：空槽 == 没有物品，driver 那边靠 containsKey + isEmpty 判断
         Map<ResourceLocation, ItemStack> filteredDriver = new HashMap<>();
         driverSnapshot.forEach((slot, stack) -> {
             if (!stack.isEmpty()) {

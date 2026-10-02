@@ -2,12 +2,12 @@ package com.jpigeon.ridebattlelib.common.api.builder;
 
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.TriggerType;
-import com.jpigeon.ridebattlelib.server.system.SkillSystem;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -44,14 +44,14 @@ public class FormBuilder {
     }
 
     // ========== 属性 ==========
-
-    public FormBuilder attribute(ResourceLocation attributeId, double amount) {
-        form.addAttribute(attributeId, amount);
+    public FormBuilder attribute(Holder<Attribute> attribute, double amount) {
+        form.addAttribute(attribute, amount);
         return this;
     }
 
-    public FormBuilder attribute(ResourceLocation attributeId, double amount, AttributeModifier.Operation operation) {
-        form.addAttribute(attributeId, amount, operation);
+    public FormBuilder attribute(Holder<Attribute> attribute, double amount,
+                                 AttributeModifier.Operation operation) {
+        form.addAttribute(attribute, amount, operation);
         return this;
     }
 
@@ -116,24 +116,27 @@ public class FormBuilder {
     // ========== 技能 ==========
 
     /**
-     * 自动注册技能并添加到形态
+     * 自动注册技能并添加到形态。
+     * <p>
+     * 注意：这里只记录待注册信息，真正的 SkillSystem.registerSkill
+     * 会在 {@code RiderRegistry.registerRider} 时统一执行。
+     */
+    public FormBuilder skill(ResourceLocation skillId, int cooldownSeconds) {
+        Component displayName = Component.translatable(
+                "skill." + skillId.getNamespace() + "." + skillId.getPath());
+        form.addSkill(skillId);
+        form.addPendingSkill(skillId, displayName, cooldownSeconds);  // ← 只记录
+        return this;
+    }
+
+    /**
+     * 自动拼接形态路径 + skillPath 作为技能 ID 的重载保持不变（内部调用上面那个）
      */
     public FormBuilder skill(String skillPath, int cooldownSeconds) {
         ResourceLocation skillId = ResourceLocation.fromNamespaceAndPath(
                 form.getFormId().getNamespace(),
-                form.getFormId().getPath() + "_" + skillPath
-        );
+                form.getFormId().getPath() + "_" + skillPath);
         return skill(skillId, cooldownSeconds);
-    }
-
-    /**
-     * 自动注册技能并添加到形态
-     */
-    public FormBuilder skill(ResourceLocation skillId, int cooldownSeconds) {
-        Component displayName = Component.translatable("skill." + skillId.getNamespace() + "." + skillId.getPath());
-        SkillSystem.registerSkill(skillId, displayName, cooldownSeconds);
-        form.addSkill(skillId);
-        return this;
     }
 
     /**

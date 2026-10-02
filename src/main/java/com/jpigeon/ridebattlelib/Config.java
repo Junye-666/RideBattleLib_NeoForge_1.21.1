@@ -68,21 +68,21 @@ public class Config
     static final ModConfigSpec SPEC = BUILDER.build();
 
     @SubscribeEvent
-    static void onLoad(final ModConfigEvent event)
-    {
-        if (Config.DEBUG_MODE.get()){
+    static void onLoad(final ModConfigEvent event) {
+        if (Config.DEBUG_MODE.get()) {
             RideBattleLib.LOGGER.debug(
-                    "Loaded config: penaltyEnabled={}, penaltyThreshold={}, penaltyReset = {}, cooldown={}s, explosionPower={}, knockbackStrength={}, keyCooldown={}, interactionCooldown={}, debugMode={}, developerMode={}",
+                    "Loaded config: penaltyEnabled={}, penaltyThreshold={}, penaltyReset={}, cooldown={}s, explosionPower={}, knockbackStrength={}, keyCooldown={}, interactionCooldown={}, debugMode={}, developerMode={}",
                     PENALTY_ENABLED.get(),
                     PENALTY_THRESHOLD.get(),
                     PENALTY_RESET_HEALTH.get(),
                     COOLDOWN_DURATION.get(),
                     EXPLOSION_POWER.get(),
                     KNOCKBACK_STRENGTH.get(),
-                    KNOCKBACK_STRENGTH.get(),
+                    KEY_COOLDOWN_MS.get(),
                     INTERACTION_COOLDOWN_MS.get(),
                     DEBUG_MODE.get(),
                     DEVELOPER_MODE.get());
         }
     }
+
 }

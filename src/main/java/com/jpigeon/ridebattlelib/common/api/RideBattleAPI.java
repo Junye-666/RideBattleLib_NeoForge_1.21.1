@@ -4,6 +4,12 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.client.cache.ClientDriverDataCache;
 import com.jpigeon.ridebattlelib.client.cache.ClientTransformedCache;
+import com.jpigeon.ridebattlelib.common.api.client.ClientRiderDispatcher;
+import com.jpigeon.ridebattlelib.common.api.client.IRiderClientHandler;
+import com.jpigeon.ridebattlelib.common.api.registry.IRiderPack;
+import com.jpigeon.ridebattlelib.common.api.registry.RiderPackRegistry;
+import com.jpigeon.ridebattlelib.common.api.server.IRiderServerHandler;
+import com.jpigeon.ridebattlelib.common.api.server.ServerRiderDispatcher;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
@@ -33,6 +39,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 假面骑士系统快捷方法管理器。
@@ -102,7 +109,7 @@ public final class RideBattleAPI {
      * @return 是否成功切换
      */
     public static boolean switchForm(Player player, ResourceLocation newFormId) {
-        if (isTransformed(player) && getCurrentFormId(player) != newFormId) {
+        if (isTransformed(player) && !Objects.equals(getCurrentFormId(player), newFormId)) {
             if (Config.DEVELOPER_MODE.get())
                 RideBattleLib.LOGGER.debug("尝试切换玩家{}形态{}", player.getName().getString(), newFormId);
             if (player.level().isClientSide()) {
@@ -678,6 +685,29 @@ public final class RideBattleAPI {
      */
     public static void completeIn(int ticks, Player player) {
         scheduleTicks(ticks, () -> completeHenshin(player));
+    }
+
+    // ================ 注册便捷方法 ================
+
+    /**
+     * 注册骑士包裹
+     */
+    public static void registerRiderPack(IRiderPack pack) {
+        RiderPackRegistry.register(pack);
+    }
+
+    /**
+     * 注册服务器监听器
+     */
+    public static void registerServerHandler(IRiderServerHandler handler) {
+        ServerRiderDispatcher.register(handler);
+    }
+
+    /**
+     * 注册客户端监听器
+     */
+    public static void registerClientHandler(IRiderClientHandler handler) {
+        ClientRiderDispatcher.register(handler);
     }
 
     /**

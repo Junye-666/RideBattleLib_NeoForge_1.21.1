@@ -4,12 +4,15 @@ import com.jpigeon.ridebattlelib.Config;
 import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.data.RiderAttachments;
 import com.jpigeon.ridebattlelib.common.data.RiderData;
+import io.netty.util.internal.UnstableApi;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -46,6 +49,9 @@ public class FormConfig {
     private SoundEvent henshinSound = null;
     private int autoCompleteTicks = 0;
     private final List<ResourceLocation> skillIds = new ArrayList<>();
+
+    private final Map<ResourceLocation, Integer> pendingSkillCooldowns = new LinkedHashMap<>();
+    private final Map<ResourceLocation, Component> pendingSkillNames = new HashMap<>();
 
     public FormConfig(ResourceLocation formId) {
         this.formId = formId;
@@ -103,6 +109,7 @@ public class FormConfig {
      * @param amount      修改值
      * @param operation   修改方式
      */
+    @UnstableApi
     public FormConfig addAttribute(ResourceLocation attributeId, double amount,
                                    AttributeModifier.Operation operation) {
         attributes.add(new AttributeModifier(attributeId, amount, operation));
@@ -113,8 +120,18 @@ public class FormConfig {
     /**
      * 添加属性（默认使用ADD_VALUE）
      */
-    public FormConfig addAttribute(ResourceLocation attributeId, double amount) {
-        return addAttribute(attributeId, amount, AttributeModifier.Operation.ADD_VALUE);
+    public FormConfig addAttribute(Holder<Attribute> attribute, double amount,
+                                   AttributeModifier.Operation operation) {
+        ResourceLocation id = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
+        if (id == null) {
+            RideBattleLib.LOGGER.warn("未知属性 Holder: {}", attribute);
+            return this;
+        }
+        return addAttribute(id, amount, operation);
+    }
+
+    public FormConfig addAttribute(Holder<Attribute> attribute, double amount) {
+        return addAttribute(attribute, amount, AttributeModifier.Operation.ADD_VALUE);
     }
 
     /**
@@ -229,6 +246,23 @@ public class FormConfig {
     }
 
     /**
+     * 由 FormBuilder.skill 调用 —— 只记录，不注册。
+     * 真正的注册由 RiderRegistry.registerRider 在骑士注册时统一 flush。
+     */
+    public void addPendingSkill(ResourceLocation skillId, Component displayName, int cooldownSeconds) {
+        pendingSkillNames.put(skillId, displayName);
+        pendingSkillCooldowns.put(skillId, cooldownSeconds);
+    }
+
+    public Map<ResourceLocation, Integer> getPendingSkillCooldowns() {
+        return Collections.unmodifiableMap(pendingSkillCooldowns);
+    }
+
+    public Map<ResourceLocation, Component> getPendingSkillNames() {
+        return Collections.unmodifiableMap(pendingSkillNames);
+    }
+
+    /**
      * 设定形态是否允许空驱动器
      */
     public void setAllowsEmptyDriver(boolean allow) {
@@ -241,8 +275,12 @@ public class FormConfig {
     public boolean matchesMainSlots(Map<ResourceLocation, ItemStack> driverItems, RiderConfig config) {
         // 处理动态形态的情况 - 如果没有特定物品要求，直接返回true
         if (requiredItems.isEmpty()) {
-            if (allowsEmptyDriver) return true;
-            return hasAnyItem(driverItems, config.getSlotDefinitions().keySet());
+            // 未声明任何 requiredItems 时：只有在驱动器完全为空的情况下才考虑匹配
+            boolean driverEmpty = true;
+            for (ItemStack s : driverItems.values()) {
+                if (!s.isEmpty()) { driverEmpty = false; break; }
+            }
+            return driverEmpty && allowsEmptyDriver;
         }
 
         // 原有的精确匹配逻辑

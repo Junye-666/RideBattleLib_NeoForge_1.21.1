@@ -32,13 +32,13 @@ public class RideBattleLib {
         RiderAttachments.ATTACHMENTS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+
+        RideBattleLib.LOGGER.info("骑士Pack注册一定是在主线哦~");
+        // RiderPackRegistry.register(new ExampleBasicPack());
+        // RiderPackRegistry.register(new ExampleDynamicPack());
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        RideBattleLib.LOGGER.info("请确保骑士初始化在CommonSetup中哦~");
-        // ExampleBasic.init();
-        // ExampleDynamicForm.init();
-
         event.enqueueWork(RiderPackRegistry::initCommon);
 
         event.enqueueWork(() -> RiderRegistry.getRegisteredRiders().forEach(config -> {

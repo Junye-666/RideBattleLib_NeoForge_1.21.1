@@ -27,8 +27,15 @@ public record HenshinStateSyncPacket(
                     UUIDUtil.STREAM_CODEC, HenshinStateSyncPacket::playerId,
                     ByteBufCodecs.BOOL, HenshinStateSyncPacket::isTransformed,
                     StreamCodec.of(
-                            (buf, s) -> buf.writeByte(s.ordinal()),
-                            buf -> HenshinState.values()[buf.readByte()]
+                            (buf, s) -> buf.writeUtf(s.getSerializedName()),
+                            buf -> {
+                                String n = buf.readUtf();
+                                return switch (n) {
+                                    case "pending", "transforming", "paused" -> HenshinState.PENDING;
+                                    case "transformed" -> HenshinState.TRANSFORMED;
+                                    default -> HenshinState.IDLE;
+                                };
+                            }
                     ), HenshinStateSyncPacket::state,
                     PayloadUtils.nullableResourceLocation(), HenshinStateSyncPacket::riderId,
                     PayloadUtils.nullableResourceLocation(), HenshinStateSyncPacket::currentFormId,

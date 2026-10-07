@@ -86,7 +86,7 @@ public class DriverActionManager {
 
     public void cancelHenshin(Player player) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-        if (data.getState() == HenshinState.TRANSFORMING) {
+        if (data.getState().isInProgress()) {
             data.setState(HenshinState.IDLE);
             data.setPendingFormId(null);
             if (player instanceof ServerPlayer sp) {

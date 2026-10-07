@@ -8,12 +8,15 @@ import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.config.dynamic.DynamicFormCache;
 import com.jpigeon.ridebattlelib.common.data.HenshinSessionData;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
+import com.jpigeon.ridebattlelib.server.event.FormRegisterEvent;
+import com.jpigeon.ridebattlelib.server.event.RiderRegisterEvent;
 import com.jpigeon.ridebattlelib.server.system.SkillSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.NeoForge;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -34,6 +37,8 @@ public class RiderRegistry {
     public static void registerRider(RiderConfig config) {
         RIDERS.put(config.getRiderId(), config);
 
+        NeoForge.EVENT_BUS.post(new RiderRegisterEvent(config));
+
         Item driverItem = config.getDriverItem();
         if (driverItem != null && driverItem != Items.AIR) {
             DRIVER_ITEM_INDEX
@@ -41,12 +46,13 @@ public class RiderRegistry {
                     .add(config);
         }
 
-        RiderArmorRegistry.registerRiderArmor(config);
-
         for (FormConfig form : config.getForms().values()) {
             registerFormForRider(form, config.getRiderId());
-            flushPendingSkills(form);   // ← 新增
+            NeoForge.EVENT_BUS.post(new FormRegisterEvent(config, form));
+            flushPendingSkills(form);
         }
+
+        RiderArmorRegistry.registerRiderArmor(config);
     }
 
     // 为特定骑士注册形态

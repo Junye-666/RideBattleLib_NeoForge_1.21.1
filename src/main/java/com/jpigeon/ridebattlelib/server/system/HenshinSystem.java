@@ -15,7 +15,6 @@ import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import com.jpigeon.ridebattlelib.common.util.RiderUtils;
 import com.jpigeon.ridebattlelib.server.event.*;
 import com.jpigeon.ridebattlelib.server.system.helper.DriverActionManager;
-import com.jpigeon.ridebattlelib.server.system.helper.HenshinPhase;
 import com.jpigeon.ridebattlelib.server.system.helper.SyncManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -49,16 +48,24 @@ public class HenshinSystem {
         RiderConfig config = RiderConfig.findActiveDriverConfig(player);
         if (config == null) return;
 
-        switch (phaseOf(player)) {
-            case IDLE, PAUSED -> doHenshin(player, config);   // PAUSED 下重按视为重新触发
-            case TRANSFORMED -> doSwitch(player, config);
-            case ACTIVATING, TRANSFORMING, SWITCHING, UNHENSHIN -> {
-                if (Config.DEBUG_MODE.get()) {
-                    RideBattleLib.LOGGER.debug(
-                            "driverAction 在非稳定状态 {} 被触发，忽略", phaseOf(player));
-                }
-            }
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
+
+        // 已变身 → 尝试切形态
+        if (data.isTransformed()) {
+            doSwitch(player, config);
+            return;
         }
+
+        // 未变身：PENDING 忽略重入，避免打断进行中的变身流程
+        if (data.getState() == HenshinState.PENDING) {
+            if (Config.DEBUG_MODE.get()) {
+                RideBattleLib.LOGGER.debug("driverAction 在 PENDING 状态被触发，忽略");
+            }
+            return;
+        }
+
+        // IDLE → 发起变身
+        doHenshin(player, config);
     }
 
     /**
@@ -86,9 +93,7 @@ public class HenshinSystem {
         // 进入中间态
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         data.setPendingFormId(formId);
-        if (data.getState() != HenshinState.TRANSFORMING) {
-            data.setState(HenshinState.TRANSFORMING);
-        }
+        data.setState(HenshinState.PENDING);
         syncState(player);
 
         // 分派：pause / auto / immediate
@@ -105,22 +110,30 @@ public class HenshinSystem {
     public void unHenshin(Player player, boolean isPenalty) {
         if (player.level().isClientSide()) return;
 
-        HenshinPhase phase = phaseOf(player);
-        if (phase != HenshinPhase.TRANSFORMED && phase != HenshinPhase.TRANSFORMING) return;
+        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
 
-        HenshinSessionData data = HenshinUtils.getSessionData(player);
-        if (data == null) return;
+        if (!data.isTransformed() && data.getState() != HenshinState.PENDING) {
+            return;
+        }
 
-        RiderConfig config = RiderRegistry.getRider(data.riderId());
+        HenshinSessionData session = HenshinUtils.getSessionData(player);
+        if (session == null) {
+            data.setState(HenshinState.IDLE);
+            data.setPendingFormId(null);
+            syncState(player);
+            return;
+        }
+
+        RiderConfig config = RiderRegistry.getRider(session.riderId());
         if (config == null) return;
 
-        UnhenshinEvent.Pre pre = new UnhenshinEvent.Pre(player, data, isPenalty);
+        UnhenshinEvent.Pre pre = new UnhenshinEvent.Pre(player, session, isPenalty);
         if (NeoForge.EVENT_BUS.post(pre).isCanceled()) return;
 
-        config.getHenshinStrategy().unHenshin(player, data);
+        config.getHenshinStrategy().unHenshin(player, session);
         transitionToState(player, HenshinState.IDLE, null);
         syncState(player);
-        NeoForge.EVENT_BUS.post(new UnhenshinEvent.Post(player, data, isPenalty));
+        NeoForge.EVENT_BUS.post(new UnhenshinEvent.Post(player, session, isPenalty));
     }
 
     /**
@@ -149,9 +162,7 @@ public class HenshinSystem {
 
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         data.setPendingFormId(newFormId);
-        if (data.getState() != HenshinState.TRANSFORMING) {
-            data.setState(HenshinState.TRANSFORMING);
-        }
+        data.setState(HenshinState.PENDING);
         syncState(player);
 
         dispatchTransition(player, config, form, newFormId, oldFormId);
@@ -166,27 +177,24 @@ public class HenshinSystem {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);
         boolean isSwitch = oldFormId != null;
 
-        // shouldPause
         if (form.shouldPause()) {
+            // 状态已经是 PENDING，只需发事件 + prepare，然后停在这里等 completeHenshin
             HenshinPauseEvent.Pre pre = new HenshinPauseEvent.Pre(player, config.getRiderId(), formId);
             NeoForge.EVENT_BUS.post(pre);
             if (pre.isCanceled()) {
-                // 直接走完
                 completeAndPostEvents(player, config, formId, oldFormId);
                 return;
             }
-
             if (!isSwitch) {
                 DriverActionManager.getInstance().prepareHenshin(player, formId);
             } else {
                 DriverActionManager.getInstance().prepareFormSwitch(player, oldFormId, formId);
             }
-
             NeoForge.EVENT_BUS.post(new HenshinPauseEvent.Post(player, config.getRiderId(), formId));
             return;
         }
 
-        // autoTicks > 0
+        // auto tick 分支，保持 PENDING
         int autoTicks = form.getAutoCompleteTicks();
         if (autoTicks > 0) {
             if (!isSwitch) {
@@ -194,7 +202,6 @@ public class HenshinSystem {
             } else {
                 DriverActionManager.getInstance().prepareFormSwitch(player, oldFormId, formId);
             }
-            // Pre 事件可能已取消 pendingFormId
             if (data.getPendingFormId() != null) {
                 RideBattleAPI.scheduleTicks(autoTicks,
                         () -> DriverActionManager.getInstance().completeTransformation(player));
@@ -202,7 +209,7 @@ public class HenshinSystem {
             return;
         }
 
-        // 分支 C：立即完成
+        // immediate
         completeAndPostEvents(player, config, formId, oldFormId);
     }
 
@@ -296,28 +303,14 @@ public class HenshinSystem {
     }
 
     //====================检查方法====================
-    // 相位计算
-    private HenshinPhase phaseOf(Player player) {
-        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-        boolean transformed = data.isTransformed();
-        HenshinState state = data.getState();
-
-        if (transformed) {
-            return state == HenshinState.TRANSFORMING
-                    ? HenshinPhase.TRANSFORMING
-                    : HenshinPhase.TRANSFORMED;
-        } else {
-            if (state == HenshinState.TRANSFORMING) {
-                // 有 pendingFormId 说明在 ACTIVATING/PAUSED
-                return data.getPendingFormId() != null
-                        ? HenshinPhase.PAUSED
-                        : HenshinPhase.ACTIVATING;
-            }
-            return HenshinPhase.IDLE;
-        }
-    }
-
-    // 状态转移
+    /**
+     * 用于跨 session 的状态转移，例如：
+     * <ul>
+     *   <li>{@code henshin()} API 直接完成 → TRANSFORMED</li>
+     *   <li>取消/解除 → IDLE</li>
+     * </ul>
+     * PENDING 不通过本方法进入（走 doHenshin / doSwitch 里的 setState）。
+     */
     private void transitionToState(Player player, HenshinState state,
                                    @Nullable ResourceLocation formId) {
         RiderData data = player.getData(RiderAttachments.RIDER_DATA);

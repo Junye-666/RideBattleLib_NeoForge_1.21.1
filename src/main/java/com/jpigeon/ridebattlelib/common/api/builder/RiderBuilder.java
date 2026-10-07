@@ -1,5 +1,7 @@
 package com.jpigeon.ridebattlelib.common.api.builder;
 
+import com.jpigeon.ridebattlelib.Config;
+import com.jpigeon.ridebattlelib.RideBattleLib;
 import com.jpigeon.ridebattlelib.common.config.FormConfig;
 import com.jpigeon.ridebattlelib.common.config.RiderConfig;
 import com.jpigeon.ridebattlelib.common.registry.RiderRegistry;
@@ -12,7 +14,10 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 一站式骑士构建器 - 快速创建并注册一个完整的骑士
@@ -150,7 +155,8 @@ public class RiderBuilder {
      */
     public RiderConfig build() {
         try {
-            Map<String, FormConfig> builtForms = new HashMap<>();
+            Map<String, FormConfig> builtForms = new LinkedHashMap<>();
+
             for (Map.Entry<String, FormBuilder> entry : formBuilders.entrySet()) {
                 FormConfig form = entry.getValue().build();
                 config.addForm(form);
@@ -160,16 +166,27 @@ public class RiderBuilder {
                 config.addForm(form);
                 builtForms.put(form.getFormId().getPath(), form);
             }
-            if (baseFormId == null) {
+
+            if (builtForms.isEmpty()) {
                 throw new IllegalStateException(
-                        "骑士 " + riderId + " 未调用 .baseForm(...)。已注册形态: " + builtForms.keySet());
+                        "骑士 " + riderId + " 没有任何形态，至少调用一次 .form(...)");
             }
 
-            boolean found = builtForms.values().stream().anyMatch(f -> f.getFormId().equals(baseFormId));
+            // 隐式 baseForm：未显式指定时取第一个注册的形态
+            if (baseFormId == null) {
+                baseFormId = builtForms.values().iterator().next().getFormId();
+                if (Config.DEVELOPER_MODE.get()) {
+                    RideBattleLib.LOGGER.debug(
+                            "骑士 {} 未指定 baseForm，隐式使用第一个形态: {}",
+                            riderId, baseFormId);
+                }
+            }
 
-            if (!found) {
+            // 校验 baseForm 存在
+            if (!config.getForms().containsKey(baseFormId)) {
                 throw new IllegalStateException(
-                        "骑士 " + riderId + " 的 baseForm '" + baseFormId + "' 未找到！可选: " + builtForms.keySet());
+                        "骑士 " + riderId + " 的 baseForm '" + baseFormId
+                                + "' 未在已注册形态中找到！可选: " + builtForms.keySet());
             }
             config.setBaseForm(baseFormId);
 

@@ -19,6 +19,11 @@ public final class RiderPackRegistry {
             RideBattleLib.LOGGER.warn("重复注册骑士包: {}", pack.riderId());
             return;
         }
+        if (commonInitialized) {
+            RideBattleLib.LOGGER.warn(
+                    "骑士包 {} 在 commonSetup 之后注册，registerCommon 不会被调用；请确保在主类构造中注册。",
+                    pack.riderId());
+        }
         RideBattleLib.LOGGER.info("注册骑士包: {}", pack.riderId());
     }
 

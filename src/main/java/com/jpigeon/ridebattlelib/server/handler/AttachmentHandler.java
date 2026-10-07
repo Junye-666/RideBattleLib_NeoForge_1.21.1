@@ -9,15 +9,10 @@ import com.jpigeon.ridebattlelib.common.data.RiderData;
 import com.jpigeon.ridebattlelib.common.util.HenshinUtils;
 import com.jpigeon.ridebattlelib.server.system.HenshinSystem;
 import com.jpigeon.ridebattlelib.server.system.helper.SyncManager;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class AttachmentHandler {
     @SubscribeEvent
@@ -39,12 +34,14 @@ public class AttachmentHandler {
             player.removeTag("penalty_cooldown");
         }
 
-        // 如果玩家处于变身中（TRANSFORMING）状态，重置为 IDLE（登录时不可能在变身中）
-        if (data.getState() == HenshinState.TRANSFORMING) {
+        // 进行中（PENDING）状态下登录 → 重置为 IDLE，避免残留在中间态
+        if (data.getState().isInProgress()) {
             data.setState(HenshinState.IDLE);
             data.setPendingFormId(null);
             if (Config.DEBUG_MODE.get()) {
-                RideBattleLib.LOGGER.debug("重置玩家 {} 的状态为 IDLE，因为登录时处于 TRANSFORMING 状态", player.getName().getString());
+                RideBattleLib.LOGGER.debug(
+                        "重置玩家 {} 的状态为 IDLE（登录时处于 PENDING）",
+                        player.getName().getString());
             }
         }
 
@@ -120,8 +117,8 @@ public class AttachmentHandler {
         // 创建新数据，只复制持久数据（驱动器物品、冷却时间、技能索引）
         RiderData newData = new RiderData();
         // 复制主驱动器和辅助驱动器（深拷贝）
-        newData.setMainDriverItems(deepCopyMap(originalData.getMainDriverItems()));
-        newData.setAuxDriverItems(deepCopyMap(originalData.getAuxDriverItems()));
+        newData.setMainDriverItems(RiderData.deepCopyMap(originalData.getMainDriverItems()));
+        newData.setAuxDriverItems(RiderData.deepCopyMap(originalData.getAuxDriverItems()));
         newData.setPenaltyCooldownEnd(originalData.getPenaltyCooldownEnd());
         newData.setCurrentSkillIndex(originalData.getCurrentSkillIndex());
 
@@ -138,19 +135,5 @@ public class AttachmentHandler {
         if (newData.isInPenaltyCooldown()) {
             newPlayer.addTag("penalty_cooldown");
         }
-    }
-
-    // 深拷贝工具方法
-    private static Map<ResourceLocation, Map<ResourceLocation, ItemStack>> deepCopyMap(
-            Map<ResourceLocation, Map<ResourceLocation, ItemStack>> original) {
-        Map<ResourceLocation, Map<ResourceLocation, ItemStack>> copy = new HashMap<>();
-        for (var entry : original.entrySet()) {
-            Map<ResourceLocation, ItemStack> innerCopy = new HashMap<>();
-            for (var innerEntry : entry.getValue().entrySet()) {
-                innerCopy.put(innerEntry.getKey(), innerEntry.getValue().copy());
-            }
-            copy.put(entry.getKey(), innerCopy);
-        }
-        return copy;
     }
 }

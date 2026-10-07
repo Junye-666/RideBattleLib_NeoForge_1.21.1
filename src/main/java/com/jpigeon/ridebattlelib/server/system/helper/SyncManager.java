@@ -44,7 +44,7 @@ public class SyncManager {
 
         if (session != null) {
             riderId = session.riderId();
-        } else if (data.getState() == HenshinState.TRANSFORMING) {
+        } else if (data.getState() == HenshinState.PENDING) {
             RiderConfig config = RiderConfig.findActiveDriverConfig(player);
             if (config != null) riderId = config.getRiderId();
         }

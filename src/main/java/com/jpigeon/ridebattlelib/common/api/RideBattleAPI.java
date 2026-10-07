@@ -407,10 +407,9 @@ public final class RideBattleAPI {
      */
     public static boolean isTransforming(Player player) {
         if (player.level().isClientSide()) {
-            return ClientTransformedCache.getState(player.getUUID()) == HenshinState.TRANSFORMING;
+            return ClientTransformedCache.getState(player.getUUID()).isInProgress();
         }
-        RiderData data = player.getData(RiderAttachments.RIDER_DATA);
-        return data.getState() == HenshinState.TRANSFORMING;
+        return player.getData(RiderAttachments.RIDER_DATA).getState().isInProgress();
     }
 
     /**

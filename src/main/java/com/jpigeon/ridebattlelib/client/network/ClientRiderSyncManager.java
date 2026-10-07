@@ -168,7 +168,7 @@ public final class ClientRiderSyncManager {
             boolean isTransformed, HenshinState state,
             @Nullable ResourceLocation newForm) {
 
-        if (state == HenshinState.TRANSFORMING) {
+        if (state.isInProgress()) {
             return ClientRiderContext.ChangeType.PENDING;
         }
         if (isTransformed && !wasTransformed) {
@@ -180,7 +180,6 @@ public final class ClientRiderSyncManager {
         if (isTransformed && !Objects.equals(newForm, oldForm)) {
             return ClientRiderContext.ChangeType.SWITCH;
         }
-        // 状态没变（比如单纯刷新），不发事件
         return null;
     }
 }
